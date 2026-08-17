@@ -3,12 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PenLine, ScanBarcode, Star } from "lucide-react";
+import { Loader2, PenLine, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import {
   agregarLibroLeido,
@@ -18,6 +17,7 @@ import {
 import { buscarPorIsbn } from "@/services/google-books";
 import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
+import { RatingCaraPicker } from "@/components/catalogo/rating-cara";
 import type { LibroGlobal } from "@/types";
 
 type Paso = "buscar" | "formulario";
@@ -247,9 +247,15 @@ export default function AgregarLeidoPage() {
               onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
             />
             <Button onClick={handleBuscar} disabled={buscando}>
-              Buscar
+              {buscando ? <Loader2 className="size-4 animate-spin" /> : "Buscar"}
             </Button>
           </div>
+          {buscando && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              Buscando el libro…
+            </div>
+          )}
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <div className="h-px flex-1 bg-border" />o<div className="h-px flex-1 bg-border" />
           </div>
@@ -333,18 +339,7 @@ export default function AgregarLeidoPage() {
           <div className="mt-2 border-t pt-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
             Tu reseña (opcional)
           </div>
-          <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} type="button" onClick={() => setEstrellas(n)}>
-                <Star
-                  className={cn(
-                    "size-5",
-                    n <= estrellas ? "fill-amber-400 text-amber-400" : "text-muted-foreground"
-                  )}
-                />
-              </button>
-            ))}
-          </div>
+          <RatingCaraPicker value={estrellas} onChange={setEstrellas} />
           <Textarea
             placeholder="¿Qué te pareció?"
             rows={3}

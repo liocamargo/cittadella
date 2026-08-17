@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PenLine, Plus, ScanBarcode } from "lucide-react";
+import { Loader2, PenLine, Plus, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -355,9 +355,15 @@ export default function AgregarLibroPage() {
               onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
             />
             <Button onClick={handleBuscar} disabled={buscando}>
-              Buscar
+              {buscando ? <Loader2 className="size-4 animate-spin" /> : "Buscar"}
             </Button>
           </div>
+          {buscando && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              Buscando el libro…
+            </div>
+          )}
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <div className="h-px flex-1 bg-border" />o<div className="h-px flex-1 bg-border" />
           </div>
