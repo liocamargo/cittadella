@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PenLine, Plus } from "lucide-react";
+import { PenLine, Plus, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -62,7 +62,7 @@ export default function AgregarLibroPage() {
   const [guardando, setGuardando] = useState(false);
   const [comunidad, setComunidad] = useState<LibroGlobal | null>(null);
   const [form, setForm] = useState(FORM_INICIAL);
-  const [escaneando, setEscaneando] = useState(true);
+  const [escaneando, setEscaneando] = useState(false);
   const [portadaPickerOpen, setPortadaPickerOpen] = useState(false);
   const [cargaMultiple, setCargaMultiple] = useState(false);
   const [agregadosSesion, setAgregadosSesion] = useState(0);
@@ -72,6 +72,14 @@ export default function AgregarLibroPage() {
   // Guarda qué ISBN ya pasó por el aviso de "copia repetida" en buscar(),
   // para no volver a preguntar lo mismo al guardar.
   const isbnVerificadoRef = useRef<string | null>(null);
+
+  // En mobile abrimos la cámara sola; en desktop/web queda apagada por
+  // defecto (nadie quiere el permiso de cámara apenas entra a la página).
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      setEscaneando(true);
+    }
+  }, []);
 
   function setCampo<K extends keyof typeof FORM_INICIAL>(campo: K, valor: string) {
     setForm((f) => ({ ...f, [campo]: valor }));
@@ -328,7 +336,8 @@ export default function AgregarLibroPage() {
             </>
           ) : (
             <Button variant="outline" onClick={() => setEscaneando(true)}>
-              Volver a escanear
+              <ScanBarcode />
+              Escanear con la cámara
             </Button>
           )}
 
