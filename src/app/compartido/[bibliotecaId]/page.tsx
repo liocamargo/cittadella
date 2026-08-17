@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Loader2, Library } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Library } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,10 +12,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { listenBiblioteca } from "@/lib/firestore/bibliotecas";
-import { normalizarBusqueda } from "@/lib/utils";
+import { cn, normalizarBusqueda } from "@/lib/utils";
 import { listenInventario } from "@/lib/firestore/libros";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
 import type { Biblioteca, LibroEnBiblioteca } from "@/types";
+
+const PAGE_SIZE = 14;
+type Filtro = "all" | "disponible" | "prestado";
+
+const FILTROS: { key: Filtro; label: string }[] = [
+  { key: "all", label: "Todos" },
+  { key: "disponible", label: "Disponibles" },
+  { key: "prestado", label: "Prestados" },
+];
 
 export default function CatalogoPublicoPage() {
   const params = useParams<{ bibliotecaId: string }>();
@@ -26,6 +35,8 @@ export default function CatalogoPublicoPage() {
   );
   const [copias, setCopias] = useState<LibroEnBiblioteca[]>([]);
   const [search, setSearch] = useState("");
+  const [filtro, setFiltro] = useState<Filtro>("all");
+  const [page, setPage] = useState(1);
   const [seleccionada, setSeleccionada] = useState<LibroEnBiblioteca | null>(null);
 
   useEffect(() => {
@@ -58,14 +69,25 @@ export default function CatalogoPublicoPage() {
     );
   }
 
+  const conteos = {
+    all: copias.length,
+    disponible: copias.filter((c) => c.estado === "disponible").length,
+    prestado: copias.filter((c) => c.estado === "prestado").length,
+  };
+
   const term = normalizarBusqueda(search.trim());
   const filtrados = copias.filter((c) => {
+    if (filtro === "disponible" && c.estado !== "disponible") return false;
+    if (filtro === "prestado" && c.estado !== "prestado") return false;
     if (!term) return true;
     const g = globales[c.isbn];
     return normalizarBusqueda(
       `${g?.titulo ?? ""} ${g?.autor ?? ""} ${g?.genero ?? ""}`
     ).includes(term);
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE));
+  const pageItems = filtrados.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const detalle = seleccionada ? globales[seleccionada.isbn] : undefined;
 
@@ -83,9 +105,30 @@ export default function CatalogoPublicoPage() {
         <SearchInput
           placeholder="Buscar por título, autor o género"
           value={search}
-          onValueChange={setSearch}
-          className="mb-6 max-w-xs"
+          onValueChange={(v) => {
+            setSearch(v);
+            setPage(1);
+          }}
+          className="mb-4 max-w-xs"
         />
+
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          {FILTROS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => {
+                setFiltro(f.key);
+                setPage(1);
+              }}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
+                filtro === f.key && "border-foreground bg-foreground text-background"
+              )}
+            >
+              {f.label} ({conteos[f.key]})
+            </button>
+          ))}
+        </div>
 
         {filtrados.length === 0 && (
           <div className="py-16 text-center text-sm text-muted-foreground">
@@ -95,8 +138,8 @@ export default function CatalogoPublicoPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-5">
-          {filtrados.map((copia) => {
+        <div className="mb-6 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-5">
+          {pageItems.map((copia) => {
             const g = globales[copia.isbn];
             const inicial = (g?.titulo ?? "?").trim().charAt(0).toUpperCase();
             return (
@@ -122,7 +165,9 @@ export default function CatalogoPublicoPage() {
                 <div className="text-[13px] font-semibold leading-tight">
                   {g?.titulo}
                 </div>
-                <div className="text-xs text-muted-foreground">{g?.autor}</div>
+                <div className="line-clamp-2 text-xs text-muted-foreground" title={g?.autor}>
+                  {g?.autor}
+                </div>
                 <Badge
                   variant={copia.estado === "disponible" ? "secondary" : "outline"}
                   className="w-fit text-[11px]"
@@ -133,6 +178,39 @@ export default function CatalogoPublicoPage() {
             );
           })}
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="flex size-8 items-center justify-center rounded-md border text-xs font-medium disabled:opacity-40"
+              aria-label="Página anterior"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                onClick={() => setPage(n)}
+                className={cn(
+                  "size-8 rounded-md border text-xs font-medium",
+                  n === page && "border-foreground bg-foreground text-background"
+                )}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="flex size-8 items-center justify-center rounded-md border text-xs font-medium disabled:opacity-40"
+              aria-label="Página siguiente"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       <Dialog open={Boolean(seleccionada)} onOpenChange={(o) => !o && setSeleccionada(null)}>
