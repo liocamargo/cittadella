@@ -64,6 +64,18 @@ export async function getLibroGlobal(isbn: string): Promise<LibroGlobal | null> 
   return snap.exists() ? toLibroGlobal(isbn, snap.data()) : null;
 }
 
+/** Versión en tiempo real de getLibroGlobal: se actualiza sola ante cualquier cambio. */
+export function listenLibroGlobal(
+  isbn: string,
+  onChange: (libro: LibroGlobal | null) => void
+): Unsubscribe {
+  return onSnapshot(
+    doc(db, GLOBALES, isbn),
+    (snap) => onChange(snap.exists() ? toLibroGlobal(isbn, snap.data()) : null),
+    () => onChange(null)
+  );
+}
+
 export async function actualizarPortada(isbn: string, portadaUrl: string): Promise<void> {
   await updateDoc(doc(db, GLOBALES, isbn), { portadaUrl });
 }

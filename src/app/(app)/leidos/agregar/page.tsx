@@ -175,7 +175,7 @@ export default function AgregarLeidoPage() {
       </p>
 
       {paso === "buscar" && (
-        <div className="flex max-w-xl flex-col gap-4">
+        <div className="flex flex-col gap-4">
           {escaneando ? (
             <BarcodeScanner onDetected={handleDetected} />
           ) : (
@@ -216,7 +216,7 @@ export default function AgregarLeidoPage() {
       )}
 
       {paso === "formulario" && (
-        <div className="flex max-w-xl flex-col gap-4">
+        <div className="flex flex-col gap-4">
           {comunidad && (
             <div className="rounded-lg border bg-muted/40 p-3 text-xs">
               <span className="font-semibold">Ya está en la comunidad: </span>
@@ -302,14 +302,17 @@ export default function AgregarLeidoPage() {
             onChange={(e) => setComentario(e.target.value)}
           />
 
-          <div className="mt-2 flex gap-2.5">
-            <Button variant="outline" onClick={() => setPaso("buscar")}>
-              Cancelar
-            </Button>
-            <Button className="flex-1" onClick={handleGuardar} disabled={guardando}>
-              Agregar a leídos
-            </Button>
-          </div>
+        </div>
+      )}
+
+      {paso === "formulario" && (
+        <div className="sticky bottom-0 -mx-5 flex gap-2.5 border-t bg-background px-5 py-3 md:-mx-12 md:px-12">
+          <Button variant="outline" onClick={() => setPaso("buscar")}>
+            Cancelar
+          </Button>
+          <Button className="flex-1" onClick={handleGuardar} disabled={guardando}>
+            Agregar a leídos
+          </Button>
         </div>
       )}
 
