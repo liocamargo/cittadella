@@ -25,6 +25,7 @@ function toBiblioteca(id: string, data: Record<string, unknown>): Biblioteca {
     invitacionesPendientes: (data.invitacionesPendientes as string[]) ?? [],
     nombresMiembros: (data.nombresMiembros as Record<string, string>) ?? {},
     emailsMiembros: (data.emailsMiembros as Record<string, string>) ?? {},
+    whatsappMiembros: (data.whatsappMiembros as Record<string, string>) ?? {},
     estantes: (data.estantes as string[]) ?? [],
     catalogoPublico: Boolean(data.catalogoPublico),
     creadaPor: (data.creadaPor as string) ?? "",
@@ -66,6 +67,7 @@ export async function crearBiblioteca(
     invitacionesPendientes: [],
     nombresMiembros: { [uid]: nombreMiembro },
     emailsMiembros: { [uid]: email },
+    whatsappMiembros: {},
     estantes: [],
     catalogoPublico: false,
     creadaPor: uid,
@@ -114,6 +116,7 @@ export async function quitarMiembro(bibliotecaId: string, uid: string) {
     miembrosUids: arrayRemove(uid),
     [`nombresMiembros.${uid}`]: deleteField(),
     [`emailsMiembros.${uid}`]: deleteField(),
+    [`whatsappMiembros.${uid}`]: deleteField(),
   });
 }
 
@@ -124,6 +127,17 @@ export async function renombrarMiembro(
 ) {
   await updateDoc(doc(db, COL, bibliotecaId), {
     [`nombresMiembros.${uid}`]: nombre,
+  });
+}
+
+/** WhatsApp del miembro (solo dígitos, con código de país) para pedidos desde el catálogo público. */
+export async function actualizarWhatsappMiembro(
+  bibliotecaId: string,
+  uid: string,
+  whatsapp: string
+) {
+  await updateDoc(doc(db, COL, bibliotecaId), {
+    [`whatsappMiembros.${uid}`]: whatsapp.trim() ? whatsapp.trim() : deleteField(),
   });
 }
 

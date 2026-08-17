@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ChevronLeft, ChevronRight, Loader2, Library } from "lucide-react";
+import { ChevronLeft, ChevronRight, Library, Loader2, Mail, MessageCircle } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -91,6 +92,23 @@ export default function CatalogoPublicoPage() {
 
   const detalle = seleccionada ? globales[seleccionada.isbn] : undefined;
 
+  const nombreDueño =
+    biblioteca.nombresMiembros[biblioteca.creadaPor] ??
+    biblioteca.emailsMiembros[biblioteca.creadaPor] ??
+    "";
+  const whatsappDueño = biblioteca.whatsappMiembros[biblioteca.creadaPor] ?? "";
+  const emailDueño = biblioteca.emailsMiembros[biblioteca.creadaPor] ?? "";
+
+  const mensajePedido = `Hola! Vi "${detalle?.titulo ?? "un libro"}" en el catálogo de ${biblioteca.nombre} y quería consultar si está disponible para pedir.`;
+  const linkWhatsapp = whatsappDueño
+    ? `https://wa.me/${whatsappDueño.replace(/\D/g, "")}?text=${encodeURIComponent(mensajePedido)}`
+    : null;
+  const linkEmail = emailDueño
+    ? `mailto:${emailDueño}?subject=${encodeURIComponent(
+        `Consulta por "${detalle?.titulo ?? "un libro"}"`
+      )}&body=${encodeURIComponent(mensajePedido)}`
+    : null;
+
   return (
     <div className="min-h-screen bg-background px-6 py-10 md:px-12">
       <div className="mx-auto max-w-5xl">
@@ -100,7 +118,12 @@ export default function CatalogoPublicoPage() {
             Catálogo público · solo lectura
           </span>
         </div>
-        <h1 className="mb-6 text-2xl font-bold">{biblioteca.nombre}</h1>
+        <h1 className="mb-1 text-2xl font-bold">{biblioteca.nombre}</h1>
+        {nombreDueño && (
+          <p className="mb-6 text-sm text-muted-foreground">
+            Bibliotecario: {nombreDueño}
+          </p>
+        )}
 
         <SearchInput
           placeholder="Buscar por título, autor o género"
@@ -244,6 +267,15 @@ export default function CatalogoPublicoPage() {
                 ({detalle?.totalResenas ?? 0} reseña(s) de la comunidad)
               </span>
             </div>
+
+            {(linkWhatsapp || linkEmail) && (
+              <Button asChild className="mt-1">
+                <a href={linkWhatsapp ?? linkEmail ?? "#"} target="_blank" rel="noopener noreferrer">
+                  {linkWhatsapp ? <MessageCircle /> : <Mail />}
+                  Pedir por {linkWhatsapp ? "WhatsApp" : "email"}
+                </a>
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>

@@ -56,6 +56,8 @@ export interface Biblioteca {
   nombresMiembros: Record<string, string>;
   /** uid -> email, para mostrar en "Espacio compartido". */
   emailsMiembros: Record<string, string>;
+  /** uid -> WhatsApp (solo dígitos, con código de país), opcional. */
+  whatsappMiembros: Record<string, string>;
   /** Estantes declarados explícitamente (pueden existir sin libros todavía). */
   estantes: string[];
   /** Si es true, el catálogo se puede ver (solo lectura) sin login en /compartido/{id}. */

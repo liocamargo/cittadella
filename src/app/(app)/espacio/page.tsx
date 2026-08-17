@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import {
+  actualizarWhatsappMiembro,
   cancelarInvitacion,
   invitarMiembro,
   quitarMiembro,
@@ -19,6 +20,7 @@ export default function EspacioPage() {
   const { bibliotecaActual } = useBiblioteca();
   const [editingUid, setEditingUid] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [editWhatsapp, setEditWhatsapp] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
 
@@ -35,6 +37,7 @@ export default function EspacioPage() {
       bibliotecaActual.emailsMiembros[uid] ??
       uid,
     email: bibliotecaActual.emailsMiembros[uid] ?? "",
+    whatsapp: bibliotecaActual.whatsappMiembros[uid] ?? "",
     esOwner: uid === bibliotecaActual.creadaPor,
   }));
 
@@ -42,6 +45,7 @@ export default function EspacioPage() {
     if (!bibliotecaActual) return;
     if (!editName.trim()) return;
     await renombrarMiembro(bibliotecaActual.id, uid, editName.trim());
+    await actualizarWhatsappMiembro(bibliotecaActual.id, uid, editWhatsapp);
     setEditingUid(null);
   }
 
@@ -103,9 +107,13 @@ export default function EspacioPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">Espacio compartido</h1>
-      <p className="mb-7 mt-1 text-sm text-muted-foreground">
+      <p className="mb-1 mt-1 text-sm text-muted-foreground">
         Miembros de <strong>{bibliotecaActual.nombre}</strong>. Todos pueden
         agregar, editar y prestar libros de esta biblioteca.
+      </p>
+      <p className="mb-7 text-xs text-muted-foreground">
+        Si cargás tu WhatsApp, quien vea el catálogo público va a poder
+        pedirte libros directo desde ahí.
       </p>
 
       <div className="mb-6 flex flex-col divide-y overflow-hidden rounded-lg border">
@@ -115,7 +123,7 @@ export default function EspacioPage() {
             className="flex items-center justify-between gap-2.5 bg-card p-3.5"
           >
             {editingUid === m.uid ? (
-              <div className="flex flex-1 items-center gap-1.5">
+              <div className="flex flex-1 flex-col gap-1.5">
                 <Input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
@@ -123,22 +131,34 @@ export default function EspacioPage() {
                   className="h-8 text-sm"
                   autoFocus
                 />
-                <Button size="sm" className="h-8" onClick={() => handleGuardarNombre(m.uid)}>
-                  Guardar
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8"
-                  onClick={() => setEditingUid(null)}
-                >
-                  Cancelar
-                </Button>
+                <Input
+                  value={editWhatsapp}
+                  onChange={(e) => setEditWhatsapp(e.target.value)}
+                  placeholder="WhatsApp (con código de país, ej: 5491122334455)"
+                  inputMode="numeric"
+                  className="h-8 text-sm"
+                />
+                <div className="flex gap-1.5">
+                  <Button size="sm" className="h-8" onClick={() => handleGuardarNombre(m.uid)}>
+                    Guardar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8"
+                    onClick={() => setEditingUid(null)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
               </div>
             ) : (
               <div>
                 <div className="text-sm font-semibold">{m.nombre}</div>
                 <div className="text-xs text-muted-foreground">{m.email}</div>
+                {m.whatsapp && (
+                  <div className="text-xs text-muted-foreground">WhatsApp: {m.whatsapp}</div>
+                )}
               </div>
             )}
 
@@ -154,6 +174,7 @@ export default function EspacioPage() {
                   onClick={() => {
                     setEditingUid(m.uid);
                     setEditName(m.nombre);
+                    setEditWhatsapp(m.whatsapp);
                   }}
                 >
                   Editar
