@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PenLine, Plus } from "lucide-react";
@@ -30,6 +30,11 @@ import { IdiomaSelect } from "@/components/catalogo/idioma-select";
 import type { LibroGlobal } from "@/types";
 
 type Paso = "buscar" | "formulario";
+
+/** Deja solo los caracteres válidos de un ISBN y lo corta a 13 (ISBN-13). */
+function sanitizarIsbn(valor: string): string {
+  return valor.replace(/[^0-9Xx]/g, "").slice(0, 13);
+}
 
 const FORM_INICIAL = {
   titulo: "",
@@ -131,6 +136,27 @@ export default function AgregarLibroPage() {
     buscar(codigo);
   }
 
+  function handleIsbnInputChange(valor: string) {
+    setIsbnInput(sanitizarIsbn(valor));
+  }
+
+  // Auto-búsqueda: apenas el ISBN tipeado llega a un largo válido (10 o 13
+  // dígitos) buscamos solo, sin esperar que aprieten "Buscar".
+  const largoAnteriorRef = useRef(0);
+  useEffect(() => {
+    const largo = isbnInput.length;
+    if (
+      paso === "buscar" &&
+      !buscando &&
+      (largo === 10 || largo === 13) &&
+      largo !== largoAnteriorRef.current
+    ) {
+      buscar(isbnInput);
+    }
+    largoAnteriorRef.current = largo;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isbnInput]);
+
   function handleManual() {
     setIsbn("");
     setComunidad(null);
@@ -159,31 +185,33 @@ export default function AgregarLibroPage() {
       toast.error("Todavía no tenés una biblioteca activa.");
       return;
     }
-    if (!isbn) {
-      toast.error("Falta el ISBN.");
-      return;
-    }
     if (!form.titulo.trim()) {
       toast.error("El título es obligatorio.");
       return;
     }
 
-    try {
-      const copiasExistentes = await contarCopiasDelIsbn(bibliotecaActual.id, isbn);
-      if (copiasExistentes > 0) {
-        const seguir = window.confirm(
-          `Ya tenés ${copiasExistentes} copia(s) de este libro en tu biblioteca. ¿Querés agregar una copia más?`
-        );
-        if (!seguir) return;
+    if (isbn) {
+      try {
+        const copiasExistentes = await contarCopiasDelIsbn(bibliotecaActual.id, isbn);
+        if (copiasExistentes > 0) {
+          const seguir = window.confirm(
+            `Ya tenés ${copiasExistentes} copia(s) de este libro en tu biblioteca. ¿Querés agregar una copia más?`
+          );
+          if (!seguir) return;
+        }
+      } catch (err) {
+        console.error("Error chequeando copias existentes:", err);
       }
-    } catch (err) {
-      console.error("Error chequeando copias existentes:", err);
     }
+
+    // El ISBN es opcional: si no lo cargaron, generamos un identificador
+    // propio para poder crear igual el libro comunitario y la copia.
+    const isbnFinal = isbn || `manual-${crypto.randomUUID()}`;
 
     setGuardando(true);
     try {
       await agregarLibroABiblioteca(
-        isbn,
+        isbnFinal,
         bibliotecaActual.id,
         {
           titulo: form.titulo.trim(),
@@ -231,7 +259,7 @@ export default function AgregarLibroPage() {
     <div>
       <h1 className="text-2xl font-bold">Agregar libro</h1>
       <p className="mb-4 mt-1 text-sm text-muted-foreground">
-        Todo libro necesita su ISBN: escaneá el código, buscalo, o cargalo a mano en el formulario.
+        Escaneá el código o buscá el ISBN. Si no lo tenés, podés cargar el libro a mano sin ISBN.
       </p>
 
       <label className="mb-7 flex items-center gap-2 text-sm">
@@ -269,8 +297,10 @@ export default function AgregarLibroPage() {
           <div className="flex gap-2">
             <Input
               placeholder="978-..."
+              inputMode="numeric"
+              maxLength={13}
               value={isbnInput}
-              onChange={(e) => setIsbnInput(e.target.value)}
+              onChange={(e) => handleIsbnInputChange(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
             />
             <Button onClick={handleBuscar} disabled={buscando}>
@@ -320,8 +350,13 @@ export default function AgregarLibroPage() {
             </Button>
           </div>
 
-          <Field label="ISBN">
-            <Input value={isbn} onChange={(e) => setIsbn(e.target.value.trim())} />
+          <Field label="ISBN (opcional)">
+            <Input
+              inputMode="numeric"
+              maxLength={13}
+              value={isbn}
+              onChange={(e) => setIsbn(sanitizarIsbn(e.target.value))}
+            />
           </Field>
           <Field label="Título">
             <Input value={form.titulo} onChange={(e) => setCampo("titulo", e.target.value)} />

@@ -18,7 +18,27 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
 
   useEffect(() => {
     let cancelado = false;
+    let detenido = false;
     detectedRef.current = false;
+
+    // html5-qrcode's stop() puede tirar una excepción SINCRÓNICA (no un
+    // reject de promesa) si se llama cuando el scanner ya no está corriendo.
+    // Nos podía pasar dos veces: una vez al detectar un código, y otra vez
+    // en el cleanup del efecto al desmontar el componente justo después,
+    // lo cual rompía la página entera en producción. Este helper evita
+    // llamar stop() más de una vez y blinda contra el throw sincrónico.
+    function detenerScanner(scanner: Html5Qrcode): Promise<void> {
+      if (detenido) return Promise.resolve();
+      detenido = true;
+      try {
+        return scanner
+          .stop()
+          .then(() => scanner.clear())
+          .catch(() => {});
+      } catch {
+        return Promise.resolve();
+      }
+    }
 
     async function iniciar() {
       const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import(
@@ -47,11 +67,7 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
             const codigo = decodedText.replace(/[^0-9Xx]/g, "");
             // Frenamos la cámara ANTES de avisar al padre, para no seguir
             // decodificando ni disparar más de un fetch por el mismo código.
-            scanner
-              .stop()
-              .then(() => scanner.clear())
-              .catch(() => {})
-              .finally(() => onDetected(codigo));
+            detenerScanner(scanner).finally(() => onDetected(codigo));
           },
           () => {
             // decode attempt sin resultado, ignorar (se llama constantemente)
@@ -74,12 +90,7 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
     return () => {
       cancelado = true;
       const scanner = scannerRef.current;
-      if (scanner) {
-        scanner
-          .stop()
-          .then(() => scanner.clear())
-          .catch(() => {});
-      }
+      if (scanner) detenerScanner(scanner);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
