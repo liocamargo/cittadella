@@ -61,7 +61,15 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
       setBibliotecas(lista);
       setLoading(false);
 
-      if (lista.length === 0 && !autoCreateAttempted.current) {
+      if (lista.length > 0) {
+        // Vuelve a armar la guarda: si más adelante te quedás sin
+        // bibliotecas (p.ej. la borraste a mano en Firestore), se
+        // puede volver a crear una por defecto sin recargar la página.
+        autoCreateAttempted.current = false;
+        return;
+      }
+
+      if (!autoCreateAttempted.current) {
         autoCreateAttempted.current = true;
         const nombre = user.displayName
           ? `Biblioteca de ${user.displayName.split(" ")[0]}`
