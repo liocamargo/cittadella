@@ -145,10 +145,9 @@ export function SidebarNav() {
         <div className="flex items-center justify-between gap-2">
           {!collapsed && (
             <div className="overflow-hidden">
-              <div className="whitespace-nowrap text-[15px] font-bold">
-                Cittadella
-              </div>
-              <div className="mt-0.5 whitespace-nowrap text-xs text-muted-foreground">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="Cittadella" className="h-6 w-auto" />
+              <div className="mt-1 whitespace-nowrap text-xs text-muted-foreground">
                 Espacio compartido
               </div>
             </div>
