@@ -85,7 +85,19 @@ export default function AgregarLeidoPage() {
         try {
           const encontrado = await buscarPorIsbn(codigo);
           if (encontrado) {
-            setForm({ ...FORM_INICIAL, ...encontrado });
+            setForm({
+              ...FORM_INICIAL,
+              titulo: encontrado.titulo ?? "",
+              subtitulo: encontrado.subtitulo ?? "",
+              autor: encontrado.autor ?? "",
+              editorial: encontrado.editorial ?? "",
+              anio: encontrado.anio ?? "",
+              paginas: encontrado.paginas ?? "",
+              idioma: encontrado.idioma ?? "",
+              genero: encontrado.genero ?? "",
+              sinopsis: encontrado.sinopsis ?? "",
+              portadaUrl: encontrado.portadaUrl ?? "",
+            });
           } else {
             toast.error(
               "No encontramos ese ISBN (Google Books ni Open Library). Completá los datos a mano."
@@ -148,7 +160,7 @@ export default function AgregarLeidoPage() {
 
   async function handleGuardar() {
     if (!user) return;
-    if (!form.titulo.trim()) {
+    if (!(form.titulo ?? "").trim()) {
       toast.error("El título es obligatorio.");
       return;
     }
@@ -160,16 +172,16 @@ export default function AgregarLeidoPage() {
     setGuardando(true);
     try {
       await agregarLibroLeido(isbnFinal, user.uid, {
-        titulo: form.titulo.trim(),
-        subtitulo: form.subtitulo.trim() || undefined,
-        autor: form.autor.trim(),
-        editorial: form.editorial.trim() || undefined,
-        anio: form.anio.trim() || undefined,
-        paginas: form.paginas.trim() || undefined,
-        idioma: form.idioma.trim() || undefined,
-        genero: form.genero.trim() || undefined,
-        sinopsis: form.sinopsis.trim() || undefined,
-        portadaUrl: form.portadaUrl.trim() || undefined,
+        titulo: (form.titulo ?? "").trim(),
+        subtitulo: (form.subtitulo ?? "").trim() || undefined,
+        autor: (form.autor ?? "").trim(),
+        editorial: (form.editorial ?? "").trim() || undefined,
+        anio: (form.anio ?? "").trim() || undefined,
+        paginas: (form.paginas ?? "").trim() || undefined,
+        idioma: (form.idioma ?? "").trim() || undefined,
+        genero: (form.genero ?? "").trim() || undefined,
+        sinopsis: (form.sinopsis ?? "").trim() || undefined,
+        portadaUrl: (form.portadaUrl ?? "").trim() || undefined,
       });
 
       if (comentario.trim()) {
