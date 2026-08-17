@@ -8,8 +8,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
-import { agregarLibroABiblioteca, listenInventario } from "@/lib/firestore/libros";
-import type { LibroEnBiblioteca } from "@/types";
+import {
+  agregarLibroABiblioteca,
+  getLibroGlobal,
+  listenInventario,
+} from "@/lib/firestore/libros";
+import type { LibroEnBiblioteca, LibroGlobal } from "@/types";
 
 interface FilaImportada {
   titulo: string;
@@ -97,6 +101,7 @@ export default function ImportarPage() {
   const { bibliotecaActual } = useBiblioteca();
   const [copias, setCopias] = useState<LibroEnBiblioteca[]>([]);
   const [preview, setPreview] = useState<FilaImportada[] | null>(null);
+  const [datosComunidad, setDatosComunidad] = useState<Record<string, LibroGlobal>>({});
   const [importando, setImportando] = useState(false);
   const [progreso, setProgreso] = useState(0);
   const [arrastrando, setArrastrando] = useState(false);
@@ -109,11 +114,7 @@ export default function ImportarPage() {
   const isbns = copias.map((c) => c.isbn);
   const globales = useLibrosGlobales(isbns);
 
-  const titulosExistentes = new Set(
-    copias
-      .map((c) => globales[c.isbn]?.titulo?.trim().toLowerCase())
-      .filter((t): t is string => Boolean(t))
-  );
+  const isbnsExistentes = new Set(copias.map((c) => c.isbn));
 
   function handleExportar() {
     const filas = copias.map((c) => {
@@ -181,9 +182,23 @@ export default function ImportarPage() {
           );
         }
         setPreview(filas);
+        setDatosComunidad({});
+        cargarDatosComunidad(filas);
       },
       error: () => toast.error("No pudimos leer ese archivo."),
     });
+  }
+
+  async function cargarDatosComunidad(filas: FilaImportada[]) {
+    const isbnsUnicos = Array.from(new Set(filas.map((f) => f.isbn)));
+    const encontrados: Record<string, LibroGlobal> = {};
+    await Promise.all(
+      isbnsUnicos.map(async (isbn) => {
+        const libro = await getLibroGlobal(isbn);
+        if (libro) encontrados[isbn] = libro;
+      })
+    );
+    setDatosComunidad(encontrados);
   }
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -206,7 +221,7 @@ export default function ImportarPage() {
     let ok = 0;
     let omitidos = 0;
     for (const fila of preview) {
-      if (titulosExistentes.has(fila.titulo.trim().toLowerCase())) {
+      if (isbnsExistentes.has(fila.isbn)) {
         omitidos += 1;
         setProgreso((p) => p + 1);
         continue;
@@ -301,19 +316,28 @@ export default function ImportarPage() {
             </div>
             <div className="mb-3 max-h-64 overflow-y-auto rounded-lg border">
               {preview.slice(0, 30).map((f, i) => {
-                const duplicado = titulosExistentes.has(f.titulo.trim().toLowerCase());
+                const enComunidad = datosComunidad[f.isbn];
+                const yaEnBiblioteca = isbnsExistentes.has(f.isbn);
+                const titulo = enComunidad?.titulo || f.titulo;
+                const autor = enComunidad?.autor || f.autor;
                 return (
                   <div
                     key={i}
                     className="flex items-center justify-between gap-2 border-b p-2.5 text-sm last:border-b-0"
                   >
-                    <span className={cn(duplicado && "text-muted-foreground")}>
-                      {f.titulo} — {f.autor}
+                    <span className={cn(yaEnBiblioteca && "text-muted-foreground")}>
+                      {titulo} — {autor}
                     </span>
-                    {duplicado && (
+                    {yaEnBiblioteca ? (
                       <span className="shrink-0 text-[11px] text-muted-foreground">
                         ya en tu biblioteca
                       </span>
+                    ) : (
+                      enComunidad && (
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          ya en la comunidad
+                        </span>
+                      )
                     )}
                   </div>
                 );
