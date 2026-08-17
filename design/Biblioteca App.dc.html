@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: oklch(98% 0.004 90); }
+  ::placeholder { color: oklch(60% 0.006 90); }
+</style>
+</helmet>
+
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh; width:100%; display:flex; align-items:center; justify-content:center; background:oklch(98% 0.004 90); font-family:'Helvetica Neue',Arial,sans-serif;">
+  <div style="width:380px; background:oklch(100% 0 0); border:1px solid oklch(89% 0.004 90); border-radius:12px; padding:40px 36px; display:flex; flex-direction:column; gap:24px;">
+    <div>
+      <div style="width:36px; height:36px; background:oklch(22% 0.005 90); border-radius:8px; margin-bottom:16px;"></div>
+      <div style="font-size:22px; font-weight:600; color:oklch(20% 0.006 90);">Bibliotecar</div>
+      <div style="font-size:14px; color:oklch(50% 0.006 90); margin-top:4px;">Catálogo compartido de tu biblioteca</div>
+    </div>
+
+    <sc-if value="{{ loginStep === 'start' }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <button onClick="{{ googleLogin }}" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:oklch(100% 0 0); font-size:14px; font-weight:600; color:oklch(20% 0.006 90); cursor:pointer;" style-hover="{{ {borderColor: 'oklch(70% 0.006 90)'} }}">
+          <div style="width:16px; height:16px; border-radius:50%; background:conic-gradient(oklch(60% 0.15 30) 0 25%, oklch(60% 0.15 145) 25% 50%, oklch(60% 0.15 255) 50% 75%, oklch(75% 0.14 90) 75% 100%);"></div>
+          Continuar con Google
+        </button>
+        <div style="display:flex; align-items:center; gap:12px; color:oklch(60% 0.006 90); font-size:12px;">
+          <div style="flex:1; height:1px; background:oklch(89% 0.004 90);"></div>
+          o con tu correo
+          <div style="flex:1; height:1px; background:oklch(89% 0.004 90);"></div>
+        </div>
+        <input type="email" placeholder="tu@correo.com" value="{{ loginEmail }}" onChange="{{ setLoginEmail }}" style="padding:12px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+        <button onClick="{{ sendOtp }}" style="padding:12px; border-radius:8px; border:none; background:oklch(22% 0.005 90); color:white; font-size:14px; font-weight:600; cursor:pointer;">Enviar código</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ loginStep === 'otp' }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="font-size:13px; color:oklch(50% 0.006 90);">Enviamos un código de 6 dígitos a <strong style="color:oklch(20% 0.006 90);">{{ loginEmail }}</strong></div>
+        <input type="text" maxlength="6" placeholder="000000" value="{{ otpCode }}" onChange="{{ setOtpCode }}" style="padding:12px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:20px; letter-spacing:8px; text-align:center; font-family:inherit;" />
+        <button onClick="{{ verifyOtp }}" style="padding:12px; border-radius:8px; border:none; background:oklch(22% 0.005 90); color:white; font-size:14px; font-weight:600; cursor:pointer;">Ingresar</button>
+        <button onClick="{{ backToStart }}" style="padding:8px; border-radius:8px; border:none; background:transparent; color:oklch(50% 0.006 90); font-size:13px; cursor:pointer;">Volver</button>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ !isLogin }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex; min-height:100vh; width:100%; background:oklch(98% 0.004 90); font-family:'Helvetica Neue',Arial,sans-serif; color:oklch(20% 0.006 90);">
+
+  <aside style="{{ sidebarStyle }}">
+    <div style="{{ sidebarHeaderStyle }}">
+      <sc-if value="{{ !sidebarCollapsed }}" hint-placeholder-val="{{ true }}">
+        <div style="overflow:hidden;">
+          <div style="font-size:15px; font-weight:700; white-space:nowrap;">Biblioteca Casa</div>
+          <div style="font-size:12px; color:oklch(50% 0.006 90); margin-top:2px; white-space:nowrap;">Espacio compartido</div>
+        </div>
+      </sc-if>
+      <button onClick="{{ toggleSidebar }}" style="flex-shrink:0; width:28px; height:28px; border-radius:6px; border:1px solid oklch(89% 0.004 90); background:white; cursor:pointer; display:flex; align-items:center; justify-content:center; color:oklch(45% 0.006 90);">
+        <sc-if value="{{ sidebarCollapsed }}" hint-placeholder-val="{{ false }}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+        </sc-if>
+        <sc-if value="{{ !sidebarCollapsed }}" hint-placeholder-val="{{ true }}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+        </sc-if>
+      </button>
+    </div>
+    <nav style="display:flex; flex-direction:column; gap:2px;">
+      <div onClick="{{ catalogNav.onClick }}" style="{{ catalogNav.style }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m16 6 4 14"></path><path d="M12 6v14"></path><path d="M8 8v12"></path><path d="M4 4v16"></path></svg>
+        <sc-if value="{{ !sidebarCollapsed }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;">Catálogo</span></sc-if>
+      </div>
+      <div onClick="{{ loansNav.onClick }}" style="{{ loansNav.style }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>
+        <sc-if value="{{ !sidebarCollapsed }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;">Préstamos</span></sc-if>
+      </div>
+      <div onClick="{{ spaceNav.onClick }}" style="{{ spaceNav.style }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <sc-if value="{{ !sidebarCollapsed }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;">Espacio compartido</span></sc-if>
+      </div>
+      <div onClick="{{ importNav.onClick }}" style="{{ importNav.style }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m3 16 4 4 4-4"></path><path d="M7 20V4"></path><path d="m21 8-4-4-4 4"></path><path d="M17 4v16"></path></svg>
+        <sc-if value="{{ !sidebarCollapsed }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;">Importar / Exportar</span></sc-if>
+      </div>
+    </nav>
+    <div style="margin-top:auto; padding-top:16px; border-top:1px solid oklch(89% 0.004 90); position:relative;">
+      <sc-if value="{{ accountMenuOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; bottom:100%; left:0; width:260px; margin-bottom:8px; background:white; border:1px solid oklch(89% 0.004 90); border-radius:10px; box-shadow:0 4px 16px oklch(0% 0 0 / 0.1); padding:12px; display:flex; flex-direction:column; gap:10px; z-index:50;">
+          <div style="font-size:12px; color:oklch(50% 0.006 90); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 6px;">{{ loginEmail }}</div>
+          <div style="display:flex; flex-direction:column; gap:1px;">
+            <sc-for list="{{ libraryOptions }}" as="lib" hint-placeholder-count="2">
+              <div onClick="{{ lib.onClick }}" style="{{ lib.style }}">
+                <span>{{ lib.name }}</span>
+                <sc-if value="{{ lib.active }}" hint-placeholder-val="{{ false }}">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex; gap:6px; border-top:1px solid oklch(89% 0.004 90); padding-top:10px;">
+            <input type="text" placeholder="Nombre de la nueva biblioteca" value="{{ newLibraryName }}" onChange="{{ setNewLibraryName }}" style="flex:1; padding:8px 10px; border-radius:6px; border:1px solid oklch(89% 0.004 90); font-size:12px; font-family:inherit;" />
+            <button onClick="{{ createLibrary }}" style="padding:8px 12px; border-radius:6px; border:none; background:oklch(22% 0.005 90); color:white; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;">Crear</button>
+          </div>
+          <button onClick="{{ logout }}" style="text-align:left; padding:8px 6px; border-top:1px solid oklch(89% 0.004 90); border-left:none; border-right:none; border-bottom:none; background:transparent; font-size:13px; color:oklch(45% 0.14 35); cursor:pointer;">Cerrar sesión</button>
+        </div>
+      </sc-if>
+      <button onClick="{{ toggleAccountMenu }}" style="{{ accountButtonStyle }}">
+        <div style="width:28px; height:28px; border-radius:50%; background:oklch(22% 0.005 90); color:white; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0;">{{ userInitial }}</div>
+        <sc-if value="{{ !sidebarCollapsed }}" hint-placeholder-val="{{ true }}">
+          <div style="overflow:hidden; text-align:left;">
+            <div style="font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ currentLibraryName }}</div>
+            <div style="font-size:11px; color:oklch(55% 0.006 90); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ loginEmail }}</div>
+          </div>
+        </sc-if>
+      </button>
+    </div>
+  </aside>
+
+  <main style="flex:1; padding:40px 48px; overflow-y:auto; height:100vh;">
+
+    <sc-if value="{{ screen === 'catalog' }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:24px;">
+          <div>
+            <div style="font-size:24px; font-weight:700;">Catálogo</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <input type="text" placeholder="Buscar por título, autor o género" value="{{ search }}" onChange="{{ setSearch }}" style="width:220px; min-width:0; flex:1 1 180px; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+            <div style="position:relative;">
+              <button onClick="{{ toggleShareMenu }}" style="display:flex; align-items:center; gap:6px; padding:10px 16px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:white; font-size:14px; font-weight:600; color:oklch(30% 0.006 90); cursor:pointer; white-space:nowrap;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.59 13.51 15.42 17.49"></path><path d="M15.41 6.51 8.59 10.49"></path></svg>
+                Compartir
+              </button>
+              <sc-if value="{{ shareMenuOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute; top:calc(100% + 6px); right:0; width:300px; background:white; border:1px solid oklch(89% 0.004 90); border-radius:10px; box-shadow:0 4px 16px oklch(0% 0 0 / 0.1); padding:16px; display:flex; flex-direction:column; gap:10px; z-index:30;">
+                  <div style="font-size:13px; font-weight:600;">Link público de solo lectura</div>
+                  <div style="font-size:12px; color:oklch(50% 0.006 90); line-height:1.4;">Cualquiera con este link puede ver el catálogo de {{ currentLibraryName }}, sin poder editarlo.</div>
+                  <div style="display:flex; gap:6px;">
+                    <input type="text" readonly value="{{ publicShareLink }}" style="flex:1; padding:8px 10px; border-radius:6px; border:1px solid oklch(89% 0.004 90); font-size:12px; font-family:monospace; color:oklch(40% 0.006 90);" />
+                    <button onClick="{{ copyShareLink }}" style="padding:8px 12px; border-radius:6px; border:none; background:oklch(22% 0.005 90); color:white; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;">{{ copyLinkLabel }}</button>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+            <button onClick="{{ goToScan }}" style="display:flex; align-items:center; gap:6px; padding:10px 18px; border-radius:8px; border:none; background:oklch(22% 0.005 90); color:white; font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+              Agregar libro
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:24px; flex-wrap:wrap;">
+          <sc-for list="{{ filterChips }}" as="chip" hint-placeholder-count="4">
+            <button onClick="{{ chip.onClick }}" style="{{ chip.style }}">{{ chip.label }}</button>
+          </sc-for>
+          <div style="width:1px; height:20px; background:oklch(89% 0.004 90); margin:0 4px;"></div>
+          <span style="font-size:12px; color:oklch(50% 0.006 90);">Estante:</span>
+          <sc-for list="{{ shelfChips }}" as="chip" hint-placeholder-count="4">
+            <button onClick="{{ chip.onClick }}" style="{{ chip.style }}">{{ chip.label }}</button>
+          </sc-for>
+
+          <sc-if value="{{ shelfFilter !== 'all' }}" hint-placeholder-val="{{ false }}">
+            <div style="position:relative;">
+              <button onClick="{{ toggleShelfEdit }}" style="padding:7px 12px; border-radius:20px; border:1px solid oklch(89% 0.004 90); background:white; font-size:12px; color:oklch(45% 0.006 90); cursor:pointer;">Editar</button>
+              <sc-if value="{{ shelfEditOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute; top:calc(100% + 6px); left:0; width:220px; background:white; border:1px solid oklch(89% 0.004 90); border-radius:10px; box-shadow:0 4px 16px oklch(0% 0 0 / 0.1); padding:12px; display:flex; flex-direction:column; gap:8px; z-index:30;">
+                  <label style="font-size:11px; color:oklch(50% 0.006 90);">Renombrar</label>
+                  <div style="display:flex; gap:6px;">
+                    <input type="text" value="{{ renameShelfValue }}" onChange="{{ setRenameShelfValue }}" style="flex:1; padding:7px 10px; border-radius:6px; border:1px solid oklch(89% 0.004 90); font-size:12px; font-family:inherit;" />
+                    <button onClick="{{ confirmRenameShelf }}" style="padding:7px 10px; border-radius:6px; border:none; background:oklch(22% 0.005 90); color:white; font-size:12px; cursor:pointer;">OK</button>
+                  </div>
+                  <button onClick="{{ deleteCurrentShelf }}" style="text-align:left; padding:7px 6px; border-top:1px solid oklch(89% 0.004 90); background:transparent; border-left:none; border-right:none; border-bottom:none; font-size:12px; color:oklch(45% 0.14 35); cursor:pointer;">Eliminar estante</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <div style="position:relative;">
+            <button onClick="{{ toggleShelfCreate }}" style="padding:7px 12px; border-radius:20px; border:1px dashed oklch(80% 0.006 90); background:white; font-size:12px; color:oklch(45% 0.006 90); cursor:pointer;">+ Crear estante</button>
+            <sc-if value="{{ shelfCreateOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute; top:calc(100% + 6px); left:0; width:220px; background:white; border:1px solid oklch(89% 0.004 90); border-radius:10px; box-shadow:0 4px 16px oklch(0% 0 0 / 0.1); padding:12px; display:flex; gap:6px; z-index:30;">
+                <input type="text" placeholder="Nombre del estante" value="{{ newShelfName }}" onChange="{{ setNewShelfName }}" onKeyDown="{{ addShelfOnEnter }}" style="flex:1; padding:7px 10px; border-radius:6px; border:1px solid oklch(89% 0.004 90); font-size:12px; font-family:inherit;" />
+                <button onClick="{{ addShelf }}" style="padding:7px 10px; border-radius:6px; border:none; background:oklch(22% 0.005 90); color:white; font-size:12px; cursor:pointer;">Crear</button>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <sc-if value="{{ filteredBooks.length === 0 }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:60px 0; text-align:center; color:oklch(55% 0.006 90); font-size:14px;">Sin resultados para esta búsqueda.</div>
+        </sc-if>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:20px; margin-bottom:24px;">
+          <sc-for list="{{ filteredBooks }}" as="book" hint-placeholder-count="8">
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div onClick="{{ book.onClick }}" style="cursor:pointer; position:relative;">
+                <div style="{{ book.coverStyle }}">
+                  <div style="font-size:26px; font-weight:700; color:oklch(70% 0.006 90);">{{ book.initial }}</div>
+                  <div style="font-size:9px; letter-spacing:1px; color:oklch(70% 0.006 90); font-family:monospace; margin-top:6px;">PORTADA</div>
+                </div>
+                <button onClick="{{ book.toggleFavClick }}" style="{{ book.favButtonStyle }}">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path><path d="M6 10h2"></path><path d="M6 14h2"></path><path d="M16 10h2"></path><path d="M16 14h2"></path></svg>
+                </button>
+              </div>
+              <div onClick="{{ book.onClick }}" style="cursor:pointer; font-size:13px; font-weight:600; line-height:1.3;">{{ book.title }}</div>
+              <div style="font-size:12px; color:oklch(50% 0.006 90);">{{ book.author }}</div>
+              <div style="font-size:11px; color:oklch(60% 0.006 90); font-family:monospace;">{{ book.shelf }}</div>
+              <div style="{{ book.badgeStyle }}">{{ book.statusLabel }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ totalPages > 1 }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; gap:6px;">
+            <sc-for list="{{ pageNumbers }}" as="p" hint-placeholder-count="2">
+              <button onClick="{{ p.onClick }}" style="{{ p.style }}">{{ p.n }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ screen === 'scan' }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:none;">
+        <div style="font-size:24px; font-weight:700; margin-bottom:4px;">Agregar libro</div>
+        <div style="font-size:14px; color:oklch(50% 0.006 90); margin-bottom:28px;">Escaneá el código de barras o cargalo manualmente</div>
+
+        <sc-if value="{{ isScanStepScan }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="height:min(45vh, 380px); border-radius:12px; background:repeating-linear-gradient(135deg, oklch(93% 0.004 90), oklch(93% 0.004 90) 10px, oklch(96% 0.004 90) 10px, oklch(96% 0.004 90) 20px); border:1px solid oklch(89% 0.004 90); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px;">
+              <div style="width:120px; height:2px; background:oklch(30% 0.005 90);"></div>
+              <div style="font-size:12px; font-family:monospace; color:oklch(55% 0.006 90);">cámara / lector de código de barras</div>
+            </div>
+            <button onClick="{{ simulateScan }}" style="padding:12px; border-radius:8px; border:none; background:oklch(22% 0.005 90); color:white; font-size:14px; font-weight:600; cursor:pointer;">{{ scanButtonLabel }}</button>
+            <div style="display:flex; align-items:center; gap:12px; color:oklch(60% 0.006 90); font-size:12px;">
+              <div style="flex:1; height:1px; background:oklch(89% 0.004 90);"></div>
+              o buscá por ISBN
+              <div style="flex:1; height:1px; background:oklch(89% 0.004 90);"></div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <input type="text" placeholder="978-..." value="{{ isbnInput }}" onChange="{{ setIsbnInput }}" style="flex:1; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+              <button onClick="{{ lookupIsbn }}" style="padding:10px 18px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:white; font-size:14px; font-weight:600; cursor:pointer;">Buscar</button>
+            </div>
+            <button onClick="{{ startManualEntry }}" style="display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 16px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:white; font-size:13px; font-weight:600; color:oklch(30% 0.006 90); cursor:pointer;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg>
+              Cargar manualmente sin código
+            </button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isScanStepReview }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div style="font-size:13px; color:oklch(50% 0.006 90);">{{ reviewHintLabel }}</div>
+            <sc-if value="{{ communityInfo !== null }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:12px 14px; border-radius:8px; background:oklch(96% 0.004 90); border:1px solid oklch(89% 0.004 90); font-size:12px; color:oklch(40% 0.006 90); display:flex; gap:6px; align-items:center;">
+                <span style="font-weight:600;">Ya está en la comunidad:</span>
+                <span>{{ communityInfo.owners }} biblioteca(s) lo tienen · ★ {{ communityInfo.rating }} promedio</span>
+              </div>
+            </sc-if>
+            <div style="font-size:12px; font-weight:700; color:oklch(35% 0.006 90); text-transform:uppercase; letter-spacing:0.4px; margin-top:4px;">Datos del libro (comunidad)</div>
+            <div>
+              <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Título</label>
+              <input type="text" value="{{ scanForm.title }}" onChange="{{ setScanField_title }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+            </div>
+            <div>
+              <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Subtítulo (opcional)</label>
+              <input type="text" value="{{ scanForm.subtitle }}" onChange="{{ setScanField_subtitle }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+            </div>
+            <div>
+              <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Autor(es)</label>
+              <input type="text" placeholder="separados por coma" value="{{ scanForm.author }}" onChange="{{ setScanField_author }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+            </div>
+            <div style="display:flex; gap:12px;">
+              <div style="flex:2;">
+                <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Editorial</label>
+                <input type="text" value="{{ scanForm.publisher }}" onChange="{{ setScanField_publisher }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+              </div>
+              <div style="width:90px;">
+                <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Año</label>
+                <input type="text" value="{{ scanForm.year }}" onChange="{{ setScanField_year }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+              </div>
+              <div style="width:90px;">
+                <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Páginas</label>
+                <input type="text" value="{{ scanForm.pages }}" onChange="{{ setScanField_pages }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+              </div>
+            </div>
+            <div style="display:flex; gap:12px;">
+              <div style="flex:1;">
+                <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Género (opcional)</label>
+                <input type="text" value="{{ scanForm.genre }}" onChange="{{ setScanField_genre }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+              </div>
+              <div style="width:100px;">
+                <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Idioma</label>
+                <input type="text" placeholder="es" value="{{ scanForm.language }}" onChange="{{ setScanField_language }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+              </div>
+            </div>
+            <div>
+              <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Sinopsis (opcional)</label>
+              <textarea value="{{ scanForm.synopsis }}" onChange="{{ setScanField_synopsis }}" rows="3" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit; resize:vertical;"></textarea>
+            </div>
+
+            <div style="font-size:12px; font-weight:700; color:oklch(35% 0.006 90); text-transform:uppercase; letter-spacing:0.4px; margin-top:12px; border-top:1px solid oklch(89% 0.004 90); padding-top:16px;">Tu copia física</div>
+            <div style="display:flex; gap:12px;">
+              <div style="flex:1;">
+                <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Estante</label>
+                <input type="text" placeholder="Estante A" value="{{ scanForm.shelf }}" onChange="{{ setScanField_shelf }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+              </div>
+              <div style="flex:1;">
+                <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Tipo de tapa</label>
+                <input type="text" placeholder="Tapa blanda" value="{{ scanForm.coverType }}" onChange="{{ setScanField_coverType }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+              </div>
+            </div>
+            <div>
+              <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Notas privadas (opcional)</label>
+              <input type="text" placeholder="ej: firmado por el autor" value="{{ scanForm.notes }}" onChange="{{ setScanField_notes }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+            </div>
+            <div style="display:flex; gap:10px; margin-top:8px;">
+              <button onClick="{{ cancelScan }}" style="padding:12px 18px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:white; font-size:14px; cursor:pointer;">Cancelar</button>
+              <button onClick="{{ saveScannedBook }}" style="flex:1; padding:12px; border-radius:8px; border:none; background:oklch(22% 0.005 90); color:white; font-size:14px; font-weight:600; cursor:pointer;">Agregar</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ screen === 'loans' }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="font-size:24px; font-weight:700; margin-bottom:4px;">Préstamos</div>
+        <div style="font-size:14px; color:oklch(50% 0.006 90); margin-bottom:24px;">{{ loanedBooks.length }} libro(s) actualmente prestado(s)</div>
+        <sc-if value="{{ loanedBooks.length === 0 }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:60px 0; text-align:center; color:oklch(55% 0.006 90); font-size:14px;">No hay libros prestados ahora mismo.</div>
+        </sc-if>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:20px;">
+          <sc-for list="{{ loanedBooks }}" as="book" hint-placeholder-count="2">
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div onClick="{{ book.onClick }}" style="cursor:pointer;">
+                <div style="{{ book.coverStyle }}">
+                  <div style="font-size:26px; font-weight:700; color:oklch(70% 0.006 90);">{{ book.initial }}</div>
+                  <div style="font-size:9px; letter-spacing:1px; color:oklch(70% 0.006 90); font-family:monospace; margin-top:6px;">PORTADA</div>
+                </div>
+              </div>
+              <div onClick="{{ book.onClick }}" style="cursor:pointer; font-size:13px; font-weight:600; line-height:1.3;">{{ book.title }}</div>
+              <div style="font-size:12px; color:oklch(50% 0.006 90);">{{ book.author }}</div>
+              <div style="{{ book.badgeStyle }}">Prestado a {{ book.loanedTo }}</div>
+              <button onClick="{{ book.returnClick }}" style="padding:8px 12px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:white; font-size:12px; font-weight:600; cursor:pointer;">Marcar como devuelto</button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ screen === 'space' }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:560px;">
+        <div style="font-size:24px; font-weight:700; margin-bottom:4px;">Espacio compartido</div>
+        <div style="font-size:14px; color:oklch(50% 0.006 90); margin-bottom:28px;">Miembros de <strong>{{ currentLibraryName }}</strong>. Todos pueden agregar, editar y prestar libros de esta biblioteca.</div>
+
+        <div style="display:flex; flex-direction:column; gap:1px; background:oklch(89% 0.004 90); border:1px solid oklch(89% 0.004 90); border-radius:10px; overflow:hidden; margin-bottom:24px;">
+          <sc-for list="{{ members }}" as="member" hint-placeholder-count="2">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:white; gap:10px;">
+              <sc-if value="{{ member.isEditing }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; align-items:center; gap:6px; flex:1;">
+                  <input type="text" placeholder="Nombre" value="{{ editMemberName }}" onChange="{{ setEditMemberName }}" style="flex:1; padding:7px 10px; border-radius:6px; border:1px solid oklch(89% 0.004 90); font-size:13px; font-family:inherit;" />
+                  <button onClick="{{ saveEditMember }}" style="padding:7px 12px; border-radius:6px; border:none; background:oklch(22% 0.005 90); color:white; font-size:12px; font-weight:600; cursor:pointer;">Guardar</button>
+                  <button onClick="{{ cancelEditMember }}" style="padding:7px 10px; border-radius:6px; border:1px solid oklch(89% 0.004 90); background:white; font-size:12px; cursor:pointer;">Cancelar</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ !member.isEditing }}" hint-placeholder-val="{{ true }}">
+                <div>
+                  <div style="font-size:14px; font-weight:600;">{{ member.displayName }}</div>
+                  <div style="font-size:12px; color:oklch(55% 0.006 90); margin-top:1px;">{{ member.email }}</div>
+                </div>
+              </sc-if>
+              <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                <div style="{{ member.badgeStyle }}">{{ member.statusLabel }}</div>
+                <sc-if value="{{ !member.isEditing }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ member.editClick }}" style="padding:6px 10px; border-radius:6px; border:1px solid oklch(89% 0.004 90); background:white; font-size:12px; color:oklch(45% 0.006 90); cursor:pointer;">Editar</button>
+                </sc-if>
+                <sc-if value="{{ member.canRemove }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ member.removeClick }}" style="padding:6px 12px; border-radius:6px; border:1px solid oklch(89% 0.004 90); background:white; font-size:12px; color:oklch(45% 0.14 35); cursor:pointer;">Quitar acceso</button>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="font-size:13px; font-weight:600; margin-bottom:8px;">Invitar a un nuevo miembro</div>
+        <div style="display:flex; gap:8px;">
+          <input type="text" placeholder="Nombre (opcional)" value="{{ inviteName }}" onChange="{{ setInviteName }}" style="width:160px; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+          <input type="email" placeholder="correo@ejemplo.com" value="{{ inviteEmail }}" onChange="{{ setInviteEmail }}" style="flex:1; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+          <button onClick="{{ sendInvite }}" style="padding:10px 18px; border-radius:8px; border:none; background:oklch(22% 0.005 90); color:white; font-size:14px; font-weight:600; cursor:pointer;">Invitar</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ screen === 'importExport' }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:560px; display:flex; flex-direction:column; gap:36px;">
+        <div>
+          <div style="font-size:24px; font-weight:700; margin-bottom:4px;">Importar / Exportar</div>
+          <div style="font-size:14px; color:oklch(50% 0.006 90);">Llevate tus datos a Excel o cargalos de golpe desde una planilla.</div>
+        </div>
+
+        <div>
+          <div style="font-size:13px; font-weight:600; margin-bottom:8px;">Exportar biblioteca</div>
+          <div style="font-size:13px; color:oklch(50% 0.006 90); margin-bottom:12px;">Descarga un CSV con {{ books.length }} libro(s): título, autor, estado y a quién está prestado.</div>
+          <button onClick="{{ exportCsv }}" style="padding:10px 18px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:white; font-size:14px; font-weight:600; cursor:pointer;">Descargar CSV</button>
+        </div>
+
+        <div>
+          <div style="font-size:13px; font-weight:600; margin-bottom:8px;">Importar desde Excel/CSV</div>
+          <label style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:32px; border:1px dashed oklch(80% 0.006 90); border-radius:10px; cursor:pointer; text-align:center;">
+            <div style="font-size:13px; color:oklch(50% 0.006 90);">Arrastrá tu archivo .csv acá o hacé clic para elegirlo</div>
+            <div style="font-size:11px; font-family:monospace; color:oklch(65% 0.006 90);">columnas: title, author, publisher, year, genre</div>
+            <input type="file" accept=".csv" onChange="{{ handleFileSelect }}" style="display:none;" />
+          </label>
+          <button onClick="{{ downloadTemplate }}" style="margin-top:10px; padding:9px 16px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:white; font-size:13px; font-weight:600; color:oklch(30% 0.006 90); cursor:pointer;">Descargar plantilla de Excel</button>
+
+          <sc-if value="{{ importPreview !== null }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:16px;">
+              <div style="font-size:13px; color:oklch(50% 0.006 90); margin-bottom:8px;">{{ importPreview.length }} fila(s) detectadas</div>
+              <div style="border:1px solid oklch(89% 0.004 90); border-radius:8px; overflow:hidden; margin-bottom:12px;">
+                <sc-for list="{{ importPreview }}" as="row" hint-placeholder-count="2">
+                  <div style="padding:10px 14px; font-size:13px; border-bottom:1px solid oklch(89% 0.004 90);">{{ row.title }} — {{ row.author }}</div>
+                </sc-for>
+              </div>
+              <button onClick="{{ confirmImport }}" style="padding:10px 18px; border-radius:8px; border:none; background:oklch(22% 0.005 90); color:white; font-size:14px; font-weight:600; cursor:pointer;">Agregar al catálogo</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+  </main>
+
+  <sc-if value="{{ selectedBook !== null }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeBookDetail }}" style="position:fixed; inset:0; background:oklch(20% 0.006 90 / 0.4); display:flex; justify-content:flex-end; z-index:20;">
+      <div onClick="{{ stopPropagation }}" style="width:420px; height:100vh; background:white; padding:32px; overflow-y:auto; display:flex; flex-direction:column; gap:20px;">
+        <button onClick="{{ closeBookDetail }}" style="align-self:flex-end; border:none; background:transparent; font-size:14px; color:oklch(50% 0.006 90); cursor:pointer;">Cerrar ✕</button>
+        <div style="width:120px; height:170px; border-radius:8px; background:repeating-linear-gradient(135deg, oklch(93% 0.004 90), oklch(93% 0.004 90) 8px, oklch(96% 0.004 90) 8px, oklch(96% 0.004 90) 16px); border:1px solid oklch(89% 0.004 90); display:flex; align-items:center; justify-content:center; flex-direction:column;">
+          <div style="font-size:34px; font-weight:700; color:oklch(70% 0.006 90);">{{ selectedBook.initial }}</div>
+        </div>
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+          <div>
+            <div style="font-size:19px; font-weight:700;">{{ selectedBook.title }}</div>
+            <div style="font-size:14px; color:oklch(50% 0.006 90); margin-top:4px;">{{ selectedBook.author }}</div>
+          </div>
+          <button onClick="{{ toggleFavoriteSelected }}" style="{{ selectedBook.favButtonLargeStyle }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path><path d="M6 10h2"></path><path d="M6 14h2"></path><path d="M16 10h2"></path><path d="M16 14h2"></path></svg>
+          </button>
+        </div>
+        <div style="{{ selectedBook.badgeStyle }}">{{ selectedBook.statusLabel }}</div>
+        <sc-if value="{{ selectedBook.subtitle }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:13px; color:oklch(50% 0.006 90); font-style:italic;">{{ selectedBook.subtitle }}</div>
+        </sc-if>
+        <sc-if value="{{ selectedBook.synopsis }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:13px; color:oklch(35% 0.006 90); line-height:1.5;">{{ selectedBook.synopsis }}</div>
+        </sc-if>
+
+        <div style="display:flex; gap:16px; padding:12px 0; border-top:1px solid oklch(89% 0.004 90); border-bottom:1px solid oklch(89% 0.004 90);">
+          <div><div style="font-size:16px; font-weight:700;">★ {{ selectedBook.avgRating }}</div><div style="font-size:11px; color:oklch(55% 0.006 90);">{{ selectedBook.totalReviews }} reseña(s)</div></div>
+          <div><div style="font-size:16px; font-weight:700;">{{ selectedBook.owners }}</div><div style="font-size:11px; color:oklch(55% 0.006 90);">propietario(s)</div></div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:13px; color:oklch(40% 0.006 90);">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:oklch(55% 0.006 90);">Datos del libro</div>
+          <div><strong>Editorial:</strong> {{ selectedBook.publisher }}</div>
+          <div><strong>Año:</strong> {{ selectedBook.year }}</div>
+          <sc-if value="{{ selectedBook.pages }}" hint-placeholder-val="{{ false }}"><div><strong>Páginas:</strong> {{ selectedBook.pages }}</div></sc-if>
+          <div><strong>Idioma:</strong> {{ selectedBook.language }}</div>
+          <div><strong>Género:</strong> {{ selectedBook.genre }}</div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:13px; color:oklch(40% 0.006 90); border-top:1px solid oklch(89% 0.004 90); padding-top:16px;">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:oklch(55% 0.006 90);">Tu copia</div>
+          <div><strong>Estante:</strong> {{ selectedBook.shelf }}</div>
+          <sc-if value="{{ selectedBook.coverType }}" hint-placeholder-val="{{ false }}"><div><strong>Tapa:</strong> {{ selectedBook.coverType }}</div></sc-if>
+          <div><strong>Agregado:</strong> {{ selectedBook.dateAdded }}</div>
+          <sc-if value="{{ selectedBook.notes }}" hint-placeholder-val="{{ false }}"><div><strong>Notas privadas:</strong> {{ selectedBook.notes }}</div></sc-if>
+          <sc-if value="{{ selectedBook.status === 'loaned' && selectedBook.dueDate }}" hint-placeholder-val="{{ false }}"><div><strong>Devolución límite:</strong> {{ selectedBook.dueDate }}</div></sc-if>
+        </div>
+        <div style="border-top:1px solid oklch(89% 0.004 90); padding-top:16px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <div style="font-size:13px; font-weight:600;">Reseñas de la comunidad</div>
+            <button onClick="{{ toggleReviewForm }}" style="border:none; background:transparent; font-size:12px; color:oklch(22% 0.005 90); font-weight:600; cursor:pointer; text-decoration:underline;">{{ reviewToggleLabel }}</button>
+          </div>
+          <sc-if value="{{ reviewFormOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:8px; padding:12px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); margin-bottom:12px;">
+              <div style="display:flex; gap:4px;">
+                <sc-for list="{{ reviewStarOptions }}" as="star" hint-placeholder-count="5">
+                  <button onClick="{{ star.onClick }}" style="{{ star.style }}">★</button>
+                </sc-for>
+              </div>
+              <textarea placeholder="Escribí tu reseña..." value="{{ reviewDraft.comment }}" onChange="{{ setReviewComment }}" rows="3" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid oklch(89% 0.004 90); font-size:13px; font-family:inherit; resize:vertical;"></textarea>
+              <button onClick="{{ submitReview }}" style="align-self:flex-end; padding:8px 16px; border-radius:6px; border:none; background:oklch(22% 0.005 90); color:white; font-size:12px; font-weight:600; cursor:pointer;">Publicar reseña</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ selectedBook.reviews.length === 0 }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:12px; color:oklch(55% 0.006 90);">Todavía no hay reseñas para este libro.</div>
+          </sc-if>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <sc-for list="{{ selectedBook.reviews }}" as="review" hint-placeholder-count="2">
+              <div style="padding:12px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:oklch(98% 0.004 90);">
+                <div style="font-size:12px; font-weight:600;">{{ review.user }} <span style="color:oklch(55% 0.14 80); font-weight:400; margin-left:4px;">{{ review.starsLabel }}</span></div>
+                <div style="font-size:12px; color:oklch(45% 0.006 90); margin-top:4px;">{{ review.comment }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:auto; padding-top:16px;">
+          <sc-if value="{{ selectedBook.status === 'available' }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ selectedBook.loanClick }}" style="flex:1; padding:12px; border-radius:8px; border:none; background:oklch(22% 0.005 90); color:white; font-size:14px; font-weight:600; cursor:pointer;">Prestar</button>
+          </sc-if>
+          <sc-if value="{{ selectedBook.status === 'loaned' }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ selectedBook.returnClick }}" style="flex:1; padding:12px; border-radius:8px; border:none; background:oklch(52% 0.12 150); color:white; font-size:14px; font-weight:600; cursor:pointer;">Devolver</button>
+          </sc-if>
+          <button onClick="{{ selectedBook.toggleReadClick }}" style="{{ selectedBook.readButtonStyle }}">{{ selectedBook.readButtonLabel }}</button>
+          <button onClick="{{ deleteSelectedBook }}" style="padding:12px 16px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:white; font-size:14px; color:oklch(55% 0.14 35); cursor:pointer;">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ loanModalBook !== null }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; inset:0; background:oklch(20% 0.006 90 / 0.4); display:flex; align-items:center; justify-content:center; z-index:30;">
+      <div style="width:360px; background:white; border-radius:12px; padding:28px; display:flex; flex-direction:column; gap:14px;">
+        <div style="font-size:16px; font-weight:700;">Prestar "{{ loanModalBook.title }}"</div>
+        <div>
+          <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">¿A quién se lo prestás?</label>
+          <input type="text" placeholder="Nombre" value="{{ loanName }}" onChange="{{ setLoanName }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:oklch(50% 0.006 90); display:block; margin-bottom:4px;">Fecha de salida</label>
+          <input type="date" value="{{ loanDate }}" onChange="{{ setLoanDate }}" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid oklch(89% 0.004 90); font-size:14px; font-family:inherit;" />
+        </div>
+        <div style="display:flex; gap:10px; margin-top:8px;">
+          <button onClick="{{ confirmLoan }}" style="flex:1; padding:11px; border-radius:8px; border:none; background:oklch(22% 0.005 90); color:white; font-size:14px; font-weight:600; cursor:pointer;">Confirmar préstamo</button>
+          <button onClick="{{ closeLoanModal }}" style="padding:11px 16px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:white; font-size:14px; cursor:pointer;">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const MOCK_BOOKS = [
+  { id: 1, title: '¡Oh envoltura de la muerte!', subtitle: '', author: 'Blake, Nicholas', publisher: 'Emecé (Clarín)', year: '2015', pages: '312', language: 'es', genre: 'Mystery', synopsis: 'Nigel Strangeways investiga un misterioso asesinato en una cabaña rodeada de nieve.', shelf: 'Estante C', coverType: 'Tapa blanda', dateAdded: '2026-01-10', notes: '', owners: 3, avgRating: '3.8', totalReviews: 1, status: 'available', favorite: false },
+  { id: 2, title: '40 Formas de Oración Personal', subtitle: '', author: 'Fernández, Víctor Manuel', publisher: 'San Pablo', year: '—', pages: '94', language: 'es', genre: 'Espiritualidad', synopsis: '', shelf: 'Estante A', coverType: 'Tapa blanda', dateAdded: '2026-02-03', notes: '', owners: 5, avgRating: '4.0', totalReviews: 0, status: 'loaned', loanedTo: 'Juan', loanDate: '2026-07-02', dueDate: '2026-08-20', favorite: false },
+  { id: 3, title: 'A Merced de su Gracia', subtitle: '', author: 'Louf, André', publisher: '—', year: '—', pages: '', language: 'es', genre: 'Favorites', synopsis: '', shelf: 'Estante A', coverType: 'Tapa blanda', dateAdded: '2026-01-22', notes: 'Regalo de mi abuela', owners: 2, avgRating: '4.4', totalReviews: 2, status: 'available', favorite: true },
+  { id: 4, title: 'Apasionados por el amor, la justicia y la paz', subtitle: 'Los mártires riojanos', author: 'Peña, Gabriela', publisher: 'Editorial Claretiana', year: '2019', pages: '222', language: 'es', genre: 'Martyrs', synopsis: '', shelf: 'Estante A', coverType: 'Tapa blanda', dateAdded: '2026-03-01', notes: '', owners: 1, avgRating: '0', totalReviews: 0, status: 'available', favorite: false },
+  { id: 5, title: 'Billy Bathgate', subtitle: '', author: 'Doctorow, E.L.', publisher: '—', year: '—', pages: '', language: 'es', genre: 'Novela', synopsis: 'Billy Bathgate se insinúa en el círculo del gangster Dutch Schultz.', shelf: 'Estante B', coverType: 'Tapa blanda', dateAdded: '2026-04-11', notes: '', owners: 4, avgRating: '4.1', totalReviews: 0, status: 'loaned', loanedTo: 'María', loanDate: '2026-06-18', dueDate: '', favorite: false },
+  { id: 6, title: 'Alvaro Siza', subtitle: '', author: 'Author, Unknown', publisher: '—', year: '—', pages: '', language: 'es', genre: 'Biblioteca', synopsis: '', shelf: 'Estante D', coverType: 'Tapa blanda', dateAdded: '2026-02-18', notes: '', owners: 1, avgRating: '4.0', totalReviews: 0, status: 'available', favorite: false },
+  { id: 7, title: 'Aventuras de Huck Finn', subtitle: '', author: 'Mark, Twain', publisher: '—', year: '—', pages: '', language: 'es', genre: 'Ficción', synopsis: '', shelf: 'Estante B', coverType: 'Tapa blanda', dateAdded: '2026-01-05', notes: '', owners: 6, avgRating: '4.5', totalReviews: 1, status: 'available', favorite: true },
+  { id: 8, title: '¿Tienes miedo a la oscuridad?', subtitle: '', author: 'Sidney, Sheldon', publisher: '—', year: '—', pages: '', language: 'es', genre: 'Suspenso', synopsis: '', shelf: 'Estante C', coverType: 'Tapa blanda', dateAdded: '2026-03-15', notes: '', owners: 2, avgRating: '3.8', totalReviews: 0, status: 'available', favorite: false },
+];
+
+const MOCK_REVIEWS = {
+  1: [{ user: 'Carla M.', stars: 4, comment: 'Buena intriga, se lee rápido.' }],
+  3: [{ user: 'Diego R.', stars: 5, comment: 'Un clásico espiritual, lo recomiendo.' }, { user: 'Sole P.', stars: 4, comment: 'Muy inspirador.' }],
+  7: [{ user: 'Nico T.', stars: 5, comment: 'Una aventura entretenida para todas las edades.' }],
+};
+
+const FILTERS = [
+  { key: 'all', label: 'Todos' },
+  { key: 'available', label: 'Disponibles' },
+  { key: 'loaned', label: 'Prestados' },
+  { key: 'favorite', label: '★ Favoritos' },
+];
+
+class Component extends DCLogic {
+  state = {
+    isLogin: false,
+    loginStep: 'start',
+    loginEmail: '',
+    otpCode: '',
+    screen: 'catalog',
+    booksByLibrary: { 'Biblioteca Casa': MOCK_BOOKS, 'Biblioteca Oficina': [] },
+    search: '',
+    filter: 'all',
+    catalogPage: 1,
+    selectedBookId: null,
+    scanStep: 'scan',
+    isbnInput: '',
+    scanForm: { title: '', subtitle: '', author: '', publisher: '', year: '', pages: '', language: '', genre: '', synopsis: '', shelf: '', coverType: '', notes: '' },
+    communityInfo: null,
+    shelfFilter: 'all',
+    shelvesByLibrary: {
+      'Biblioteca Casa': ['Estante A', 'Estante B', 'Estante C', 'Estante D'],
+      'Biblioteca Oficina': [],
+    },
+    newShelfName: '',
+    shelfEditOpen: false,
+    shelfCreateOpen: false,
+    renameShelfValue: '',
+    sidebarCollapsed: false,
+    accountMenuOpen: false,
+    libraries: ['Biblioteca Casa', 'Biblioteca Oficina'],
+    currentLibraryName: 'Biblioteca Casa',
+    newLibraryName: '',
+    shareMenuOpen: false,
+    copyLinkLabel: 'Copiar',
+    reviewsByBookId: MOCK_REVIEWS,
+    reviewFormOpen: false,
+    reviewDraft: { stars: 5, comment: '' },
+    loanModalBookId: null,
+    loanName: '',
+    loanDate: '',
+    membersByLibrary: {
+      'Biblioteca Casa': [
+        { name: 'Vos', email: 'vos@correo.com', status: 'owner' },
+        { name: 'María', email: 'pareja@correo.com', status: 'active' },
+      ],
+      'Biblioteca Oficina': [
+        { name: 'Vos', email: 'vos@correo.com', status: 'owner' },
+      ],
+    },
+    editingMemberEmail: null,
+    editMemberName: '',
+    inviteName: '',
+    inviteEmail: '',
+    importPreview: null,
+  };
+
+  getBooks(s) { return s.booksByLibrary[s.currentLibraryName] || []; }
+  updateBooks(updater) {
+    this.setState(s => ({ booksByLibrary: { ...s.booksByLibrary, [s.currentLibraryName]: updater(this.getBooks(s)) } }));
+  }
+  getShelves(s) { return s.shelvesByLibrary[s.currentLibraryName] || []; }
+  updateShelves(updater) {
+    this.setState(s => ({ shelvesByLibrary: { ...s.shelvesByLibrary, [s.currentLibraryName]: updater(this.getShelves(s)) } }));
+  }
+  setScreen(key) { this.setState({ screen: key, selectedBookId: null }); }
+  setShelfFilter(key) { this.setState({ shelfFilter: key }); }
+  setNewShelfName(e) { this.setState({ newShelfName: e.target.value }); }
+  addShelf() {
+    const name = this.state.newShelfName.trim();
+    if (!name || this.getShelves(this.state).includes(name)) return;
+    this.updateShelves(shelves => [...shelves, name]);
+    this.setState({ newShelfName: '' });
+  }
+  removeShelf(name) {
+    this.updateShelves(shelves => shelves.filter(sh => sh !== name));
+    this.setState(s => ({ shelfFilter: s.shelfFilter === name ? 'all' : s.shelfFilter }));
+    this.updateBooks(books => books.map(b => b.shelf === name ? { ...b, shelf: '' } : b));
+  }
+  toggleAccountMenu() { this.setState(s => ({ accountMenuOpen: !s.accountMenuOpen })); }
+  setNewLibraryName(e) { this.setState({ newLibraryName: e.target.value }); }
+  switchLibrary(name) { this.setState({ currentLibraryName: name, accountMenuOpen: false, selectedBookId: null, screen: 'catalog', shelfFilter: 'all', filter: 'all', search: '' }); }
+  createLibrary() {
+    const name = this.state.newLibraryName.trim();
+    if (!name) return;
+    this.setState(s => ({
+      libraries: [...s.libraries, name],
+      membersByLibrary: { ...s.membersByLibrary, [name]: [{ name: 'Vos', email: s.loginEmail || 'vos@correo.com', status: 'owner' }] },
+      booksByLibrary: { ...s.booksByLibrary, [name]: [] },
+      shelvesByLibrary: { ...s.shelvesByLibrary, [name]: [] },
+      currentLibraryName: name,
+      newLibraryName: '',
+      accountMenuOpen: false,
+    }));
+  }
+  addShelfOnEnter(e) { if (e.key === 'Enter') this.addShelf(); }
+  toggleShelfCreate() { this.setState(s => ({ shelfCreateOpen: !s.shelfCreateOpen, shelfEditOpen: false })); }
+  toggleShelfEdit() {
+    this.setState(s => ({ shelfEditOpen: !s.shelfEditOpen, shelfCreateOpen: false, renameShelfValue: s.shelfFilter }));
+  }
+  setRenameShelfValue(e) { this.setState({ renameShelfValue: e.target.value }); }
+  confirmRenameShelf() {
+    const { shelfFilter, renameShelfValue } = this.state;
+    const shelves = this.getShelves(this.state);
+    const newName = renameShelfValue.trim();
+    if (!newName || newName === shelfFilter || shelves.includes(newName)) return;
+    this.updateShelves(shelves => shelves.map(sh => sh === shelfFilter ? newName : sh));
+    this.setState({ shelfFilter: newName, shelfEditOpen: false });
+    this.updateBooks(books => books.map(b => b.shelf === shelfFilter ? { ...b, shelf: newName } : b));
+  }
+  deleteCurrentShelf() {
+    this.removeShelf(this.state.shelfFilter);
+    this.setState({ shelfEditOpen: false });
+  }
+  toggleFavorite(id) {
+    this.updateBooks(books => books.map(b => b.id === id ? { ...b, favorite: !b.favorite } : b));
+  }
+  toggleRead(id) {
+    this.updateBooks(books => books.map(b => b.id === id ? { ...b, read: !b.read } : b));
+  }
+  toggleReviewForm() {
+    this.setState(s => ({ reviewFormOpen: !s.reviewFormOpen, reviewDraft: { stars: 5, comment: '' } }));
+  }
+  setReviewStars(n) { this.setState(s => ({ reviewDraft: { ...s.reviewDraft, stars: n } })); }
+  setReviewComment(e) { this.setState(s => ({ reviewDraft: { ...s.reviewDraft, comment: e.target.value } })); }
+  submitReview() {
+    const { selectedBookId, reviewDraft, reviewsByBookId } = this.state;
+    if (!reviewDraft.comment.trim()) return;
+    const existing = reviewsByBookId[selectedBookId] || [];
+    this.setState(s => ({
+      reviewsByBookId: { ...s.reviewsByBookId, [selectedBookId]: [...existing, { user: 'Vos', stars: reviewDraft.stars, comment: reviewDraft.comment.trim() }] },
+      reviewFormOpen: false,
+      reviewDraft: { stars: 5, comment: '' },
+    }));
+    this.updateBooks(books => books.map(b => b.id === selectedBookId ? { ...b, totalReviews: (b.totalReviews || 0) + 1, read: true } : b));
+  }
+  toggleSidebar() { this.setState(s => ({ sidebarCollapsed: !s.sidebarCollapsed })); }
+  setLoginEmail(e) { this.setState({ loginEmail: e.target.value }); }
+  setOtpCode(e) { this.setState({ otpCode: e.target.value }); }
+  sendOtp() { if (this.state.loginEmail) this.setState({ loginStep: 'otp' }); }
+  verifyOtp() { this.setState({ isLogin: true }); }
+  googleLogin() { this.setState({ isLogin: true, loginEmail: this.state.loginEmail || 'vos@correo.com' }); }
+  backToStart() { this.setState({ loginStep: 'start' }); }
+  logout() { this.setState({ isLogin: false, loginStep: 'start', screen: 'catalog', accountMenuOpen: false, selectedBookId: null, loanModalBookId: null }); }
+
+  setSearch(e) { this.setState({ search: e.target.value, catalogPage: 1 }); }
+  setFilter(key) { this.setState({ filter: key, catalogPage: 1 }); }
+  setCatalogPage(n) { this.setState({ catalogPage: n }); }
+  selectBook(id) { this.setState({ selectedBookId: id }); }
+  closeBookDetail() { this.setState({ selectedBookId: null }); }
+  stopPropagation(e) { e.stopPropagation(); }
+  deleteSelectedBook() {
+    this.updateBooks(books => books.filter(b => b.id !== this.state.selectedBookId));
+    this.setState({ selectedBookId: null });
+  }
+
+  openLoanModal(id) { this.setState({ loanModalBookId: id, loanName: '', loanDate: new Date().toISOString().slice(0, 10) }); }
+  closeLoanModal() { this.setState({ loanModalBookId: null }); }
+  setLoanName(e) { this.setState({ loanName: e.target.value }); }
+  setLoanDate(e) { this.setState({ loanDate: e.target.value }); }
+  confirmLoan() {
+    const { loanModalBookId, loanName, loanDate } = this.state;
+    if (!loanName) return;
+    this.updateBooks(books => books.map(b => b.id === loanModalBookId ? { ...b, status: 'loaned', loanedTo: loanName, loanDate } : b));
+    this.setState({ loanModalBookId: null, selectedBookId: null });
+  }
+  returnBook(id) {
+    this.updateBooks(books => books.map(b => b.id === id ? { ...b, status: 'available', loanedTo: null, loanDate: null } : b));
+    this.setState({ selectedBookId: null });
+  }
+
+  setIsbnInput(e) { this.setState({ isbnInput: e.target.value }); }
+  simulateScan() {
+    this.setState({
+      scanStep: 'review',
+      scanForm: { title: 'Pedro Páramo', subtitle: '', author: 'Rulfo, Juan', publisher: 'FCE', year: '1955', pages: '124', language: 'es', genre: 'Novela', synopsis: 'Juan Preciado viaja a Comala en busca de su padre, Pedro Páramo.', shelf: '', coverType: 'Tapa blanda', notes: '' },
+      communityInfo: { owners: 3, rating: '4.6' },
+    });
+  }
+  lookupIsbn() {
+    if (!this.state.isbnInput) return;
+    this.setState({
+      scanStep: 'review',
+      scanForm: { title: 'Ficciones', subtitle: '', author: 'Borges, Jorge Luis', publisher: 'Sur', year: '1944', pages: '203', language: 'es', genre: 'Cuento', synopsis: 'Colección de cuentos entre los que se destaca "El jardín de senderos que se bifurcan".', shelf: '', coverType: 'Tapa blanda', notes: '' },
+      communityInfo: { owners: 12, rating: '4.8' },
+    });
+  }
+  startManualEntry() {
+    this.setState({ scanStep: 'review', scanForm: { title: '', subtitle: '', author: '', publisher: '', year: '', pages: '', language: '', genre: '', synopsis: '', shelf: '', coverType: '', notes: '' }, communityInfo: null });
+  }
+  setScanField_title(e) { this.setState(s => ({ scanForm: { ...s.scanForm, title: e.target.value } })); }
+  setScanField_author(e) { this.setState(s => ({ scanForm: { ...s.scanForm, author: e.target.value } })); }
+  setScanField_publisher(e) { this.setState(s => ({ scanForm: { ...s.scanForm, publisher: e.target.value } })); }
+  setScanField_year(e) { this.setState(s => ({ scanForm: { ...s.scanForm, year: e.target.value } })); }
+  setScanField_genre(e) { this.setState(s => ({ scanForm: { ...s.scanForm, genre: e.target.value } })); }
+  setScanField_shelf(e) { this.setState(s => ({ scanForm: { ...s.scanForm, shelf: e.target.value } })); }
+  setScanField_subtitle(e) { this.setState(s => ({ scanForm: { ...s.scanForm, subtitle: e.target.value } })); }
+  setScanField_pages(e) { this.setState(s => ({ scanForm: { ...s.scanForm, pages: e.target.value } })); }
+  setScanField_language(e) { this.setState(s => ({ scanForm: { ...s.scanForm, language: e.target.value } })); }
+  setScanField_synopsis(e) { this.setState(s => ({ scanForm: { ...s.scanForm, synopsis: e.target.value } })); }
+  setScanField_coverType(e) { this.setState(s => ({ scanForm: { ...s.scanForm, coverType: e.target.value } })); }
+  setScanField_notes(e) { this.setState(s => ({ scanForm: { ...s.scanForm, notes: e.target.value } })); }
+  saveScannedBook() {
+    const { scanForm, communityInfo } = this.state;
+    if (!scanForm.title) return;
+    const books = this.getBooks(this.state);
+    const nextId = Math.max(0, ...books.map(b => b.id)) + 1;
+    const isNew = communityInfo === null;
+    this.updateBooks(books => [...books, {
+      id: nextId, ...scanForm, status: 'available',
+      dateAdded: new Date().toISOString().slice(0, 10),
+      owners: isNew ? 1 : (communityInfo.owners + 1),
+      avgRating: isNew ? '0' : communityInfo.rating,
+      totalReviews: 0,
+    }]);
+    this.setState({
+      scanStep: 'scan',
+      isbnInput: '',
+      scanForm: { title: '', subtitle: '', author: '', publisher: '', year: '', pages: '', language: '', genre: '', synopsis: '', shelf: '', coverType: '', notes: '' },
+      communityInfo: null,
+    });
+  }
+  cancelScan() { this.setState({ scanStep: 'scan', isbnInput: '', screen: 'catalog', communityInfo: null }); }
+  goToScan() { this.setState({ screen: 'scan', scanStep: 'scan', isbnInput: '' }); }
+
+  removeMember(email) {
+    this.setState(s => ({
+      membersByLibrary: {
+        ...s.membersByLibrary,
+        [s.currentLibraryName]: (s.membersByLibrary[s.currentLibraryName] || []).filter(m => m.email !== email),
+      },
+    }));
+  }
+  setInviteEmail(e) { this.setState({ inviteEmail: e.target.value }); }
+  setInviteName(e) { this.setState({ inviteName: e.target.value }); }
+  sendInvite() {
+    if (!this.state.inviteEmail) return;
+    this.setState(s => ({
+      membersByLibrary: {
+        ...s.membersByLibrary,
+        [s.currentLibraryName]: [...(s.membersByLibrary[s.currentLibraryName] || []), { name: s.inviteName || '', email: s.inviteEmail, status: 'invited' }],
+      },
+      inviteEmail: '',
+      inviteName: '',
+    }));
+  }
+  startEditMember(email, currentName) { this.setState({ editingMemberEmail: email, editMemberName: currentName || '' }); }
+  setEditMemberName(e) { this.setState({ editMemberName: e.target.value }); }
+  saveEditMember() {
+    const { editingMemberEmail, editMemberName, currentLibraryName } = this.state;
+    this.setState(s => ({
+      membersByLibrary: {
+        ...s.membersByLibrary,
+        [currentLibraryName]: (s.membersByLibrary[currentLibraryName] || []).map(m => m.email === editingMemberEmail ? { ...m, name: editMemberName.trim() } : m),
+      },
+      editingMemberEmail: null,
+    }));
+  }
+  cancelEditMember() { this.setState({ editingMemberEmail: null }); }
+
+  handleFileSelect(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const lines = String(reader.result).split('\n').filter(Boolean);
+      const rows = lines.slice(1, 6).map(line => {
+        const cells = line.split(',').map(c => c.replace(/"/g, '').trim());
+        return { title: cells[0] || 'Sin título', author: cells[1] || 'Autor desconocido' };
+      });
+      this.setState({ importPreview: rows });
+    };
+    reader.readAsText(file);
+  }
+  confirmImport() {
+    const { importPreview } = this.state;
+    if (!importPreview) return;
+    const books = this.getBooks(this.state);
+    let nextId = Math.max(0, ...books.map(b => b.id)) + 1;
+    const newBooks = importPreview.map(row => ({ id: nextId++, title: row.title, author: row.author, publisher: '—', year: '—', genre: '—', status: 'available' }));
+    this.updateBooks(books => [...books, ...newBooks]);
+    this.setState({ importPreview: null, screen: 'catalog' });
+  }
+  toggleShareMenu() { this.setState(s => ({ shareMenuOpen: !s.shareMenuOpen, copyLinkLabel: 'Copiar' })); }
+  copyShareLink() {
+    const slug = this.state.currentLibraryName.toLowerCase().replace(/\s+/g, '-');
+    navigator.clipboard.writeText(`https://bibliotecar.app/c/${slug}`).catch(() => {});
+    this.setState({ copyLinkLabel: 'Copiado ✓' });
+  }
+  downloadTemplate() {
+    const header = 'title,author,publisher,year,genre,shelf\n';
+    const example = '"Cien años de soledad","Gabriel García Márquez","Sudamericana","1967","Ficción","Estante A"\n';
+    const blob = new Blob([header + example], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'plantilla_biblioteca.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  exportCsv() {
+    const books = this.getBooks(this.state);
+    const header = 'Title,Author,Status,LoanedTo\n';
+    const rows = books.map(b => `"${b.title}","${b.author}","${b.status}","${b.loanedTo || ''}"`).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'biblioteca.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  badgeStyleFor(status) {
+    const base = 'display:inline-block; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; width:fit-content;';
+    return status === 'loaned'
+      ? base + 'background:oklch(93% 0.03 35); color:oklch(45% 0.14 35);'
+      : base + 'background:oklch(93% 0.03 150); color:oklch(42% 0.1 150);';
+  }
+
+  renderVals() {
+    const s = this.state;
+    const books = this.getBooks(s);
+    const activeStyle = 'padding:9px 12px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; background:oklch(94% 0.004 90); color:oklch(20% 0.006 90);';
+    const inactiveStyle = 'padding:9px 12px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; background:transparent; color:oklch(45% 0.006 90);';
+
+    const navItemBase = 'display:flex; align-items:center; gap:10px; border-radius:8px; font-size:13px; cursor:pointer;';
+    const navStyleFor = (key) => {
+      const active = key === s.screen;
+      return navItemBase + (active
+        ? ' padding:9px 10px; font-weight:600; background:oklch(94% 0.004 90); color:oklch(20% 0.006 90);'
+        : ' padding:9px 10px; font-weight:500; background:transparent; color:oklch(45% 0.006 90);') + (s.sidebarCollapsed ? ' justify-content:center;' : '');
+    };
+    const catalogNav = { onClick: () => this.setScreen('catalog'), style: navStyleFor('catalog') };
+    const loansNav = { onClick: () => this.setScreen('loans'), style: navStyleFor('loans') };
+    const spaceNav = { onClick: () => this.setScreen('space'), style: navStyleFor('space') };
+    const importNav = { onClick: () => this.setScreen('importExport'), style: navStyleFor('importExport') };
+
+    const chipActive = 'padding:8px 16px; border-radius:20px; border:1px solid oklch(22% 0.005 90); background:oklch(22% 0.005 90); color:white; font-size:13px; font-weight:600; cursor:pointer;';
+    const chipInactive = 'padding:8px 16px; border-radius:20px; border:1px solid oklch(89% 0.004 90); background:white; color:oklch(40% 0.006 90); font-size:13px; font-weight:600; cursor:pointer;';
+
+    const shelves = this.getShelves(s);
+    const shelfChips = [{ key: 'all', label: 'Todos', onClick: () => this.setShelfFilter('all'), style: 'all' === s.shelfFilter ? chipActive : chipInactive }]
+      .concat(shelves.map(sh => ({
+        key: sh,
+        label: sh,
+        onClick: () => this.setShelfFilter(sh),
+        style: sh === s.shelfFilter ? chipActive : chipInactive,
+      })));
+
+    const filterChips = FILTERS.map(f => ({
+      label: `${f.label} (${f.key === 'all' ? books.length : f.key === 'favorite' ? books.filter(b => b.favorite).length : books.filter(b => b.status === f.key).length})`,
+      onClick: () => this.setFilter(f.key),
+      style: f.key === s.filter ? chipActive : chipInactive,
+    }));
+
+    let filteredBooks = books.filter(b => s.filter === 'all' || (s.filter === 'favorite' ? b.favorite : b.status === s.filter));
+    filteredBooks = filteredBooks.filter(b => s.shelfFilter === 'all' || b.shelf === s.shelfFilter);
+    const q = s.search.trim().toLowerCase();
+    if (q) {
+      filteredBooks = filteredBooks.filter(b =>
+        b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q) || (b.genre || '').toLowerCase().includes(q)
+      );
+    }
+    const PAGE_SIZE = 12;
+    const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PAGE_SIZE));
+    const catalogPage = Math.min(s.catalogPage, totalPages);
+    filteredBooks = filteredBooks.slice((catalogPage - 1) * PAGE_SIZE, catalogPage * PAGE_SIZE).map(b => ({
+      ...b,
+      initial: (b.title || '?').charAt(0).toUpperCase(),
+      statusLabel: b.status === 'loaned' ? `Prestado a ${b.loanedTo}` : 'Disponible',
+      badgeStyle: this.badgeStyleFor(b.status),
+      coverStyle: 'aspect-ratio:3/4; border-radius:8px; background:repeating-linear-gradient(135deg, oklch(93% 0.004 90), oklch(93% 0.004 90) 8px, oklch(96% 0.004 90) 8px, oklch(96% 0.004 90) 16px); border:1px solid oklch(89% 0.004 90); display:flex; align-items:center; justify-content:center; flex-direction:column;',
+      onClick: () => this.selectBook(b.id),
+      toggleFavClick: (e) => { e.stopPropagation(); this.toggleFavorite(b.id); },
+      favButtonStyle: `position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; border:none; background:white; box-shadow:0 1px 3px oklch(0% 0 0 / 0.15); display:flex; align-items:center; justify-content:center; cursor:pointer; color:${b.favorite ? 'oklch(65% 0.14 80)' : 'oklch(80% 0.006 90)'};`,
+    }));
+    const pageNumbers = Array.from({ length: totalPages }, (_, i) => ({
+      n: i + 1,
+      onClick: () => this.setCatalogPage(i + 1),
+      style: `width:32px; height:32px; border-radius:6px; border:1px solid oklch(89% 0.004 90); font-size:13px; font-weight:600; cursor:pointer; background:${i + 1 === catalogPage ? 'oklch(22% 0.005 90)' : 'white'}; color:${i + 1 === catalogPage ? 'white' : 'oklch(40% 0.006 90)'};`,
+    }));
+
+    const loanedBooks = books.filter(b => b.status === 'loaned').map(b => ({
+      ...b,
+      initial: (b.title || '?').charAt(0).toUpperCase(),
+      badgeStyle: this.badgeStyleFor('loaned'),
+      coverStyle: 'aspect-ratio:3/4; border-radius:8px; background:repeating-linear-gradient(135deg, oklch(93% 0.004 90), oklch(93% 0.004 90) 8px, oklch(96% 0.004 90) 8px, oklch(96% 0.004 90) 16px); border:1px solid oklch(89% 0.004 90); display:flex; align-items:center; justify-content:center; flex-direction:column;',
+      onClick: () => this.selectBook(b.id),
+      returnClick: () => this.returnBook(b.id),
+    }));
+
+    const pendingBadgeStyle = 'display:inline-block; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; width:fit-content; background:oklch(93% 0.05 95); color:oklch(50% 0.13 85);';
+    const members = (s.membersByLibrary[s.currentLibraryName] || []).map(m => ({
+      ...m,
+      displayName: m.name || m.email,
+      statusLabel: m.status === 'owner' ? 'Propietario' : m.status === 'invited' ? 'Pendiente' : 'Activo',
+      badgeStyle: m.status === 'invited' ? pendingBadgeStyle : this.badgeStyleFor('available'),
+      canRemove: m.status !== 'owner',
+      removeClick: () => this.removeMember(m.email),
+      isEditing: s.editingMemberEmail === m.email,
+      editClick: () => this.startEditMember(m.email, m.name),
+    }));
+
+    const rawSelected = s.selectedBookId != null ? books.find(b => b.id === s.selectedBookId) : null;
+    const selectedBook = rawSelected ? {
+      ...rawSelected,
+      initial: rawSelected.title.charAt(0).toUpperCase(),
+      statusLabel: rawSelected.status === 'loaned' ? `Prestado a ${rawSelected.loanedTo}` : 'Disponible',
+      badgeStyle: this.badgeStyleFor(rawSelected.status),
+      loanClick: () => this.openLoanModal(rawSelected.id),
+      returnClick: () => this.returnBook(rawSelected.id),
+      reviews: (s.reviewsByBookId[rawSelected.id] || []).map(r => ({ ...r, starsLabel: '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars) })),
+      favButtonLargeStyle: `width:36px; height:36px; border-radius:50%; border:1px solid oklch(89% 0.004 90); background:white; display:flex; align-items:center; justify-content:center; cursor:pointer; color:${rawSelected.favorite ? 'oklch(65% 0.14 80)' : 'oklch(75% 0.006 90)'};`,
+      readButtonStyle: rawSelected.read
+        ? 'padding:12px 16px; border-radius:8px; border:1px solid oklch(85% 0.08 150); background:oklch(94% 0.03 150); color:oklch(40% 0.1 150); font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap;'
+        : 'padding:12px 16px; border-radius:8px; border:1px solid oklch(89% 0.004 90); background:white; color:oklch(30% 0.006 90); font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap;',
+      readButtonLabel: rawSelected.read ? 'Leído' : 'No Leído',
+      toggleReadClick: () => this.toggleRead(rawSelected.id),
+    } : null;
+
+    const loanModalBook = s.loanModalBookId != null ? books.find(b => b.id === s.loanModalBookId) : null;
+
+    return {
+      isLogin: s.isLogin,
+      loginStep: s.loginStep,
+      loginEmail: s.loginEmail,
+      otpCode: s.otpCode,
+      setLoginEmail: this.setLoginEmail.bind(this),
+      setOtpCode: this.setOtpCode.bind(this),
+      sendOtp: this.sendOtp.bind(this),
+      verifyOtp: this.verifyOtp.bind(this),
+      googleLogin: this.googleLogin.bind(this),
+      backToStart: this.backToStart.bind(this),
+      logout: this.logout.bind(this),
+
+      screen: s.screen,
+      catalogNav,
+      loansNav,
+      spaceNav,
+      importNav,
+      sidebarCollapsed: s.sidebarCollapsed,
+      sidebarStyle: `width:${s.sidebarCollapsed ? '72px' : '232px'}; flex-shrink:0; background:oklch(100% 0 0); border-right:1px solid oklch(89% 0.004 90); display:flex; flex-direction:column; padding:24px 16px; gap:28px; position:sticky; top:0; height:100vh; transition:width 0.15s ease; z-index:10;`,
+      sidebarHeaderStyle: s.sidebarCollapsed
+        ? 'display:flex; align-items:center; justify-content:center; gap:8px;'
+        : 'display:flex; align-items:center; justify-content:space-between; gap:8px;',
+      toggleSidebar: this.toggleSidebar.bind(this),
+      logoutLabel: s.sidebarCollapsed ? '⏻' : 'Cerrar sesión',
+      books,
+      search: s.search,
+      setSearch: this.setSearch.bind(this),
+      filterChips,
+      shelfChips,
+      shelfFilter: s.shelfFilter,
+      newShelfName: s.newShelfName,
+      setNewShelfName: this.setNewShelfName.bind(this),
+      addShelfOnEnter: this.addShelfOnEnter.bind(this),
+      addShelf: this.addShelf.bind(this),
+      shelfCreateOpen: s.shelfCreateOpen,
+      toggleShelfCreate: this.toggleShelfCreate.bind(this),
+      shelfEditOpen: s.shelfEditOpen,
+      toggleShelfEdit: this.toggleShelfEdit.bind(this),
+      renameShelfValue: s.renameShelfValue,
+      setRenameShelfValue: this.setRenameShelfValue.bind(this),
+      confirmRenameShelf: this.confirmRenameShelf.bind(this),
+      deleteCurrentShelf: this.deleteCurrentShelf.bind(this),
+      filteredBooks,
+      pageNumbers,
+      totalPages,
+      bookCountLabel: `${books.length} libro(s) en total`,
+      goToScan: this.goToScan.bind(this),
+      shareMenuOpen: s.shareMenuOpen,
+      toggleShareMenu: this.toggleShareMenu.bind(this),
+      publicShareLink: `https://bibliotecar.app/c/${s.currentLibraryName.toLowerCase().replace(/\s+/g, '-')}`,
+      copyShareLink: this.copyShareLink.bind(this),
+      copyLinkLabel: s.copyLinkLabel,
+
+      accountMenuOpen: s.accountMenuOpen,
+      toggleAccountMenu: this.toggleAccountMenu.bind(this),
+      currentLibraryName: s.currentLibraryName,
+      userInitial: (s.loginEmail || '?').charAt(0).toUpperCase(),
+      accountButtonStyle: `display:flex; align-items:center; gap:10px; width:100%; padding:8px 6px; border:none; background:${s.accountMenuOpen ? 'oklch(94% 0.004 90)' : 'transparent'}; border-radius:8px; cursor:pointer;` + (s.sidebarCollapsed ? ' justify-content:center;' : ''),
+      libraryOptions: s.libraries.map(lib => ({
+        name: lib,
+        active: lib === s.currentLibraryName,
+        onClick: () => this.switchLibrary(lib),
+        style: `display:flex; align-items:center; justify-content:space-between; padding:8px 6px; border-radius:6px; font-size:13px; cursor:pointer; background:${lib === s.currentLibraryName ? 'oklch(94% 0.004 90)' : 'transparent'}; color:oklch(20% 0.006 90);`,
+      })),
+      newLibraryName: s.newLibraryName,
+      setNewLibraryName: this.setNewLibraryName.bind(this),
+      createLibrary: this.createLibrary.bind(this),
+
+      selectedBook,
+      closeBookDetail: this.closeBookDetail.bind(this),
+      stopPropagation: this.stopPropagation.bind(this),
+      deleteSelectedBook: this.deleteSelectedBook.bind(this),
+      toggleFavoriteSelected: selectedBook ? () => this.toggleFavorite(selectedBook.id) : () => {},
+      reviewFormOpen: s.reviewFormOpen,
+      reviewToggleLabel: s.reviewFormOpen ? 'Cancelar' : 'Escribir una reseña',
+      toggleReviewForm: this.toggleReviewForm.bind(this),
+      reviewDraft: s.reviewDraft,
+      reviewStarOptions: [1, 2, 3, 4, 5].map(n => ({
+        n,
+        onClick: () => this.setReviewStars(n),
+        style: `font-size:20px; cursor:pointer; background:none; border:none; padding:0; color:${n <= s.reviewDraft.stars ? 'oklch(65% 0.14 80)' : 'oklch(85% 0.006 90)'};`,
+      })),
+      setReviewComment: this.setReviewComment.bind(this),
+      submitReview: this.submitReview.bind(this),
+
+      loanModalBook,
+      loanName: s.loanName,
+      loanDate: s.loanDate,
+      setLoanName: this.setLoanName.bind(this),
+      setLoanDate: this.setLoanDate.bind(this),
+      confirmLoan: this.confirmLoan.bind(this),
+      closeLoanModal: this.closeLoanModal.bind(this),
+
+      scanStep: s.scanStep,
+      isScanStepScan: s.scanStep === 'scan',
+      isScanStepReview: s.scanStep === 'review',
+      isbnInput: s.isbnInput,
+      setIsbnInput: this.setIsbnInput.bind(this),
+      simulateScan: this.simulateScan.bind(this),
+      lookupIsbn: this.lookupIsbn.bind(this),
+      startManualEntry: this.startManualEntry.bind(this),
+      scanButtonLabel: 'Simular escaneo de código',
+      reviewHintLabel: s.scanForm.title ? 'Datos encontrados en Google Books — revisá y confirmá' : 'Completá los datos manualmente',
+      scanForm: s.scanForm,
+      communityInfo: s.communityInfo,
+      setScanField_title: this.setScanField_title.bind(this),
+      setScanField_author: this.setScanField_author.bind(this),
+      setScanField_publisher: this.setScanField_publisher.bind(this),
+      setScanField_year: this.setScanField_year.bind(this),
+      setScanField_genre: this.setScanField_genre.bind(this),
+      setScanField_shelf: this.setScanField_shelf.bind(this),
+      setScanField_subtitle: this.setScanField_subtitle.bind(this),
+      setScanField_pages: this.setScanField_pages.bind(this),
+      setScanField_language: this.setScanField_language.bind(this),
+      setScanField_synopsis: this.setScanField_synopsis.bind(this),
+      setScanField_coverType: this.setScanField_coverType.bind(this),
+      setScanField_notes: this.setScanField_notes.bind(this),
+      saveScannedBook: this.saveScannedBook.bind(this),
+      cancelScan: this.cancelScan.bind(this),
+
+      loanedBooks,
+
+      members,
+      inviteEmail: s.inviteEmail,
+      inviteName: s.inviteName,
+      setInviteEmail: this.setInviteEmail.bind(this),
+      setInviteName: this.setInviteName.bind(this),
+      sendInvite: this.sendInvite.bind(this),
+      editMemberName: s.editMemberName,
+      setEditMemberName: this.setEditMemberName.bind(this),
+      saveEditMember: this.saveEditMember.bind(this),
+      cancelEditMember: this.cancelEditMember.bind(this),
+
+      importPreview: s.importPreview,
+      handleFileSelect: this.handleFileSelect.bind(this),
+      confirmImport: this.confirmImport.bind(this),
+      exportCsv: this.exportCsv.bind(this),
+      downloadTemplate: this.downloadTemplate.bind(this),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

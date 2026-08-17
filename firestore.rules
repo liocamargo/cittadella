@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isMemberOf(bibliotecaId) {
+      return signedIn() &&
+        request.auth.uid in
+          get(/databases/$(database)/documents/Bibliotecas/$(bibliotecaId)).data.miembrosUids;
+    }
+
+    // Catálogo comunitario de libros, indexado por ISBN. Lectura pública
+    // (permite links de solo lectura y ver ratings/dueños antes de loguearse).
+    // Escritura: cualquier usuario logueado puede crear o enriquecer un libro
+    // (p.ej. al escanear un ISBN nuevo).
+    match /Libros_Globales/{isbn} {
+      allow read: if true;
+      allow create, update: if signedIn();
+      allow delete: if false;
+
+      match /resenas/{resenaId} {
+        allow read: if true;
+        allow create: if signedIn() &&
+          request.resource.data.usuarioUid == request.auth.uid;
+        allow update, delete: if signedIn() &&
+          resource.data.usuarioUid == request.auth.uid;
+      }
+    }
+
+    // Espacios colaborativos. Solo los miembros pueden leer/escribir la
+    // biblioteca; cualquier usuario logueado puede crear una nueva
+    // agregándose a sí mismo como miembro.
+    match /Bibliotecas/{bibliotecaId} {
+      allow read, update, delete: if isMemberOf(bibliotecaId);
+      allow create: if signedIn() &&
+        request.auth.uid in request.resource.data.miembrosUids &&
+        request.resource.data.creadaPor == request.auth.uid;
+    }
+
+    // Inventario físico: solo miembros de la biblioteca dueña de la copia.
+    match /Libros_En_Biblioteca/{copiaId} {
+      allow read, update, delete: if isMemberOf(resource.data.bibliotecaId);
+      allow create: if isMemberOf(request.resource.data.bibliotecaId);
+    }
+  }
+}
