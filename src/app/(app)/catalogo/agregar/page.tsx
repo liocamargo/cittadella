@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PenLine } from "lucide-react";
+import { PenLine, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { getLibroGlobal, agregarLibroABiblioteca } from "@/lib/firestore/libros";
-import { buscarPorIsbn } from "@/services/google-books";
+import { buscarPorIsbn, GoogleBooksError } from "@/services/google-books";
+import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import type { LibroGlobal } from "@/types";
 
 type Paso = "buscar" | "formulario";
@@ -25,6 +26,7 @@ const FORM_INICIAL = {
   genero: "",
   idioma: "",
   sinopsis: "",
+  portadaUrl: "",
   estante: "",
   tipoTapa: "",
   notas: "",
@@ -40,13 +42,13 @@ export default function AgregarLibroPage() {
   const [guardando, setGuardando] = useState(false);
   const [comunidad, setComunidad] = useState<LibroGlobal | null>(null);
   const [form, setForm] = useState(FORM_INICIAL);
+  const [escaneando, setEscaneando] = useState(false);
 
   function setCampo<K extends keyof typeof FORM_INICIAL>(campo: K, valor: string) {
     setForm((f) => ({ ...f, [campo]: valor }));
   }
 
-  async function handleBuscar() {
-    const codigo = isbnInput.trim();
+  async function buscar(codigo: string) {
     if (!codigo) {
       toast.error("Ingresá un ISBN.");
       return;
@@ -66,17 +68,29 @@ export default function AgregarLibroPage() {
           genero: local.genero ?? "",
           idioma: local.idioma ?? "",
           sinopsis: local.sinopsis ?? "",
+          portadaUrl: local.portadaUrl ?? "",
           estante: "",
           tipoTapa: "",
           notas: "",
         });
       } else {
-        const google = await buscarPorIsbn(codigo);
-        if (google) {
-          setForm({ ...FORM_INICIAL, ...google });
-        } else {
-          toast.error("No encontramos ese ISBN. Cargalo manualmente.");
-          setForm(FORM_INICIAL);
+        try {
+          const google = await buscarPorIsbn(codigo);
+          if (google) {
+            setForm({ ...FORM_INICIAL, ...google });
+          } else {
+            toast.error("No encontramos ese ISBN en Google Books. Cargalo manualmente.");
+            setForm({ ...FORM_INICIAL });
+          }
+        } catch (err) {
+          if (err instanceof GoogleBooksError && err.esLimiteDeCuota) {
+            toast.error(
+              "Google Books alcanzó su límite de consultas por ahora. Cargá los datos manualmente."
+            );
+          } else {
+            toast.error("No pudimos consultar Google Books. Cargá los datos manualmente.");
+          }
+          setForm({ ...FORM_INICIAL });
         }
       }
       setIsbn(codigo);
@@ -86,6 +100,16 @@ export default function AgregarLibroPage() {
     } finally {
       setBuscando(false);
     }
+  }
+
+  function handleBuscar() {
+    buscar(isbnInput.trim());
+  }
+
+  function handleDetected(codigo: string) {
+    setEscaneando(false);
+    setIsbnInput(codigo);
+    buscar(codigo);
   }
 
   function handleManual() {
@@ -120,6 +144,7 @@ export default function AgregarLibroPage() {
           idioma: form.idioma.trim() || undefined,
           genero: form.genero.trim() || undefined,
           sinopsis: form.sinopsis.trim() || undefined,
+          portadaUrl: form.portadaUrl.trim() || undefined,
         },
         {
           estante: form.estante.trim(),
@@ -145,6 +170,24 @@ export default function AgregarLibroPage() {
 
       {paso === "buscar" && (
         <div className="flex flex-col gap-4">
+          {escaneando ? (
+            <BarcodeScanner onDetected={handleDetected} />
+          ) : (
+            <Button variant="outline" onClick={() => setEscaneando(true)}>
+              <ScanBarcode />
+              Escanear con la cámara
+            </Button>
+          )}
+          {escaneando && (
+            <Button variant="ghost" size="sm" onClick={() => setEscaneando(false)}>
+              Cancelar escaneo
+            </Button>
+          )}
+
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="h-px flex-1 bg-border" />o buscá por ISBN
+            <div className="h-px flex-1 bg-border" />
+          </div>
           <div className="flex gap-2">
             <Input
               placeholder="978-..."
@@ -179,6 +222,15 @@ export default function AgregarLibroPage() {
           <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
             Datos del libro (comunidad)
           </div>
+
+          {form.portadaUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={form.portadaUrl}
+              alt="Portada"
+              className="h-[130px] w-[88px] rounded-md border object-cover"
+            />
+          )}
 
           <Field label="Título">
             <Input value={form.titulo} onChange={(e) => setCampo("titulo", e.target.value)} />

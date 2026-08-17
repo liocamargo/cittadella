@@ -110,11 +110,20 @@ export function LibroDetailSheet({
         </SheetHeader>
 
         <div className="flex flex-col gap-5 px-4 pb-6">
-          <div className="flex h-[170px] w-[120px] items-center justify-center rounded-lg border bg-muted">
-            <span className="text-3xl font-bold text-muted-foreground/60">
-              {inicial}
-            </span>
-          </div>
+          {global?.portadaUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={global.portadaUrl}
+              alt={global?.titulo ?? ""}
+              className="h-[170px] w-[120px] rounded-lg border object-cover"
+            />
+          ) : (
+            <div className="flex h-[170px] w-[120px] items-center justify-center rounded-lg border bg-muted">
+              <span className="text-3xl font-bold text-muted-foreground/60">
+                {inicial}
+              </span>
+            </div>
+          )}
 
           <div className="flex items-start justify-between gap-3">
             <div>

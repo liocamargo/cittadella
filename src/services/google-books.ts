@@ -20,12 +20,32 @@ interface GoogleBooksResponse {
   items?: GoogleBooksVolume[];
 }
 
+export class GoogleBooksError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number
+  ) {
+    super(message);
+    this.name = "GoogleBooksError";
+  }
+
+  /** Google limita muy fuerte las consultas anónimas (sin API key) por IP/proyecto. */
+  get esLimiteDeCuota() {
+    return this.status === 429;
+  }
+}
+
 /** Busca un ISBN en Google Books y devuelve los datos ya mapeados a nuestro modelo. */
 export async function buscarPorIsbn(isbn: string): Promise<DatosComunidad | null> {
-  const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}`;
-  const res = await fetch(url);
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
+  const params = new URLSearchParams({ q: `isbn:${isbn}` });
+  if (apiKey) params.set("key", apiKey);
+
+  const res = await fetch(
+    `https://www.googleapis.com/books/v1/volumes?${params.toString()}`
+  );
   if (!res.ok) {
-    throw new Error(`Google Books respondió ${res.status}`);
+    throw new GoogleBooksError(`Google Books respondió ${res.status}`, res.status);
   }
   const data: GoogleBooksResponse = await res.json();
   const info = data.items?.[0]?.volumeInfo;

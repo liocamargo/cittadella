@@ -24,11 +24,20 @@ export function LibroCard({
   return (
     <div className="flex flex-col gap-2">
       <div onClick={onClick} className="relative cursor-pointer">
-        <div className="flex aspect-[3/4.2] flex-col items-center justify-center rounded-lg border bg-[repeating-linear-gradient(135deg,var(--muted)_0,var(--muted)_10px,var(--background)_10px,var(--background)_20px)]">
-          <div className="text-[26px] font-bold text-muted-foreground/60">
-            {inicial}
+        {global?.portadaUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={global.portadaUrl}
+            alt={titulo}
+            className="aspect-[3/4.2] w-full rounded-lg border object-cover"
+          />
+        ) : (
+          <div className="flex aspect-[3/4.2] flex-col items-center justify-center rounded-lg border bg-[repeating-linear-gradient(135deg,var(--muted)_0,var(--muted)_10px,var(--background)_10px,var(--background)_20px)]">
+            <div className="text-[26px] font-bold text-muted-foreground/60">
+              {inicial}
+            </div>
           </div>
-        </div>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();
