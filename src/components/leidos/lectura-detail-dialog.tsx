@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Star, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import {
   actualizarLibroGlobal,
@@ -22,6 +21,7 @@ import {
 } from "@/lib/firestore/libros";
 import { quitarLectura } from "@/lib/firestore/lecturas";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
+import { RatingCara, RatingCaraPicker } from "@/components/catalogo/rating-cara";
 import type { LibroGlobal, Resena } from "@/types";
 
 const CAMPOS_EDITABLES = {
@@ -290,20 +290,7 @@ export function LecturaDetailDialog({
 
             {reviewOpen && (
               <div className="mb-3 flex flex-col gap-2 rounded-lg border p-3">
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button key={n} onClick={() => setEstrellas(n)}>
-                      <Star
-                        className={cn(
-                          "size-4",
-                          n <= estrellas
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-muted-foreground"
-                        )}
-                      />
-                    </button>
-                  ))}
-                </div>
+                <RatingCaraPicker value={estrellas} onChange={setEstrellas} />
                 <Textarea
                   placeholder="Escribí tu reseña..."
                   value={comentario}
@@ -324,11 +311,9 @@ export function LecturaDetailDialog({
             <div className="flex flex-col gap-2">
               {resenas.map((r) => (
                 <div key={r.id} className="rounded-lg border bg-muted/40 p-3">
-                  <div className="text-xs font-semibold">
-                    {r.usuarioNombre}{" "}
-                    <span className="ml-1 font-normal text-amber-500">
-                      {"★".repeat(r.estrellas)}
-                    </span>
+                  <div className="flex items-center gap-1.5 text-xs font-semibold">
+                    {r.usuarioNombre}
+                    <RatingCara estrellas={r.estrellas} />
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">{r.comentario}</div>
                 </div>
