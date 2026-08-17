@@ -10,9 +10,12 @@ import {
   ArrowDownUp,
   PanelLeftClose,
   PanelLeftOpen,
+  Check,
 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { useBiblioteca } from "@/hooks/use-biblioteca";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +24,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const NAV_ITEMS = [
   { href: "/catalogo", label: "Catálogo", icon: Library },
@@ -33,7 +38,11 @@ export function SidebarNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOutUser } = useAuth();
+  const { bibliotecas, bibliotecaActual, seleccionarBiblioteca, crearYSeleccionar } =
+    useBiblioteca();
   const [collapsed, setCollapsed] = useState(false);
+  const [newLibraryName, setNewLibraryName] = useState("");
+  const [creating, setCreating] = useState(false);
 
   const initial = (user?.displayName ?? user?.email ?? "?")
     .trim()
@@ -43,6 +52,20 @@ export function SidebarNav() {
   async function handleLogout() {
     await signOutUser();
     router.replace("/login");
+  }
+
+  async function handleCreateLibrary() {
+    if (!newLibraryName.trim()) return;
+    setCreating(true);
+    try {
+      await crearYSeleccionar(newLibraryName.trim());
+      setNewLibraryName("");
+      toast.success("Biblioteca creada.");
+    } catch {
+      toast.error("No pudimos crear la biblioteca.");
+    } finally {
+      setCreating(false);
+    }
   }
 
   return (
@@ -106,7 +129,7 @@ export function SidebarNav() {
               {!collapsed && (
                 <div className="overflow-hidden">
                   <div className="truncate text-[13px] font-semibold">
-                    Biblioteca Casa
+                    {bibliotecaActual?.nombre ?? "Cargando…"}
                   </div>
                   <div className="truncate text-[11px] text-muted-foreground">
                     {user?.email}
@@ -115,15 +138,50 @@ export function SidebarNav() {
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-60">
-            <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+          <DropdownMenuContent align="start" className="w-64">
+            <div className="truncate px-1.5 py-1 text-xs text-muted-foreground">
               {user?.email}
-            </DropdownMenuItem>
+            </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={handleLogout}
-            >
+            {bibliotecas.map((b) => (
+              <DropdownMenuItem
+                key={b.id}
+                onClick={() => seleccionarBiblioteca(b.id)}
+                className="justify-between"
+              >
+                <span className="truncate">{b.nombre}</span>
+                {b.id === bibliotecaActual?.id && <Check className="size-3.5 shrink-0" />}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <div className="flex gap-1.5 px-1.5 py-1">
+              <Input
+                value={newLibraryName}
+                onChange={(e) => setNewLibraryName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleCreateLibrary();
+                  }
+                }}
+                placeholder="Nueva biblioteca"
+                className="h-8 text-xs"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <Button
+                size="sm"
+                className="h-8 shrink-0 px-2.5 text-xs"
+                disabled={creating}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleCreateLibrary();
+                }}
+              >
+                Crear
+              </Button>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onClick={handleLogout}>
               Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>

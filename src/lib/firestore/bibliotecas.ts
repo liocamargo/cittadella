@@ -1,0 +1,128 @@
+import {
+  addDoc,
+  arrayRemove,
+  arrayUnion,
+  collection,
+  deleteField,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  updateDoc,
+  where,
+  type Unsubscribe,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase/client";
+import type { Biblioteca } from "@/types";
+
+const COL = "Bibliotecas";
+
+function toBiblioteca(id: string, data: Record<string, unknown>): Biblioteca {
+  return {
+    id,
+    nombre: (data.nombre as string) ?? "",
+    miembrosUids: (data.miembrosUids as string[]) ?? [],
+    invitacionesPendientes: (data.invitacionesPendientes as string[]) ?? [],
+    nombresMiembros: (data.nombresMiembros as Record<string, string>) ?? {},
+    estantes: (data.estantes as string[]) ?? [],
+    creadaPor: (data.creadaPor as string) ?? "",
+    creadaEn: (data.creadaEn as string) ?? "",
+  };
+}
+
+export function listenBibliotecasDeUsuario(
+  uid: string,
+  onChange: (bibliotecas: Biblioteca[]) => void
+): Unsubscribe {
+  const q = query(collection(db, COL), where("miembrosUids", "array-contains", uid));
+  return onSnapshot(q, (snap) => {
+    onChange(snap.docs.map((d) => toBiblioteca(d.id, d.data())));
+  });
+}
+
+export async function crearBiblioteca(
+  nombre: string,
+  uid: string,
+  nombreMiembro: string
+): Promise<string> {
+  const ref = await addDoc(collection(db, COL), {
+    nombre,
+    miembrosUids: [uid],
+    invitacionesPendientes: [],
+    nombresMiembros: { [uid]: nombreMiembro },
+    estantes: [],
+    creadaPor: uid,
+    creadaEn: new Date().toISOString(),
+  });
+  return ref.id;
+}
+
+/** Se corre una vez al loguearse: une al usuario a cualquier biblioteca que lo esté esperando. */
+export async function aceptarInvitacionesPendientes(
+  uid: string,
+  email: string,
+  nombre: string
+): Promise<void> {
+  const q = query(
+    collection(db, COL),
+    where("invitacionesPendientes", "array-contains", email)
+  );
+  const snap = await getDocs(q);
+  await Promise.all(
+    snap.docs.map((d) =>
+      updateDoc(doc(db, COL, d.id), {
+        miembrosUids: arrayUnion(uid),
+        invitacionesPendientes: arrayRemove(email),
+        [`nombresMiembros.${uid}`]: nombre,
+      })
+    )
+  );
+}
+
+export async function invitarMiembro(bibliotecaId: string, email: string) {
+  await updateDoc(doc(db, COL, bibliotecaId), {
+    invitacionesPendientes: arrayUnion(email),
+  });
+}
+
+export async function quitarMiembro(bibliotecaId: string, uid: string) {
+  await updateDoc(doc(db, COL, bibliotecaId), {
+    miembrosUids: arrayRemove(uid),
+    [`nombresMiembros.${uid}`]: deleteField(),
+  });
+}
+
+export async function renombrarMiembro(
+  bibliotecaId: string,
+  uid: string,
+  nombre: string
+) {
+  await updateDoc(doc(db, COL, bibliotecaId), {
+    [`nombresMiembros.${uid}`]: nombre,
+  });
+}
+
+export async function agregarEstante(bibliotecaId: string, nombre: string) {
+  await updateDoc(doc(db, COL, bibliotecaId), {
+    estantes: arrayUnion(nombre),
+  });
+}
+
+export async function eliminarEstante(bibliotecaId: string, nombre: string) {
+  await updateDoc(doc(db, COL, bibliotecaId), {
+    estantes: arrayRemove(nombre),
+  });
+}
+
+export async function renombrarEstante(
+  bibliotecaId: string,
+  anterior: string,
+  nuevo: string
+) {
+  await updateDoc(doc(db, COL, bibliotecaId), {
+    estantes: arrayRemove(anterior),
+  });
+  await updateDoc(doc(db, COL, bibliotecaId), {
+    estantes: arrayUnion(nuevo),
+  });
+}

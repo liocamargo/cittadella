@@ -50,13 +50,12 @@ export interface Biblioteca {
   id: string;
   nombre: string;
   miembrosUids: string[];
+  /** Emails invitados que todavía no se loguearon nunca; se resuelven a uid al primer login. */
+  invitacionesPendientes: string[];
+  /** uid -> nombre para mostrar (editable desde "Espacio compartido"). */
+  nombresMiembros: Record<string, string>;
+  /** Estantes declarados explícitamente (pueden existir sin libros todavía). */
+  estantes: string[];
   creadaPor: string;
   creadaEn: string;
-}
-
-export interface MiembroBiblioteca {
-  uid: string;
-  email: string;
-  nombre?: string;
-  rol: "owner" | "miembro";
 }

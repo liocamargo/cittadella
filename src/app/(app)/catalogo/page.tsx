@@ -1,11 +1,231 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { useBiblioteca } from "@/hooks/use-biblioteca";
+import { useLibrosGlobales } from "@/hooks/use-libros-globales";
+import { listenInventario, toggleFavorito } from "@/lib/firestore/libros";
+import {
+  agregarEstante,
+  eliminarEstante,
+} from "@/lib/firestore/bibliotecas";
+import { LibroCard } from "@/components/catalogo/libro-card";
+import { LibroDetailSheet } from "@/components/catalogo/libro-detail-sheet";
+import type { LibroEnBiblioteca } from "@/types";
+
+const PAGE_SIZE = 20;
+type Filtro = "all" | "disponible" | "prestado" | "favorito";
+
+const FILTROS: { key: Filtro; label: string }[] = [
+  { key: "all", label: "Todos" },
+  { key: "disponible", label: "Disponibles" },
+  { key: "prestado", label: "Prestados" },
+  { key: "favorito", label: "★ Favoritos" },
+];
+
 export default function CatalogoPage() {
+  const { bibliotecaActual } = useBiblioteca();
+  const [copias, setCopias] = useState<LibroEnBiblioteca[]>([]);
+  const [search, setSearch] = useState("");
+  const [filtro, setFiltro] = useState<Filtro>("all");
+  const [shelfFilter, setShelfFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [newShelf, setNewShelf] = useState("");
+  const [shelfCreateOpen, setShelfCreateOpen] = useState(false);
+
+  useEffect(() => {
+    if (!bibliotecaActual) {
+      setCopias([]);
+      return;
+    }
+    return listenInventario(bibliotecaActual.id, setCopias);
+  }, [bibliotecaActual]);
+
+  const isbns = useMemo(() => copias.map((c) => c.isbn), [copias]);
+  const globales = useLibrosGlobales(isbns);
+
+  const estantes = useMemo(() => {
+    const declarados = bibliotecaActual?.estantes ?? [];
+    const usados = Array.from(new Set(copias.map((c) => c.estante).filter(Boolean)));
+    return Array.from(new Set([...declarados, ...usados]));
+  }, [bibliotecaActual, copias]);
+
+  const filtrados = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return copias.filter((c) => {
+      const g = globales[c.isbn];
+      if (filtro === "disponible" && c.estado !== "disponible") return false;
+      if (filtro === "prestado" && c.estado !== "prestado") return false;
+      if (filtro === "favorito" && !c.favorito) return false;
+      if (shelfFilter !== "all" && c.estante !== shelfFilter) return false;
+      if (term) {
+        const haystack = `${g?.titulo ?? ""} ${g?.autor ?? ""} ${g?.genero ?? ""}`.toLowerCase();
+        if (!haystack.includes(term)) return false;
+      }
+      return true;
+    });
+  }, [copias, globales, search, filtro, shelfFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE));
+  const pageItems = filtrados.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const selected = copias.find((c) => c.id === selectedId) ?? null;
+
+  async function handleCreateShelf() {
+    if (!bibliotecaActual || !newShelf.trim()) return;
+    await agregarEstante(bibliotecaActual.id, newShelf.trim());
+    setNewShelf("");
+    setShelfCreateOpen(false);
+  }
+
+  async function handleDeleteShelf(nombre: string) {
+    if (!bibliotecaActual) return;
+    if (!window.confirm(`¿Eliminar el estante "${nombre}"?`)) return;
+    await eliminarEstante(bibliotecaActual.id, nombre);
+    setShelfFilter("all");
+  }
+
   return (
     <div>
-      <h1 className="text-2xl font-bold">Catálogo</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Acá van a aparecer los libros de tu biblioteca. Se conecta en la
-        Fase 2 (modelo de datos y catálogo).
-      </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <h1 className="text-2xl font-bold">Catálogo</h1>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Input
+            placeholder="Buscar por título, autor o género"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="w-[220px]"
+          />
+          <Button asChild>
+            <Link href="/catalogo/agregar">
+              <Plus />
+              Agregar libro
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        {FILTROS.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => {
+              setFiltro(f.key);
+              setPage(1);
+            }}
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
+              filtro === f.key && "border-foreground bg-foreground text-background"
+            )}
+          >
+            {f.label}
+          </button>
+        ))}
+        <div className="mx-1 h-5 w-px bg-border" />
+        <span className="text-xs text-muted-foreground">Estante:</span>
+        <button
+          onClick={() => setShelfFilter("all")}
+          className={cn(
+            "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
+            shelfFilter === "all" && "border-foreground bg-foreground text-background"
+          )}
+        >
+          Todos
+        </button>
+        {estantes.map((e) => (
+          <button
+            key={e}
+            onClick={() => setShelfFilter(e)}
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
+              shelfFilter === e && "border-foreground bg-foreground text-background"
+            )}
+          >
+            {e}
+          </button>
+        ))}
+        {shelfFilter !== "all" && (
+          <button
+            onClick={() => handleDeleteShelf(shelfFilter)}
+            className="rounded-full border px-3 py-1.5 text-xs text-muted-foreground"
+          >
+            Eliminar estante
+          </button>
+        )}
+        {shelfCreateOpen ? (
+          <div className="flex gap-1.5">
+            <Input
+              autoFocus
+              value={newShelf}
+              onChange={(e) => setNewShelf(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleCreateShelf()}
+              placeholder="Nombre del estante"
+              className="h-8 w-40 text-xs"
+            />
+            <Button size="sm" className="h-8" onClick={handleCreateShelf}>
+              Crear
+            </Button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShelfCreateOpen(true)}
+            className="rounded-full border border-dashed px-3 py-1.5 text-xs text-muted-foreground"
+          >
+            + Crear estante
+          </button>
+        )}
+      </div>
+
+      {filtrados.length === 0 && (
+        <div className="py-16 text-center text-sm text-muted-foreground">
+          {copias.length === 0
+            ? "Todavía no agregaste ningún libro."
+            : "Sin resultados para esta búsqueda."}
+        </div>
+      )}
+
+      <div className="mb-6 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
+        {pageItems.map((copia) => (
+          <LibroCard
+            key={copia.id}
+            copia={copia}
+            global={globales[copia.isbn]}
+            onClick={() => setSelectedId(copia.id)}
+            onToggleFavorito={() => toggleFavorito(copia.id, !copia.favorito).catch(() => toast.error("No pudimos actualizar el favorito."))}
+          />
+        ))}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex gap-1.5">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              onClick={() => setPage(n)}
+              className={cn(
+                "size-8 rounded-md border text-xs font-medium",
+                n === page && "border-foreground bg-foreground text-background"
+              )}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <LibroDetailSheet
+        copia={selected}
+        global={selected ? globales[selected.isbn] : undefined}
+        onClose={() => setSelectedId(null)}
+      />
     </div>
   );
 }

@@ -13,6 +13,11 @@ service cloud.firestore {
           get(/databases/$(database)/documents/Bibliotecas/$(bibliotecaId)).data.miembrosUids;
     }
 
+    function isInvitedTo(biblioteca) {
+      return signedIn() &&
+        request.auth.token.email in biblioteca.data.invitacionesPendientes;
+    }
+
     // Catálogo comunitario de libros, indexado por ISBN. Lectura pública
     // (permite links de solo lectura y ver ratings/dueños antes de loguearse).
     // Escritura: cualquier usuario logueado puede crear o enriquecer un libro
@@ -33,9 +38,12 @@ service cloud.firestore {
 
     // Espacios colaborativos. Solo los miembros pueden leer/escribir la
     // biblioteca; cualquier usuario logueado puede crear una nueva
-    // agregándose a sí mismo como miembro.
+    // agregándose a sí mismo como miembro. Un usuario invitado por email
+    // (todavía no es miembro) puede leer/actualizar el doc únicamente para
+    // auto-aceptar la invitación (ver aceptarInvitacionesPendientes).
     match /Bibliotecas/{bibliotecaId} {
-      allow read, update, delete: if isMemberOf(bibliotecaId);
+      allow read, update: if isMemberOf(bibliotecaId) || isInvitedTo(resource);
+      allow delete: if isMemberOf(bibliotecaId);
       allow create: if signedIn() &&
         request.auth.uid in request.resource.data.miembrosUids &&
         request.resource.data.creadaPor == request.auth.uid;
