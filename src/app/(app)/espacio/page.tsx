@@ -62,7 +62,24 @@ export default function EspacioPage() {
     try {
       await invitarMiembro(bibliotecaActual.id, email);
       setInviteEmail("");
-      toast.success("Invitación enviada. Va a activarse cuando esa persona se loguee.");
+
+      try {
+        const res = await fetch("/api/invitar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            bibliotecaNombre: bibliotecaActual.nombre,
+            invitadaPorNombre: user?.displayName ?? user?.email ?? "Alguien",
+          }),
+        });
+        if (!res.ok) throw new Error();
+        toast.success(`Le mandamos un mail a ${email} para que se una.`);
+      } catch {
+        toast.warning(
+          "Guardamos la invitación, pero no pudimos mandar el email. Se une igual cuando esa persona se loguee con ese correo."
+        );
+      }
     } catch {
       toast.error("No pudimos invitar a esa persona.");
     } finally {
@@ -177,8 +194,8 @@ export default function EspacioPage() {
 
       <div className="text-sm font-semibold">Invitar a un nuevo miembro</div>
       <p className="mb-2 mt-1 text-xs text-muted-foreground">
-        Se activa automáticamente cuando esa persona inicie sesión con ese
-        correo (Google o link de acceso).
+        Le mandamos un mail con un link para entrar. Se une automáticamente
+        cuando inicie sesión con ese correo (Google o link de acceso).
       </p>
       <div className="flex gap-2">
         <Input
