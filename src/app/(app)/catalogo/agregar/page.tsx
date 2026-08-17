@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ScanBarcode } from "lucide-react";
+import { PenLine, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -123,6 +123,13 @@ export default function AgregarLibroPage() {
     buscar(codigo);
   }
 
+  function handleManual() {
+    setIsbn("");
+    setComunidad(null);
+    setForm(FORM_INICIAL);
+    setPaso("formulario");
+  }
+
   async function handleGuardar() {
     if (!bibliotecaActual) {
       toast.error("Todavía no tenés una biblioteca activa.");
@@ -172,7 +179,7 @@ export default function AgregarLibroPage() {
     <div className="max-w-xl">
       <h1 className="text-2xl font-bold">Agregar libro</h1>
       <p className="mb-7 mt-1 text-sm text-muted-foreground">
-        Todo libro necesita su ISBN: escaneá el código de barras o ingresalo a mano.
+        Todo libro necesita su ISBN: escaneá el código, buscalo, o cargalo a mano en el formulario.
       </p>
 
       {paso === "buscar" && (
@@ -206,6 +213,13 @@ export default function AgregarLibroPage() {
               Buscar
             </Button>
           </div>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="h-px flex-1 bg-border" />o<div className="h-px flex-1 bg-border" />
+          </div>
+          <Button variant="outline" onClick={handleManual}>
+            <PenLine />
+            Cargar manualmente
+          </Button>
         </div>
       )}
 
