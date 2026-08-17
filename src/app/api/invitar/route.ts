@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { getAdminAuth, getAdminDb } from "@/lib/firebase/admin";
 
 interface InvitarBody {
   email: string;
-  bibliotecaNombre: string;
-  invitadaPorNombre: string;
+  bibliotecaId: string;
 }
 
 function esEmailValido(email: string) {
@@ -12,8 +12,33 @@ function esEmailValido(email: string) {
 }
 
 export async function POST(request: Request) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  const authHeader = request.headers.get("authorization");
+  const idToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) {
+    return NextResponse.json({ error: "Falta autenticación." }, { status: 401 });
+  }
+
+  let adminAuth;
+  try {
+    adminAuth = getAdminAuth();
+  } catch (err) {
+    console.error("Firebase Admin no está configurado:", err);
+    return NextResponse.json(
+      { error: "Firebase Admin no está configurado en el servidor." },
+      { status: 500 }
+    );
+  }
+
+  let uid: string;
+  try {
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    uid = decoded.uid;
+  } catch {
+    return NextResponse.json({ error: "Token inválido o expirado." }, { status: 401 });
+  }
+
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!resendKey) {
     return NextResponse.json(
       { error: "Falta configurar RESEND_API_KEY en el servidor." },
       { status: 500 }
@@ -27,15 +52,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Body inválido." }, { status: 400 });
   }
 
-  const { email, bibliotecaNombre, invitadaPorNombre } = body;
-  if (!email || !esEmailValido(email) || !bibliotecaNombre) {
+  const { email, bibliotecaId } = body;
+  if (!email || !esEmailValido(email) || !bibliotecaId) {
     return NextResponse.json({ error: "Datos incompletos." }, { status: 400 });
   }
+
+  const bibliotecaSnap = await getAdminDb().collection("Bibliotecas").doc(bibliotecaId).get();
+  if (!bibliotecaSnap.exists) {
+    return NextResponse.json({ error: "Biblioteca inexistente." }, { status: 404 });
+  }
+  const biblioteca = bibliotecaSnap.data()!;
+  if (!(biblioteca.miembrosUids as string[] | undefined)?.includes(uid)) {
+    return NextResponse.json(
+      { error: "No sos miembro de esa biblioteca." },
+      { status: 403 }
+    );
+  }
+
+  const bibliotecaNombre = (biblioteca.nombre as string) ?? "una biblioteca";
+  const invitadaPorNombre =
+    (biblioteca.nombresMiembros as Record<string, string> | undefined)?.[uid] ??
+    (biblioteca.emailsMiembros as Record<string, string> | undefined)?.[uid] ??
+    "Alguien";
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const from = process.env.RESEND_FROM_EMAIL ?? "Cittadella <onboarding@resend.dev>";
 
-  const resend = new Resend(apiKey);
+  const resend = new Resend(resendKey);
 
   try {
     const { error } = await resend.emails.send({

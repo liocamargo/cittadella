@@ -64,13 +64,16 @@ export default function EspacioPage() {
       setInviteEmail("");
 
       try {
+        const idToken = await user?.getIdToken();
         const res = await fetch("/api/invitar", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
           body: JSON.stringify({
             email,
-            bibliotecaNombre: bibliotecaActual.nombre,
-            invitadaPorNombre: user?.displayName ?? user?.email ?? "Alguien",
+            bibliotecaId: bibliotecaActual.id,
           }),
         });
         if (!res.ok) {
