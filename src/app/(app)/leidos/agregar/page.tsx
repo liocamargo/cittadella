@@ -124,7 +124,11 @@ export default function AgregarLeidoPage() {
     buscar(isbnInput.trim());
   }
 
-  function handleDetected(codigo: string) {
+  function handleDetected(codigoCrudo: string) {
+    // Algunos libros (colecciones/volúmenes) traen un add-on de 5 dígitos
+    // pegado al EAN-13 (código de 18 dígitos); nos quedamos con los
+    // primeros 13, que son el ISBN real.
+    const codigo = sanitizarIsbn(codigoCrudo);
     setEscaneando(false);
     setIsbnInput(codigo);
     buscar(codigo);

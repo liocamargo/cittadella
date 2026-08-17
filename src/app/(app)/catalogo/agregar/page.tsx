@@ -69,6 +69,9 @@ export default function AgregarLibroPage() {
   const [creandoEstante, setCreandoEstante] = useState(false);
   const [nuevoEstanteNombre, setNuevoEstanteNombre] = useState("");
   const estantes = bibliotecaActual?.estantes ?? [];
+  // Guarda qué ISBN ya pasó por el aviso de "copia repetida" en buscar(),
+  // para no volver a preguntar lo mismo al guardar.
+  const isbnVerificadoRef = useRef<string | null>(null);
 
   function setCampo<K extends keyof typeof FORM_INICIAL>(campo: K, valor: string) {
     setForm((f) => ({ ...f, [campo]: valor }));
@@ -79,6 +82,27 @@ export default function AgregarLibroPage() {
       toast.error("Ingresá un ISBN.");
       return;
     }
+
+    // Avisamos ANTES de cargar datos si ya tenés este libro, para no
+    // hacerte llenar el formulario si en realidad no querías otra copia.
+    if (bibliotecaActual) {
+      try {
+        const copiasExistentes = await contarCopiasDelIsbn(bibliotecaActual.id, codigo);
+        if (copiasExistentes > 0) {
+          const seguir = window.confirm(
+            `Ya tenés ${copiasExistentes} copia(s) de este libro en tu biblioteca. ¿Querés agregar una copia más?`
+          );
+          if (!seguir) {
+            setEscaneando(true);
+            return;
+          }
+        }
+        isbnVerificadoRef.current = codigo;
+      } catch (err) {
+        console.error("Error chequeando copias existentes:", err);
+      }
+    }
+
     setBuscando(true);
     try {
       const local = await getLibroGlobal(codigo);
@@ -142,7 +166,11 @@ export default function AgregarLibroPage() {
     buscar(isbnInput.trim());
   }
 
-  function handleDetected(codigo: string) {
+  function handleDetected(codigoCrudo: string) {
+    // Algunos libros (colecciones/volúmenes) traen un add-on de 5 dígitos
+    // pegado al EAN-13 (código de 18 dígitos); nos quedamos con los
+    // primeros 13, que son el ISBN real.
+    const codigo = sanitizarIsbn(codigoCrudo);
     setEscaneando(false);
     setIsbnInput(codigo);
     buscar(codigo);
@@ -202,7 +230,9 @@ export default function AgregarLibroPage() {
       return;
     }
 
-    if (isbn) {
+    // Si el ISBN no pasó por buscar() (p.ej. lo escribieron directo en el
+    // formulario tras "Cargar manualmente"), chequeamos acá como respaldo.
+    if (isbn && isbn !== isbnVerificadoRef.current) {
       try {
         const copiasExistentes = await contarCopiasDelIsbn(bibliotecaActual.id, isbn);
         if (copiasExistentes > 0) {
