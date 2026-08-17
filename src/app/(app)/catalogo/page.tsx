@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookCheck, Plus } from "lucide-react";
+import { BookCheck, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -254,7 +254,15 @@ export default function CatalogoPage() {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="flex size-8 items-center justify-center rounded-md border text-xs font-medium disabled:opacity-40"
+            aria-label="Página anterior"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
             <button
               key={n}
@@ -267,6 +275,14 @@ export default function CatalogoPage() {
               {n}
             </button>
           ))}
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="flex size-8 items-center justify-center rounded-md border text-xs font-medium disabled:opacity-40"
+            aria-label="Página siguiente"
+          >
+            <ChevronRight className="size-4" />
+          </button>
         </div>
       )}
 

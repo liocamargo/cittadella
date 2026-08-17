@@ -68,6 +68,13 @@ export async function actualizarPortada(isbn: string, portadaUrl: string): Promi
   await updateDoc(doc(db, GLOBALES, isbn), { portadaUrl });
 }
 
+export async function actualizarLibroGlobal(
+  isbn: string,
+  data: Partial<DatosComunidad>
+): Promise<void> {
+  await updateDoc(doc(db, GLOBALES, isbn), { ...data });
+}
+
 export async function contarCopiasDelIsbn(
   bibliotecaId: string,
   isbn: string

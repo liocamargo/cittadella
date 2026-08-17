@@ -63,6 +63,9 @@ export function SidebarNav() {
     .charAt(0)
     .toUpperCase();
 
+  const tituloActual =
+    NAV_ITEMS.find((item) => pathname?.startsWith(item.href))?.label ?? "Cittadella";
+
   async function handleLogout() {
     await signOutUser();
     router.replace("/login");
@@ -210,16 +213,15 @@ export function SidebarNav() {
         </div>
       </aside>
 
-      {/* Mobile: header fijo arriba con menú para Espacio/Importar */}
-      <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b bg-background px-4 py-3 md:hidden">
-        <span className="text-[15px] font-bold">Cittadella</span>
+      {/* Mobile: header fijo arriba — menú | título | cuenta */}
+      <header className="fixed inset-x-0 top-0 z-40 grid grid-cols-[auto_1fr_auto] items-center gap-2 border-b bg-background px-3 py-2.5 md:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex size-8 items-center justify-center rounded-md border text-muted-foreground">
               <Menu className="size-4" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="start">
             {MOBILE_MENU_ITEMS.map(({ href, label, icon: Icon }) => (
               <DropdownMenuItem key={href} asChild>
                 <Link href={href} className="flex items-center gap-2">
@@ -230,10 +232,27 @@ export function SidebarNav() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <span className="truncate text-center text-[15px] font-bold">
+          {tituloActual}
+        </span>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex size-8 items-center justify-center rounded-full">
+              <Avatar className="size-8">
+                <AvatarFallback className="bg-primary text-[12px] font-semibold text-primary-foreground">
+                  {initial}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          </DropdownMenuTrigger>
+          {accountMenuContent}
+        </DropdownMenu>
       </header>
 
       {/* Mobile: tab bar fija abajo */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
         {MOBILE_TAB_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname?.startsWith(href);
           return (
@@ -250,19 +269,6 @@ export function SidebarNav() {
             </Link>
           );
         })}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium text-muted-foreground">
-              <Avatar className="size-5">
-                <AvatarFallback className="bg-primary text-[9px] font-semibold text-primary-foreground">
-                  {initial}
-                </AvatarFallback>
-              </Avatar>
-              <span className="leading-none">Cuenta</span>
-            </button>
-          </DropdownMenuTrigger>
-          {accountMenuContent}
-        </DropdownMenu>
       </nav>
     </>
   );

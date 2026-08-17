@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { BookMarked, Check, Star, Trash2 } from "lucide-react";
+import { BookMarked, Check, Pencil, Star, Trash2 } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -15,9 +15,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { useBiblioteca } from "@/hooks/use-biblioteca";
 import {
+  actualizarCopia,
+  actualizarLibroGlobal,
   actualizarPortada,
   devolverLibro,
   eliminarCopia,
@@ -29,6 +39,21 @@ import {
 } from "@/lib/firestore/libros";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import type { LibroEnBiblioteca, LibroGlobal, Resena } from "@/types";
+
+const CAMPOS_EDITABLES = {
+  titulo: "",
+  subtitulo: "",
+  autor: "",
+  editorial: "",
+  anio: "",
+  paginas: "",
+  idioma: "",
+  genero: "",
+  sinopsis: "",
+  estante: "",
+  tipoTapa: "",
+  notas: "",
+};
 
 interface LibroDetailSheetProps {
   copia: LibroEnBiblioteca | null;
@@ -42,7 +67,11 @@ export function LibroDetailSheet({
   onClose,
 }: LibroDetailSheetProps) {
   const { user } = useAuth();
+  const { bibliotecaActual } = useBiblioteca();
   const [prestando, setPrestando] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+  const [formEdit, setFormEdit] = useState(CAMPOS_EDITABLES);
   const [loanName, setLoanName] = useState("");
   const [loanDate, setLoanDate] = useState(
     new Date().toISOString().slice(0, 10)
@@ -57,10 +86,71 @@ export function LibroDetailSheet({
     if (!copia) return;
     setPrestando(false);
     setReviewOpen(false);
+    setEditando(false);
     return listenResenas(copia.isbn, setResenas);
   }, [copia]);
 
   if (!copia) return null;
+
+  function setCampoEdit<K extends keyof typeof CAMPOS_EDITABLES>(
+    campo: K,
+    valor: string
+  ) {
+    setFormEdit((f) => ({ ...f, [campo]: valor }));
+  }
+
+  function handleEmpezarEdicion() {
+    if (!copia) return;
+    setFormEdit({
+      titulo: global?.titulo ?? "",
+      subtitulo: global?.subtitulo ?? "",
+      autor: global?.autor ?? "",
+      editorial: global?.editorial ?? "",
+      anio: global?.anio ?? "",
+      paginas: global?.paginas ?? "",
+      idioma: global?.idioma ?? "",
+      genero: global?.genero ?? "",
+      sinopsis: global?.sinopsis ?? "",
+      estante: copia.estante ?? "",
+      tipoTapa: copia.tipoTapa ?? "",
+      notas: copia.notas ?? "",
+    });
+    setEditando(true);
+  }
+
+  async function handleGuardarEdicion() {
+    if (!copia) return;
+    if (!formEdit.titulo.trim()) {
+      toast.error("El título es obligatorio.");
+      return;
+    }
+    setGuardandoEdicion(true);
+    try {
+      await actualizarLibroGlobal(copia.isbn, {
+        titulo: formEdit.titulo.trim(),
+        subtitulo: formEdit.subtitulo.trim() || undefined,
+        autor: formEdit.autor.trim(),
+        editorial: formEdit.editorial.trim() || undefined,
+        anio: formEdit.anio.trim() || undefined,
+        paginas: formEdit.paginas.trim() || undefined,
+        idioma: formEdit.idioma.trim() || undefined,
+        genero: formEdit.genero.trim() || undefined,
+        sinopsis: formEdit.sinopsis.trim() || undefined,
+      });
+      await actualizarCopia(copia.id, {
+        estante: formEdit.estante.trim(),
+        tipoTapa: formEdit.tipoTapa.trim() || undefined,
+        notas: formEdit.notas.trim() || undefined,
+      });
+      toast.success("Datos actualizados.");
+      setEditando(false);
+    } catch (err) {
+      console.error("Error editando el libro:", err);
+      toast.error("No pudimos guardar los cambios.");
+    } finally {
+      setGuardandoEdicion(false);
+    }
+  }
 
   async function handlePrestar() {
     if (!copia) return;
@@ -227,53 +317,186 @@ export function LibroDetailSheet({
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5 text-sm">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-              Datos del libro
-            </div>
-            <div>
-              <strong>ISBN:</strong> {copia.isbn || "—"}
-            </div>
-            <div>
-              <strong>Editorial:</strong> {global?.editorial || "—"}
-            </div>
-            <div>
-              <strong>Año:</strong> {global?.anio || "—"}
-            </div>
-            {global?.paginas && (
-              <div>
-                <strong>Páginas:</strong> {global.paginas}
+          {editando ? (
+            <div className="flex flex-col gap-3 text-sm">
+              <div className="flex items-center justify-between">
+                <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                  Editar datos
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditando(false)}
+                  disabled={guardandoEdicion}
+                >
+                  Cancelar
+                </Button>
               </div>
-            )}
-            <div>
-              <strong>Idioma:</strong> {global?.idioma || "—"}
-            </div>
-            <div>
-              <strong>Género:</strong> {global?.genero || "—"}
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-1.5 border-t pt-4 text-sm">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-              Tu copia
-            </div>
-            <div>
-              <strong>Estante:</strong> {copia.estante || "—"}
-            </div>
-            {copia.tipoTapa && (
-              <div>
-                <strong>Tapa:</strong> {copia.tipoTapa}
+              <FieldEdit label="Título">
+                <Input
+                  value={formEdit.titulo}
+                  onChange={(e) => setCampoEdit("titulo", e.target.value)}
+                />
+              </FieldEdit>
+              <FieldEdit label="Subtítulo">
+                <Input
+                  value={formEdit.subtitulo}
+                  onChange={(e) => setCampoEdit("subtitulo", e.target.value)}
+                />
+              </FieldEdit>
+              <FieldEdit label="Autor(es)">
+                <Input
+                  value={formEdit.autor}
+                  onChange={(e) => setCampoEdit("autor", e.target.value)}
+                />
+              </FieldEdit>
+              <div className="flex gap-2">
+                <FieldEdit label="Editorial" className="flex-[2]">
+                  <Input
+                    value={formEdit.editorial}
+                    onChange={(e) => setCampoEdit("editorial", e.target.value)}
+                  />
+                </FieldEdit>
+                <FieldEdit label="Año" className="w-20">
+                  <Input
+                    value={formEdit.anio}
+                    onChange={(e) => setCampoEdit("anio", e.target.value)}
+                  />
+                </FieldEdit>
+                <FieldEdit label="Páginas" className="w-20">
+                  <Input
+                    value={formEdit.paginas}
+                    onChange={(e) => setCampoEdit("paginas", e.target.value)}
+                  />
+                </FieldEdit>
               </div>
-            )}
-            <div>
-              <strong>Agregado:</strong> {copia.fechaAgregado?.slice(0, 10)}
-            </div>
-            {copia.notas && (
-              <div>
-                <strong>Notas privadas:</strong> {copia.notas}
+              <div className="flex gap-2">
+                <FieldEdit label="Género" className="flex-1">
+                  <Input
+                    value={formEdit.genero}
+                    onChange={(e) => setCampoEdit("genero", e.target.value)}
+                  />
+                </FieldEdit>
+                <FieldEdit label="Idioma" className="w-24">
+                  <Input
+                    value={formEdit.idioma}
+                    onChange={(e) => setCampoEdit("idioma", e.target.value)}
+                  />
+                </FieldEdit>
               </div>
-            )}
-          </div>
+              <FieldEdit label="Sinopsis">
+                <Textarea
+                  rows={3}
+                  value={formEdit.sinopsis}
+                  onChange={(e) => setCampoEdit("sinopsis", e.target.value)}
+                />
+              </FieldEdit>
+
+              <div className="mt-1 border-t pt-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                Tu copia
+              </div>
+              <FieldEdit label="Estante">
+                {bibliotecaActual && bibliotecaActual.estantes.length > 0 ? (
+                  <Select
+                    value={formEdit.estante}
+                    onValueChange={(v) => setCampoEdit("estante", v)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Elegí un estante" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bibliotecaActual.estantes.map((e) => (
+                        <SelectItem key={e} value={e}>
+                          {e}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    value={formEdit.estante}
+                    onChange={(e) => setCampoEdit("estante", e.target.value)}
+                  />
+                )}
+              </FieldEdit>
+              <FieldEdit label="Tipo de tapa">
+                <Input
+                  value={formEdit.tipoTapa}
+                  onChange={(e) => setCampoEdit("tipoTapa", e.target.value)}
+                />
+              </FieldEdit>
+              <FieldEdit label="Notas privadas">
+                <Input
+                  value={formEdit.notas}
+                  onChange={(e) => setCampoEdit("notas", e.target.value)}
+                />
+              </FieldEdit>
+
+              <Button onClick={handleGuardarEdicion} disabled={guardandoEdicion}>
+                Guardar cambios
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col gap-1.5 text-sm">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Datos del libro
+                  </div>
+                  <button
+                    onClick={handleEmpezarEdicion}
+                    className="flex items-center gap-1 text-xs font-semibold text-primary underline"
+                  >
+                    <Pencil className="size-3" />
+                    Editar
+                  </button>
+                </div>
+                <div>
+                  <strong>ISBN:</strong> {copia.isbn || "—"}
+                </div>
+                <div>
+                  <strong>Editorial:</strong> {global?.editorial || "—"}
+                </div>
+                <div>
+                  <strong>Año:</strong> {global?.anio || "—"}
+                </div>
+                {global?.paginas && (
+                  <div>
+                    <strong>Páginas:</strong> {global.paginas}
+                  </div>
+                )}
+                <div>
+                  <strong>Idioma:</strong> {global?.idioma || "—"}
+                </div>
+                <div>
+                  <strong>Género:</strong> {global?.genero || "—"}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5 border-t pt-4 text-sm">
+                <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                  Tu copia
+                </div>
+                <div>
+                  <strong>Estante:</strong> {copia.estante || "—"}
+                </div>
+                {copia.tipoTapa && (
+                  <div>
+                    <strong>Tapa:</strong> {copia.tipoTapa}
+                  </div>
+                )}
+                <div>
+                  <strong>Agregado:</strong> {copia.fechaAgregado?.slice(0, 10)}
+                </div>
+                {copia.notas && (
+                  <div>
+                    <strong>Notas privadas:</strong> {copia.notas}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           <div className="border-t pt-4">
             <div className="mb-2.5 flex items-center justify-between">
@@ -404,5 +627,22 @@ export function LibroDetailSheet({
         onSeleccionar={handleActualizarPortada}
       />
     </Sheet>
+  );
+}
+
+function FieldEdit({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <Label className="mb-1 block text-xs text-muted-foreground">{label}</Label>
+      {children}
+    </div>
   );
 }

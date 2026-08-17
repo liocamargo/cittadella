@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Star, Trash2 } from "lucide-react";
+import { Pencil, Star, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,12 +10,30 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { listenResenas, publicarResena } from "@/lib/firestore/libros";
+import {
+  actualizarLibroGlobal,
+  listenResenas,
+  publicarResena,
+} from "@/lib/firestore/libros";
 import { quitarLectura } from "@/lib/firestore/lecturas";
 import type { LibroGlobal, Resena } from "@/types";
+
+const CAMPOS_EDITABLES = {
+  titulo: "",
+  subtitulo: "",
+  autor: "",
+  editorial: "",
+  anio: "",
+  paginas: "",
+  idioma: "",
+  genero: "",
+  sinopsis: "",
+};
 
 interface LecturaDetailDialogProps {
   isbn: string | null;
@@ -33,14 +51,69 @@ export function LecturaDetailDialog({
   const [reviewOpen, setReviewOpen] = useState(false);
   const [estrellas, setEstrellas] = useState(5);
   const [comentario, setComentario] = useState("");
+  const [editando, setEditando] = useState(false);
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+  const [formEdit, setFormEdit] = useState(CAMPOS_EDITABLES);
 
   useEffect(() => {
     if (!isbn) return;
     setReviewOpen(false);
+    setEditando(false);
     return listenResenas(isbn, setResenas);
   }, [isbn]);
 
   if (!isbn) return null;
+
+  function setCampoEdit<K extends keyof typeof CAMPOS_EDITABLES>(
+    campo: K,
+    valor: string
+  ) {
+    setFormEdit((f) => ({ ...f, [campo]: valor }));
+  }
+
+  function handleEmpezarEdicion() {
+    setFormEdit({
+      titulo: global?.titulo ?? "",
+      subtitulo: global?.subtitulo ?? "",
+      autor: global?.autor ?? "",
+      editorial: global?.editorial ?? "",
+      anio: global?.anio ?? "",
+      paginas: global?.paginas ?? "",
+      idioma: global?.idioma ?? "",
+      genero: global?.genero ?? "",
+      sinopsis: global?.sinopsis ?? "",
+    });
+    setEditando(true);
+  }
+
+  async function handleGuardarEdicion() {
+    if (!isbn) return;
+    if (!formEdit.titulo.trim()) {
+      toast.error("El título es obligatorio.");
+      return;
+    }
+    setGuardandoEdicion(true);
+    try {
+      await actualizarLibroGlobal(isbn, {
+        titulo: formEdit.titulo.trim(),
+        subtitulo: formEdit.subtitulo.trim() || undefined,
+        autor: formEdit.autor.trim(),
+        editorial: formEdit.editorial.trim() || undefined,
+        anio: formEdit.anio.trim() || undefined,
+        paginas: formEdit.paginas.trim() || undefined,
+        idioma: formEdit.idioma.trim() || undefined,
+        genero: formEdit.genero.trim() || undefined,
+        sinopsis: formEdit.sinopsis.trim() || undefined,
+      });
+      toast.success("Datos actualizados.");
+      setEditando(false);
+    } catch (err) {
+      console.error("Error editando el libro:", err);
+      toast.error("No pudimos guardar los cambios.");
+    } finally {
+      setGuardandoEdicion(false);
+    }
+  }
 
   async function handlePublicarResena() {
     if (!isbn || !user) return;
@@ -88,31 +161,120 @@ export function LecturaDetailDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-4 text-sm">
-          <div className="flex items-center gap-3">
-            {global?.portadaUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={global.portadaUrl}
-                alt={global.titulo}
-                className="h-[130px] w-[88px] rounded-md border object-cover"
-              />
-            ) : (
-              <div className="flex h-[130px] w-[88px] items-center justify-center rounded-md border bg-muted">
-                <span className="text-2xl font-bold text-muted-foreground/60">
-                  {inicial}
-                </span>
+          {editando ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                  Editar datos
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditando(false)}
+                  disabled={guardandoEdicion}
+                >
+                  Cancelar
+                </Button>
               </div>
-            )}
-            <div>
-              <div className="text-muted-foreground">{global?.autor}</div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                ★ {global?.ratingPromedio ?? 0} ({global?.totalResenas ?? 0} reseña(s)) ·{" "}
-                {global?.propietarios ?? 0} biblioteca(s) lo tienen
+              <FieldEdit label="Título">
+                <Input
+                  value={formEdit.titulo}
+                  onChange={(e) => setCampoEdit("titulo", e.target.value)}
+                />
+              </FieldEdit>
+              <FieldEdit label="Subtítulo">
+                <Input
+                  value={formEdit.subtitulo}
+                  onChange={(e) => setCampoEdit("subtitulo", e.target.value)}
+                />
+              </FieldEdit>
+              <FieldEdit label="Autor(es)">
+                <Input
+                  value={formEdit.autor}
+                  onChange={(e) => setCampoEdit("autor", e.target.value)}
+                />
+              </FieldEdit>
+              <div className="flex gap-2">
+                <FieldEdit label="Editorial" className="flex-[2]">
+                  <Input
+                    value={formEdit.editorial}
+                    onChange={(e) => setCampoEdit("editorial", e.target.value)}
+                  />
+                </FieldEdit>
+                <FieldEdit label="Año" className="w-20">
+                  <Input
+                    value={formEdit.anio}
+                    onChange={(e) => setCampoEdit("anio", e.target.value)}
+                  />
+                </FieldEdit>
+                <FieldEdit label="Páginas" className="w-20">
+                  <Input
+                    value={formEdit.paginas}
+                    onChange={(e) => setCampoEdit("paginas", e.target.value)}
+                  />
+                </FieldEdit>
               </div>
+              <div className="flex gap-2">
+                <FieldEdit label="Género" className="flex-1">
+                  <Input
+                    value={formEdit.genero}
+                    onChange={(e) => setCampoEdit("genero", e.target.value)}
+                  />
+                </FieldEdit>
+                <FieldEdit label="Idioma" className="w-24">
+                  <Input
+                    value={formEdit.idioma}
+                    onChange={(e) => setCampoEdit("idioma", e.target.value)}
+                  />
+                </FieldEdit>
+              </div>
+              <FieldEdit label="Sinopsis">
+                <Textarea
+                  rows={3}
+                  value={formEdit.sinopsis}
+                  onChange={(e) => setCampoEdit("sinopsis", e.target.value)}
+                />
+              </FieldEdit>
+              <Button onClick={handleGuardarEdicion} disabled={guardandoEdicion}>
+                Guardar cambios
+              </Button>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                {global?.portadaUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={global.portadaUrl}
+                    alt={global.titulo}
+                    className="h-[130px] w-[88px] rounded-md border object-cover"
+                  />
+                ) : (
+                  <div className="flex h-[130px] w-[88px] items-center justify-center rounded-md border bg-muted">
+                    <span className="text-2xl font-bold text-muted-foreground/60">
+                      {inicial}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <div className="text-muted-foreground">{global?.autor}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    ★ {global?.ratingPromedio ?? 0} ({global?.totalResenas ?? 0} reseña(s)) ·{" "}
+                    {global?.propietarios ?? 0} biblioteca(s) lo tienen
+                  </div>
+                  <button
+                    onClick={handleEmpezarEdicion}
+                    className="mt-2 flex items-center gap-1 text-xs font-semibold text-primary underline"
+                  >
+                    <Pencil className="size-3" />
+                    Editar datos
+                  </button>
+                </div>
+              </div>
 
-          {global?.sinopsis && <p className="leading-relaxed">{global.sinopsis}</p>}
+              {global?.sinopsis && <p className="leading-relaxed">{global.sinopsis}</p>}
+            </>
+          )}
 
           <div className="border-t pt-3">
             <div className="mb-2 flex items-center justify-between">
@@ -180,5 +342,22 @@ export function LecturaDetailDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function FieldEdit({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <Label className="mb-1 block text-xs text-muted-foreground">{label}</Label>
+      {children}
+    </div>
   );
 }
