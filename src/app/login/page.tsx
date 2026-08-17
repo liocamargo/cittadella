@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -128,12 +127,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen w-full items-center justify-center bg-background px-4">
       <div className="flex w-full max-w-[380px] flex-col gap-6 rounded-xl border bg-card p-9 shadow-sm">
         <div>
-          <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <BookOpen className="size-5 text-primary-foreground" />
-          </div>
-          <h1 className="text-[22px] font-semibold text-foreground">
-            Cittadella
-          </h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Cittadella" className="mb-3 h-9 w-auto" />
           <p className="mt-1 text-sm text-muted-foreground">
             Catálogo compartido de tu biblioteca
           </p>
