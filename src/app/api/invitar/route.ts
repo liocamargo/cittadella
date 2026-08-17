@@ -62,10 +62,12 @@ export async function POST(request: Request) {
     });
 
     if (error) {
+      console.error("Error de Resend enviando invitación:", error);
       return NextResponse.json({ error: error.message }, { status: 502 });
     }
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.error("Error inesperado enviando invitación:", err);
     return NextResponse.json(
       { error: "No pudimos enviar el email." },
       { status: 502 }

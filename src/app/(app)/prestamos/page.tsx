@@ -32,7 +32,8 @@ export default function PrestamosPage() {
     try {
       await devolverLibro(id);
       toast.success("Marcado como devuelto.");
-    } catch {
+    } catch (err) {
+      console.error("Error marcando devolución:", err);
       toast.error("No pudimos actualizar el préstamo.");
     }
   }

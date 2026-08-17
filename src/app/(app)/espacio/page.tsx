@@ -73,14 +73,19 @@ export default function EspacioPage() {
             invitadaPorNombre: user?.displayName ?? user?.email ?? "Alguien",
           }),
         });
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.error ?? `HTTP ${res.status}`);
+        }
         toast.success(`Le mandamos un mail a ${email} para que se una.`);
-      } catch {
+      } catch (err) {
+        console.error("Error mandando el email de invitación:", err);
         toast.warning(
           "Guardamos la invitación, pero no pudimos mandar el email. Se une igual cuando esa persona se loguee con ese correo."
         );
       }
-    } catch {
+    } catch (err) {
+      console.error("Error guardando la invitación:", err);
       toast.error("No pudimos invitar a esa persona.");
     } finally {
       setInviting(false);

@@ -98,16 +98,26 @@ export default function CatalogoPage() {
 
   async function handleCreateShelf() {
     if (!bibliotecaActual || !newShelf.trim()) return;
-    await agregarEstante(bibliotecaActual.id, newShelf.trim());
-    setNewShelf("");
-    setShelfCreateOpen(false);
+    try {
+      await agregarEstante(bibliotecaActual.id, newShelf.trim());
+      setNewShelf("");
+      setShelfCreateOpen(false);
+    } catch (err) {
+      console.error("Error creando estante:", err);
+      toast.error("No pudimos crear el estante.");
+    }
   }
 
   async function handleDeleteShelf(nombre: string) {
     if (!bibliotecaActual) return;
     if (!window.confirm(`¿Eliminar el estante "${nombre}"?`)) return;
-    await eliminarEstante(bibliotecaActual.id, nombre);
-    setShelfFilter("all");
+    try {
+      await eliminarEstante(bibliotecaActual.id, nombre);
+      setShelfFilter("all");
+    } catch (err) {
+      console.error("Error eliminando estante:", err);
+      toast.error("No pudimos eliminar el estante.");
+    }
   }
 
   return (
@@ -226,7 +236,12 @@ export default function CatalogoPage() {
             copia={copia}
             global={globales[copia.isbn]}
             onClick={() => setSelectedId(copia.id)}
-            onToggleFavorito={() => toggleFavorito(copia.id, !copia.favorito).catch(() => toast.error("No pudimos actualizar el favorito."))}
+            onToggleFavorito={() =>
+              toggleFavorito(copia.id, !copia.favorito).catch((err) => {
+                console.error("Error actualizando favorito:", err);
+                toast.error("No pudimos actualizar el favorito.");
+              })
+            }
           />
         ))}
       </div>

@@ -57,7 +57,8 @@ export default function LoginPage() {
     try {
       await signInWithGoogle();
       router.replace("/catalogo");
-    } catch {
+    } catch (err) {
+      console.error("Error con Google Sign-In:", err);
       toast.error("No pudimos iniciar sesión con Google.");
     } finally {
       setSubmitting(false);
@@ -73,7 +74,8 @@ export default function LoginPage() {
     try {
       await sendLoginLink(email.trim());
       setStep("sent");
-    } catch {
+    } catch (err) {
+      console.error("Error enviando el link de acceso:", err);
       toast.error("No pudimos enviar el link. Probá de nuevo.");
     } finally {
       setSubmitting(false);
@@ -89,7 +91,8 @@ export default function LoginPage() {
     try {
       await completeEmailLinkSignIn(window.location.href, confirmEmail.trim());
       router.replace("/catalogo");
-    } catch {
+    } catch (err) {
+      console.error("Error completando el login por email link:", err);
       toast.error("El link no es válido o expiró. Pedí uno nuevo.");
       setStep("start");
     } finally {

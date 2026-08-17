@@ -51,7 +51,8 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
           }
         );
         if (!cancelado) setEstado("escaneando");
-      } catch {
+      } catch (err) {
+        console.error("Error iniciando la cámara:", err);
         if (!cancelado) {
           setEstado("error");
           setErrorMsg(

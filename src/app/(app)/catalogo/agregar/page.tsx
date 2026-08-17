@@ -106,7 +106,8 @@ export default function AgregarLibroPage() {
       }
       setIsbn(codigo);
       setPaso("formulario");
-    } catch {
+    } catch (err) {
+      console.error("Error buscando ISBN:", err);
       toast.error("No pudimos buscar el ISBN. Probá de nuevo.");
     } finally {
       setBuscando(false);
@@ -168,8 +169,10 @@ export default function AgregarLibroPage() {
       );
       toast.success("Libro agregado a tu biblioteca.");
       router.push("/catalogo");
-    } catch {
-      toast.error("No pudimos guardar el libro.");
+    } catch (err) {
+      console.error("Error guardando el libro:", err);
+      const mensaje = err instanceof Error ? err.message : String(err);
+      toast.error(`No pudimos guardar el libro: ${mensaje}`);
     } finally {
       setGuardando(false);
     }

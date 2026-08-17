@@ -1,6 +1,6 @@
 import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
 import { type Auth, getAuth } from "firebase/auth";
-import { type Firestore, getFirestore } from "firebase/firestore";
+import { type Firestore, initializeFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -30,4 +30,9 @@ function createFirebaseApp(): FirebaseApp {
 
 export const firebaseApp = createFirebaseApp();
 export const auth: Auth = getAuth(firebaseApp);
-export const db: Firestore = getFirestore(firebaseApp);
+// ignoreUndefinedProperties: los campos opcionales del formulario (subtítulo,
+// notas, etc.) llegan como `undefined` cuando están vacíos, y Firestore
+// rechaza esos valores en set()/update() salvo que se ignoren acá.
+export const db: Firestore = initializeFirestore(firebaseApp, {
+  ignoreUndefinedProperties: true,
+});

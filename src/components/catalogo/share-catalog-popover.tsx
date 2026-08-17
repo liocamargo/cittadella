@@ -36,7 +36,8 @@ export function ShareCatalogPopover({
     setActualizando(true);
     try {
       await setCatalogoPublico(bibliotecaId, activo);
-    } catch {
+    } catch (err) {
+      console.error("Error actualizando catalogoPublico:", err);
       toast.error("No pudimos actualizar el link público.");
     } finally {
       setActualizando(false);

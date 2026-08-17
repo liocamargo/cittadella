@@ -185,7 +185,10 @@ export default function ImportarPage() {
         setDatosComunidad({});
         cargarDatosComunidad(filas);
       },
-      error: () => toast.error("No pudimos leer ese archivo."),
+      error: (err) => {
+        console.error("Error leyendo el CSV:", err);
+        toast.error("No pudimos leer ese archivo.");
+      },
     });
   }
 
@@ -220,6 +223,7 @@ export default function ImportarPage() {
     setProgreso(0);
     let ok = 0;
     let omitidos = 0;
+    let fallidos = 0;
     for (const fila of preview) {
       if (isbnsExistentes.has(fila.isbn)) {
         omitidos += 1;
@@ -242,14 +246,19 @@ export default function ImportarPage() {
           { estante: fila.estante, notas: fila.notas || undefined }
         );
         ok += 1;
-      } catch {
-        // seguimos con las demás filas
+      } catch (err) {
+        console.error(`Error importando "${fila.titulo}" (ISBN ${fila.isbn}):`, err);
+        fallidos += 1;
       }
       setProgreso((p) => p + 1);
     }
     setImportando(false);
     setPreview(null);
-    const detalle = omitidos > 0 ? ` (${omitidos} ya estaban en tu biblioteca)` : "";
+    const detalles = [
+      omitidos > 0 && `${omitidos} ya estaban en tu biblioteca`,
+      fallidos > 0 && `${fallidos} fallaron (mirá la consola del navegador)`,
+    ].filter(Boolean);
+    const detalle = detalles.length > 0 ? ` (${detalles.join(", ")})` : "";
     toast.success(`Se agregaron ${ok} de ${preview.length} libro(s)${detalle}.`);
   }
 

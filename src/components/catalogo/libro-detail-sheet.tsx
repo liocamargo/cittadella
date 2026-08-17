@@ -65,14 +65,24 @@ export function LibroDetailSheet({
       toast.error("Ingresá a quién se lo prestás.");
       return;
     }
-    await prestarLibro(copia.id, loanName.trim(), loanDate);
-    setLoanName("");
-    setPrestando(false);
+    try {
+      await prestarLibro(copia.id, loanName.trim(), loanDate);
+      setLoanName("");
+      setPrestando(false);
+    } catch (err) {
+      console.error("Error registrando el préstamo:", err);
+      toast.error("No pudimos registrar el préstamo.");
+    }
   }
 
   async function handleDevolver() {
     if (!copia) return;
-    await devolverLibro(copia.id);
+    try {
+      await devolverLibro(copia.id);
+    } catch (err) {
+      console.error("Error registrando la devolución:", err);
+      toast.error("No pudimos registrar la devolución.");
+    }
   }
 
   async function handleEliminar() {
@@ -80,8 +90,13 @@ export function LibroDetailSheet({
     if (!window.confirm(`¿Eliminar "${global?.titulo ?? "este libro"}" de tu biblioteca?`)) {
       return;
     }
-    await eliminarCopia(copia.id);
-    onClose();
+    try {
+      await eliminarCopia(copia.id);
+      onClose();
+    } catch (err) {
+      console.error("Error eliminando el libro:", err);
+      toast.error("No pudimos eliminar el libro.");
+    }
   }
 
   async function handlePublicarResena() {
@@ -90,15 +105,20 @@ export function LibroDetailSheet({
       toast.error("Escribí un comentario.");
       return;
     }
-    await publicarResena(
-      copia.isbn,
-      user.uid,
-      user.displayName ?? user.email ?? "Anónimo",
-      estrellas,
-      comentario.trim()
-    );
-    setComentario("");
-    setReviewOpen(false);
+    try {
+      await publicarResena(
+        copia.isbn,
+        user.uid,
+        user.displayName ?? user.email ?? "Anónimo",
+        estrellas,
+        comentario.trim()
+      );
+      setComentario("");
+      setReviewOpen(false);
+    } catch (err) {
+      console.error("Error publicando la reseña:", err);
+      toast.error("No pudimos publicar la reseña.");
+    }
   }
 
   const inicial = (global?.titulo ?? "?").trim().charAt(0).toUpperCase();
@@ -134,7 +154,12 @@ export function LibroDetailSheet({
               </div>
             </div>
             <button
-              onClick={() => toggleFavorito(copia.id, !copia.favorito)}
+              onClick={() =>
+                toggleFavorito(copia.id, !copia.favorito).catch((err) => {
+                  console.error("Error actualizando favorito:", err);
+                  toast.error("No pudimos actualizar el favorito.");
+                })
+              }
               className={cn(
                 "flex size-8 items-center justify-center rounded-md border text-muted-foreground",
                 copia.favorito && "text-amber-500"
@@ -327,7 +352,12 @@ export function LibroDetailSheet({
               )}
               <Button
                 variant="outline"
-                onClick={() => toggleLeido(copia.id, !copia.leido)}
+                onClick={() =>
+                  toggleLeido(copia.id, !copia.leido).catch((err) => {
+                    console.error("Error actualizando leído:", err);
+                    toast.error("No pudimos actualizar el estado de leído.");
+                  })
+                }
               >
                 {copia.leido ? "Marcar no leído" : "Marcar leído"}
               </Button>

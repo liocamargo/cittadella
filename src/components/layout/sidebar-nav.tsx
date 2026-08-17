@@ -61,7 +61,8 @@ export function SidebarNav() {
       await crearYSeleccionar(newLibraryName.trim());
       setNewLibraryName("");
       toast.success("Biblioteca creada.");
-    } catch {
+    } catch (err) {
+      console.error("Error creando biblioteca:", err);
       toast.error("No pudimos crear la biblioteca.");
     } finally {
       setCreating(false);
