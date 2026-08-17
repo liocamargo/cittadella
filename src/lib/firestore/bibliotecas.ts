@@ -24,6 +24,7 @@ function toBiblioteca(id: string, data: Record<string, unknown>): Biblioteca {
     miembrosUids: (data.miembrosUids as string[]) ?? [],
     invitacionesPendientes: (data.invitacionesPendientes as string[]) ?? [],
     nombresMiembros: (data.nombresMiembros as Record<string, string>) ?? {},
+    emailsMiembros: (data.emailsMiembros as Record<string, string>) ?? {},
     estantes: (data.estantes as string[]) ?? [],
     creadaPor: (data.creadaPor as string) ?? "",
     creadaEn: (data.creadaEn as string) ?? "",
@@ -43,13 +44,15 @@ export function listenBibliotecasDeUsuario(
 export async function crearBiblioteca(
   nombre: string,
   uid: string,
-  nombreMiembro: string
+  nombreMiembro: string,
+  email: string
 ): Promise<string> {
   const ref = await addDoc(collection(db, COL), {
     nombre,
     miembrosUids: [uid],
     invitacionesPendientes: [],
     nombresMiembros: { [uid]: nombreMiembro },
+    emailsMiembros: { [uid]: email },
     estantes: [],
     creadaPor: uid,
     creadaEn: new Date().toISOString(),
@@ -74,6 +77,7 @@ export async function aceptarInvitacionesPendientes(
         miembrosUids: arrayUnion(uid),
         invitacionesPendientes: arrayRemove(email),
         [`nombresMiembros.${uid}`]: nombre,
+        [`emailsMiembros.${uid}`]: email,
       })
     )
   );
@@ -85,10 +89,17 @@ export async function invitarMiembro(bibliotecaId: string, email: string) {
   });
 }
 
+export async function cancelarInvitacion(bibliotecaId: string, email: string) {
+  await updateDoc(doc(db, COL, bibliotecaId), {
+    invitacionesPendientes: arrayRemove(email),
+  });
+}
+
 export async function quitarMiembro(bibliotecaId: string, uid: string) {
   await updateDoc(doc(db, COL, bibliotecaId), {
     miembrosUids: arrayRemove(uid),
     [`nombresMiembros.${uid}`]: deleteField(),
+    [`emailsMiembros.${uid}`]: deleteField(),
   });
 }
 

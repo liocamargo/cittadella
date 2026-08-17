@@ -1,10 +1,200 @@
+"use client";
+
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
+import { useBiblioteca } from "@/hooks/use-biblioteca";
+import {
+  cancelarInvitacion,
+  invitarMiembro,
+  quitarMiembro,
+  renombrarMiembro,
+} from "@/lib/firestore/bibliotecas";
+
 export default function EspacioPage() {
+  const { user } = useAuth();
+  const { bibliotecaActual } = useBiblioteca();
+  const [editingUid, setEditingUid] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
+
+  if (!bibliotecaActual) {
+    return (
+      <div className="text-sm text-muted-foreground">Cargando tu biblioteca…</div>
+    );
+  }
+
+  const miembros = bibliotecaActual.miembrosUids.map((uid) => ({
+    uid,
+    nombre:
+      bibliotecaActual.nombresMiembros[uid] ??
+      bibliotecaActual.emailsMiembros[uid] ??
+      uid,
+    email: bibliotecaActual.emailsMiembros[uid] ?? "",
+    esOwner: uid === bibliotecaActual.creadaPor,
+  }));
+
+  async function handleGuardarNombre(uid: string) {
+    if (!bibliotecaActual) return;
+    if (!editName.trim()) return;
+    await renombrarMiembro(bibliotecaActual.id, uid, editName.trim());
+    setEditingUid(null);
+  }
+
+  async function handleQuitar(uid: string) {
+    if (!bibliotecaActual) return;
+    if (!window.confirm("¿Quitarle el acceso a esta persona?")) return;
+    await quitarMiembro(bibliotecaActual.id, uid);
+  }
+
+  async function handleInvitar() {
+    if (!bibliotecaActual) return;
+    const email = inviteEmail.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      toast.error("Ingresá un correo válido.");
+      return;
+    }
+    setInviting(true);
+    try {
+      await invitarMiembro(bibliotecaActual.id, email);
+      setInviteEmail("");
+      toast.success("Invitación enviada. Va a activarse cuando esa persona se loguee.");
+    } catch {
+      toast.error("No pudimos invitar a esa persona.");
+    } finally {
+      setInviting(false);
+    }
+  }
+
+  async function handleCancelarInvitacion(email: string) {
+    if (!bibliotecaActual) return;
+    await cancelarInvitacion(bibliotecaActual.id, email);
+  }
+
   return (
-    <div>
+    <div className="max-w-xl">
       <h1 className="text-2xl font-bold">Espacio compartido</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Acá vas a gestionar los miembros de tu biblioteca colaborativa. Se
-        conecta en la Fase 2.
+      <p className="mb-7 mt-1 text-sm text-muted-foreground">
+        Miembros de <strong>{bibliotecaActual.nombre}</strong>. Todos pueden
+        agregar, editar y prestar libros de esta biblioteca.
+      </p>
+
+      <div className="mb-6 flex flex-col divide-y overflow-hidden rounded-lg border">
+        {miembros.map((m) => (
+          <div
+            key={m.uid}
+            className="flex items-center justify-between gap-2.5 bg-card p-3.5"
+          >
+            {editingUid === m.uid ? (
+              <div className="flex flex-1 items-center gap-1.5">
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Nombre"
+                  className="h-8 text-sm"
+                  autoFocus
+                />
+                <Button size="sm" className="h-8" onClick={() => handleGuardarNombre(m.uid)}>
+                  Guardar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8"
+                  onClick={() => setEditingUid(null)}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <div className="text-sm font-semibold">{m.nombre}</div>
+                <div className="text-xs text-muted-foreground">{m.email}</div>
+              </div>
+            )}
+
+            <div className="flex shrink-0 items-center gap-2.5">
+              <Badge variant={m.esOwner ? "default" : "secondary"}>
+                {m.esOwner ? "Dueño" : "Miembro"}
+              </Badge>
+              {editingUid !== m.uid && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8"
+                  onClick={() => {
+                    setEditingUid(m.uid);
+                    setEditName(m.nombre);
+                  }}
+                >
+                  Editar
+                </Button>
+              )}
+              {!m.esOwner && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-destructive"
+                  onClick={() => handleQuitar(m.uid)}
+                >
+                  Quitar acceso
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {bibliotecaActual.invitacionesPendientes.length > 0 && (
+        <div className="mb-6">
+          <div className="mb-2 text-xs font-semibold text-muted-foreground">
+            Invitaciones pendientes
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {bibliotecaActual.invitacionesPendientes.map((email) => (
+              <div
+                key={email}
+                className="flex items-center justify-between rounded-lg border border-dashed p-2.5 text-sm"
+              >
+                <span className="text-muted-foreground">{email}</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs"
+                  onClick={() => handleCancelarInvitacion(email)}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="text-sm font-semibold">Invitar a un nuevo miembro</div>
+      <p className="mb-2 mt-1 text-xs text-muted-foreground">
+        Se activa automáticamente cuando esa persona inicie sesión con ese
+        correo (Google o link de acceso).
+      </p>
+      <div className="flex gap-2">
+        <Input
+          type="email"
+          placeholder="correo@ejemplo.com"
+          value={inviteEmail}
+          onChange={(e) => setInviteEmail(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleInvitar()}
+        />
+        <Button onClick={handleInvitar} disabled={inviting}>
+          Invitar
+        </Button>
+      </div>
+
+      <p className="mt-6 text-xs text-muted-foreground">
+        Conectado como <strong>{user?.email}</strong>
       </p>
     </div>
   );

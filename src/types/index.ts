@@ -54,6 +54,8 @@ export interface Biblioteca {
   invitacionesPendientes: string[];
   /** uid -> nombre para mostrar (editable desde "Espacio compartido"). */
   nombresMiembros: Record<string, string>;
+  /** uid -> email, para mostrar en "Espacio compartido". */
+  emailsMiembros: Record<string, string>;
   /** Estantes declarados explícitamente (pueden existir sin libros todavía). */
   estantes: string[];
   creadaPor: string;

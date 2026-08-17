@@ -66,11 +66,14 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
         const nombre = user.displayName
           ? `Biblioteca de ${user.displayName.split(" ")[0]}`
           : "Mi biblioteca";
-        crearBiblioteca(nombre, user.uid, user.displayName ?? user.email ?? "Yo").catch(
-          () => {
-            autoCreateAttempted.current = false;
-          }
-        );
+        crearBiblioteca(
+          nombre,
+          user.uid,
+          user.displayName ?? user.email ?? "Yo",
+          user.email ?? ""
+        ).catch(() => {
+          autoCreateAttempted.current = false;
+        });
       }
     });
 
@@ -103,7 +106,8 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
         const id = await crearBiblioteca(
           nombre,
           user.uid,
-          user.displayName ?? user.email ?? "Yo"
+          user.displayName ?? user.email ?? "Yo",
+          user.email ?? ""
         );
         setCurrentId(id);
         window.localStorage.setItem(storageKey(user.uid), id);
