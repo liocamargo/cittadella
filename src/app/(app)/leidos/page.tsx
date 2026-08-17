@@ -100,7 +100,9 @@ export default function LeidosPage() {
                 </div>
               )}
               <div className="text-[13px] font-semibold leading-tight">{g?.titulo}</div>
-              <div className="text-xs text-muted-foreground">{g?.autor}</div>
+              <div className="line-clamp-2 text-xs text-muted-foreground" title={g?.autor}>
+                {g?.autor}
+              </div>
               <Badge variant="secondary" className="w-fit text-[11px]">
                 En tu biblioteca · {copia.estante || "sin estante"}
               </Badge>
@@ -132,7 +134,9 @@ export default function LeidosPage() {
                 </div>
               )}
               <div className="text-[13px] font-semibold leading-tight">{g?.titulo}</div>
-              <div className="text-xs text-muted-foreground">{g?.autor}</div>
+              <div className="line-clamp-2 text-xs text-muted-foreground" title={g?.autor}>
+                {g?.autor}
+              </div>
               <Badge variant="outline" className="w-fit text-[11px]">
                 No está en tu biblioteca
               </Badge>

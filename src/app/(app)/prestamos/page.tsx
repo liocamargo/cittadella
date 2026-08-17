@@ -141,7 +141,9 @@ export default function PrestamosPage() {
               <div className="text-[13px] font-semibold leading-tight">
                 {global?.titulo}
               </div>
-              <div className="text-xs text-muted-foreground">{global?.autor}</div>
+              <div className="line-clamp-2 text-xs text-muted-foreground" title={global?.autor}>
+                {global?.autor}
+              </div>
               <Badge variant="outline" className="w-fit text-[11px]">
                 Prestado a {copia.prestadoA}
               </Badge>

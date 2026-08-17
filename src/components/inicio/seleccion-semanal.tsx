@@ -61,7 +61,9 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
                 </div>
               )}
               <div className="text-xs font-semibold leading-tight">{libro.titulo}</div>
-              <div className="text-[11px] text-muted-foreground">{libro.autor}</div>
+              <div className="line-clamp-2 text-[11px] text-muted-foreground" title={libro.autor}>
+                {libro.autor}
+              </div>
             </button>
           ) : (
             <div

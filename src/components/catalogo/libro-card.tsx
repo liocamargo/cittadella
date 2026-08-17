@@ -1,6 +1,6 @@
 "use client";
 
-import { BookMarked } from "lucide-react";
+import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import type { LibroEnBiblioteca, LibroGlobal } from "@/types";
@@ -48,13 +48,15 @@ export function LibroCard({
             copia.favorito && "text-amber-500"
           )}
         >
-          <BookMarked className="size-3.5" fill={copia.favorito ? "currentColor" : "none"} />
+          <Star className="size-3.5" fill={copia.favorito ? "currentColor" : "none"} />
         </button>
       </div>
       <div onClick={onClick} className="cursor-pointer text-[13px] font-semibold leading-tight">
         {titulo}
       </div>
-      <div className="text-xs text-muted-foreground">{global?.autor}</div>
+      <div className="line-clamp-2 text-xs text-muted-foreground" title={global?.autor}>
+        {global?.autor}
+      </div>
       <div className="font-mono text-[11px] text-muted-foreground">
         {copia.estante || "Sin estante"}
       </div>
