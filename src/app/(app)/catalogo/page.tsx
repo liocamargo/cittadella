@@ -18,7 +18,7 @@ import { LibroCard } from "@/components/catalogo/libro-card";
 import { LibroDetailSheet } from "@/components/catalogo/libro-detail-sheet";
 import type { LibroEnBiblioteca } from "@/types";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 12;
 type Filtro = "all" | "disponible" | "prestado" | "favorito";
 
 const FILTROS: { key: Filtro; label: string }[] = [
