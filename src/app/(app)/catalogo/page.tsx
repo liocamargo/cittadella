@@ -56,6 +56,25 @@ export default function CatalogoPage() {
     return Array.from(new Set([...declarados, ...usados]));
   }, [bibliotecaActual, copias]);
 
+  const conteos = useMemo(
+    () => ({
+      all: copias.length,
+      disponible: copias.filter((c) => c.estado === "disponible").length,
+      prestado: copias.filter((c) => c.estado === "prestado").length,
+      favorito: copias.filter((c) => c.favorito).length,
+    }),
+    [copias]
+  );
+
+  const conteoPorEstante = useMemo(() => {
+    const mapa: Record<string, number> = {};
+    for (const c of copias) {
+      if (!c.estante) continue;
+      mapa[c.estante] = (mapa[c.estante] ?? 0) + 1;
+    }
+    return mapa;
+  }, [copias]);
+
   const filtrados = useMemo(() => {
     const term = search.trim().toLowerCase();
     return copias.filter((c) => {
@@ -126,7 +145,7 @@ export default function CatalogoPage() {
               filtro === f.key && "border-foreground bg-foreground text-background"
             )}
           >
-            {f.label}
+            {f.label} ({conteos[f.key]})
           </button>
         ))}
         <div className="mx-1 h-5 w-px bg-border" />
@@ -138,7 +157,7 @@ export default function CatalogoPage() {
             shelfFilter === "all" && "border-foreground bg-foreground text-background"
           )}
         >
-          Todos
+          Todos ({copias.length})
         </button>
         {estantes.map((e) => (
           <button
@@ -149,7 +168,7 @@ export default function CatalogoPage() {
               shelfFilter === e && "border-foreground bg-foreground text-background"
             )}
           >
-            {e}
+            {e} ({conteoPorEstante[e] ?? 0})
           </button>
         ))}
         {shelfFilter !== "all" && (
