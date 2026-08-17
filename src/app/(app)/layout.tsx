@@ -33,7 +33,7 @@ export default function AppLayout({
     <BibliotecaProvider>
       <div className="flex min-h-screen w-full bg-background">
         <SidebarNav />
-        <main className="h-screen flex-1 overflow-y-auto p-5 pb-24 md:p-12">
+        <main className="h-screen flex-1 overflow-y-auto p-5 pb-24 pt-16 md:p-12">
           {children}
         </main>
       </div>

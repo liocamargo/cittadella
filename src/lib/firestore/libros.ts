@@ -147,6 +147,38 @@ export async function agregarLibroABiblioteca(
   });
 }
 
+/**
+ * Marca un libro como leído por el usuario sin agregarlo a ninguna
+ * biblioteca física: crea/enriquece Libros_Globales si hace falta (sin
+ * sumar a "propietarios", porque no es una copia física) y crea el
+ * registro en Lecturas.
+ */
+export async function agregarLibroLeido(
+  isbn: string,
+  uid: string,
+  comunidad: DatosComunidad
+): Promise<void> {
+  const globalRef = doc(db, GLOBALES, isbn);
+  const lecturaRef = doc(db, "Lecturas", `${uid}_${isbn}`);
+
+  await runTransaction(db, async (tx) => {
+    const globalSnap = await tx.get(globalRef);
+    if (!globalSnap.exists()) {
+      tx.set(globalRef, {
+        ...comunidad,
+        propietarios: 0,
+        ratingPromedio: 0,
+        totalResenas: 0,
+      });
+    }
+    tx.set(lecturaRef, {
+      uid,
+      isbn,
+      fechaLeido: new Date().toISOString(),
+    });
+  });
+}
+
 export async function actualizarCopia(
   copiaId: string,
   data: Partial<Pick<LibroEnBiblioteca, "estante" | "tipoTapa" | "notas">>

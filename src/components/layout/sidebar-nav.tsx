@@ -7,11 +7,13 @@ import {
   Home,
   Library,
   ArrowLeftRight,
+  BookCheck,
   Users,
   ArrowDownUp,
   PanelLeftClose,
   PanelLeftOpen,
   Check,
+  Menu,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -31,10 +33,20 @@ import { Button } from "@/components/ui/button";
 const NAV_ITEMS = [
   { href: "/inicio", label: "Inicio", icon: Home },
   { href: "/catalogo", label: "Catálogo", icon: Library },
+  { href: "/leidos", label: "Leídos", icon: BookCheck },
   { href: "/prestamos", label: "Préstamos", icon: ArrowLeftRight },
   { href: "/espacio", label: "Espacio", icon: Users },
   { href: "/importar", label: "Import/Export", icon: ArrowDownUp },
 ];
+
+// En mobile, la tab bar de abajo solo tiene lugar para lo más usado; el
+// resto (Espacio, Importar) vive en el menú de arriba.
+const MOBILE_TAB_ITEMS = NAV_ITEMS.filter(
+  (item) => item.href !== "/espacio" && item.href !== "/importar"
+);
+const MOBILE_MENU_ITEMS = NAV_ITEMS.filter(
+  (item) => item.href === "/espacio" || item.href === "/importar"
+);
 
 export function SidebarNav() {
   const pathname = usePathname();
@@ -198,9 +210,31 @@ export function SidebarNav() {
         </div>
       </aside>
 
+      {/* Mobile: header fijo arriba con menú para Espacio/Importar */}
+      <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b bg-background px-4 py-3 md:hidden">
+        <span className="text-[15px] font-bold">Cittadella</span>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex size-8 items-center justify-center rounded-md border text-muted-foreground">
+              <Menu className="size-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {MOBILE_MENU_ITEMS.map(({ href, label, icon: Icon }) => (
+              <DropdownMenuItem key={href} asChild>
+                <Link href={href} className="flex items-center gap-2">
+                  <Icon className="size-4" />
+                  {label}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </header>
+
       {/* Mobile: tab bar fija abajo */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
+        {MOBILE_TAB_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname?.startsWith(href);
           return (
             <Link

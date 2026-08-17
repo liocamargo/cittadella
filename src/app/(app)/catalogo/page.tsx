@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { BookCheck, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -142,6 +142,12 @@ export default function CatalogoPage() {
               catalogoPublico={bibliotecaActual.catalogoPublico}
             />
           )}
+          <Button variant="outline" asChild>
+            <Link href="/leidos">
+              <BookCheck />
+              Leídos
+            </Link>
+          </Button>
           <Button asChild>
             <Link href="/catalogo/agregar">
               <Plus />

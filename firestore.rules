@@ -74,5 +74,12 @@ service cloud.firestore {
     match /MetasLectura/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
+
+    // Libros leídos por un usuario (los tenga en su biblioteca o no).
+    // Doc id = `${uid}_${isbn}`, pero igual validamos por campo uid.
+    match /Lecturas/{lecturaId} {
+      allow read, delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+    }
   }
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { BookMarked, Star, Trash2 } from "lucide-react";
+import { BookMarked, Check, Star, Trash2 } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -374,6 +374,10 @@ export function LibroDetailSheet({
               )}
               <Button
                 variant="outline"
+                className={cn(
+                  copia.leido &&
+                    "border-green-600 bg-green-600 text-white hover:bg-green-700 hover:text-white"
+                )}
                 onClick={() =>
                   toggleLeido(copia.id, !copia.leido).catch((err) => {
                     console.error("Error actualizando leído:", err);
@@ -381,7 +385,8 @@ export function LibroDetailSheet({
                   })
                 }
               >
-                {copia.leido ? "Marcar no leído" : "Marcar leído"}
+                {copia.leido && <Check className="size-4" />}
+                {copia.leido ? "Leído" : "Marcar leído"}
               </Button>
               <Button variant="outline" size="icon" onClick={handleEliminar}>
                 <Trash2 className="size-4 text-destructive" />
