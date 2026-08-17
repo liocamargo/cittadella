@@ -21,12 +21,11 @@ import { ShareCatalogPopover } from "@/components/catalogo/share-catalog-popover
 import type { LibroEnBiblioteca } from "@/types";
 
 const PAGE_SIZE = 14;
-type Filtro = "all" | "disponible" | "prestado" | "favorito";
+type Filtro = "all" | "disponible" | "favorito";
 
 const FILTROS: { key: Filtro; label: string }[] = [
   { key: "all", label: "Todos" },
   { key: "disponible", label: "Disponibles" },
-  { key: "prestado", label: "Prestados" },
   { key: "favorito", label: "★ Favoritos" },
 ];
 
@@ -62,7 +61,6 @@ export default function CatalogoPage() {
     () => ({
       all: copias.length,
       disponible: copias.filter((c) => c.estado === "disponible").length,
-      prestado: copias.filter((c) => c.estado === "prestado").length,
       favorito: copias.filter((c) => c.favorito).length,
     }),
     [copias]
@@ -82,7 +80,6 @@ export default function CatalogoPage() {
     return copias.filter((c) => {
       const g = globales[c.isbn];
       if (filtro === "disponible" && c.estado !== "disponible") return false;
-      if (filtro === "prestado" && c.estado !== "prestado") return false;
       if (filtro === "favorito" && !c.favorito) return false;
       if (shelfFilter !== "all" && c.estante !== shelfFilter) return false;
       if (term) {
