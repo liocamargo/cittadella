@@ -179,7 +179,7 @@ export default function AgregarLibroPage() {
   }
 
   return (
-    <div className="max-w-xl">
+    <div>
       <h1 className="text-2xl font-bold">Agregar libro</h1>
       <p className="mb-7 mt-1 text-sm text-muted-foreground">
         Todo libro necesita su ISBN: escaneá el código, buscalo, o cargalo a mano en el formulario.

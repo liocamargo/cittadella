@@ -19,7 +19,7 @@ import { LibroDetailSheet } from "@/components/catalogo/libro-detail-sheet";
 import { ShareCatalogPopover } from "@/components/catalogo/share-catalog-popover";
 import type { LibroEnBiblioteca } from "@/types";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 14;
 type Filtro = "all" | "disponible" | "prestado" | "favorito";
 
 const FILTROS: { key: Filtro; label: string }[] = [
