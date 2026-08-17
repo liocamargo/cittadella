@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, Library } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -79,10 +79,10 @@ export default function CatalogoPublicoPage() {
         </div>
         <h1 className="mb-6 text-2xl font-bold">{biblioteca.nombre}</h1>
 
-        <Input
+        <SearchInput
           placeholder="Buscar por título, autor o género"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onValueChange={setSearch}
           className="mb-6 max-w-xs"
         />
 

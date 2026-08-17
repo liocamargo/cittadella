@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Search, UploadCloud, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import {
   buscarPortadas,
   GoogleBooksError,
@@ -38,6 +39,7 @@ export function PortadaPicker({
   const [buscando, setBuscando] = useState(false);
   const [resultados, setResultados] = useState<ResultadoPortada[] | null>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const [arrastrando, setArrastrando] = useState(false);
 
   async function handleBuscar() {
     if (!consulta.trim()) return;
@@ -65,9 +67,7 @@ export function PortadaPicker({
     onOpenChange(false);
   }
 
-  async function handleArchivo(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function procesarArchivo(file: File) {
     setSubiendo(true);
     try {
       const url = await subirPortada(isbn, file);
@@ -79,8 +79,20 @@ export function PortadaPicker({
       toast.error(mensaje);
     } finally {
       setSubiendo(false);
-      e.target.value = "";
     }
+  }
+
+  function handleArchivo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) procesarArchivo(file);
+    e.target.value = "";
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    setArrastrando(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) procesarArchivo(file);
   }
 
   return (
@@ -102,11 +114,12 @@ export function PortadaPicker({
 
           <TabsContent value="buscar" className="flex flex-col gap-3">
             <div className="flex gap-2">
-              <Input
+              <SearchInput
                 value={consulta}
-                onChange={(e) => setConsulta(e.target.value)}
+                onValueChange={setConsulta}
                 onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
                 placeholder="Título o autor"
+                className="flex-1"
               />
               <Button onClick={handleBuscar} disabled={buscando}>
                 <Search />
@@ -135,7 +148,18 @@ export function PortadaPicker({
           </TabsContent>
 
           <TabsContent value="subir">
-            <label className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center">
+            <label
+              onDragOver={(e) => {
+                e.preventDefault();
+                setArrastrando(true);
+              }}
+              onDragLeave={() => setArrastrando(false)}
+              onDrop={handleDrop}
+              className={cn(
+                "flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center transition-colors",
+                arrastrando && "border-foreground bg-muted/50"
+              )}
+            >
               {subiendo ? (
                 <Loader2 className="size-5 animate-spin text-muted-foreground" />
               ) : (
@@ -144,7 +168,7 @@ export function PortadaPicker({
               <div className="text-sm text-muted-foreground">
                 {subiendo
                   ? "Subiendo…"
-                  : "Elegí o sacá una foto de la portada (máx. 5 MB)"}
+                  : "Arrastrá una imagen, elegila o sacá una foto (máx. 5 MB)"}
               </div>
               <input
                 type="file"

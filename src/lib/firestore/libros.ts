@@ -68,6 +68,20 @@ export async function actualizarPortada(isbn: string, portadaUrl: string): Promi
   await updateDoc(doc(db, GLOBALES, isbn), { portadaUrl });
 }
 
+export async function contarCopiasDelIsbn(
+  bibliotecaId: string,
+  isbn: string
+): Promise<number> {
+  const snap = await getDocs(
+    query(
+      collection(db, COPIAS),
+      where("bibliotecaId", "==", bibliotecaId),
+      where("isbn", "==", isbn)
+    )
+  );
+  return snap.size;
+}
+
 export function listenInventario(
   bibliotecaId: string,
   onChange: (copias: LibroEnBiblioteca[]) => void

@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { cn } from "@/lib/utils";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
@@ -125,11 +126,11 @@ export default function CatalogoPage() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <h1 className="text-2xl font-bold">Catálogo</h1>
         <div className="flex flex-wrap items-center gap-2.5">
-          <Input
+          <SearchInput
             placeholder="Buscar por título, autor o género"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
+            onValueChange={(v) => {
+              setSearch(v);
               setPage(1);
             }}
             className="w-[220px]"

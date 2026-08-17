@@ -17,7 +17,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
-import { getLibroGlobal, agregarLibroABiblioteca } from "@/lib/firestore/libros";
+import {
+  agregarLibroABiblioteca,
+  contarCopiasDelIsbn,
+  getLibroGlobal,
+} from "@/lib/firestore/libros";
 import { buscarPorIsbn, GoogleBooksError } from "@/services/google-books";
 import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
@@ -146,6 +150,19 @@ export default function AgregarLibroPage() {
       toast.error("El título es obligatorio.");
       return;
     }
+
+    try {
+      const copiasExistentes = await contarCopiasDelIsbn(bibliotecaActual.id, isbn);
+      if (copiasExistentes > 0) {
+        const seguir = window.confirm(
+          `Ya tenés ${copiasExistentes} copia(s) de este libro en tu biblioteca. ¿Querés agregar una copia más?`
+        );
+        if (!seguir) return;
+      }
+    } catch (err) {
+      console.error("Error chequeando copias existentes:", err);
+    }
+
     setGuardando(true);
     try {
       await agregarLibroABiblioteca(
