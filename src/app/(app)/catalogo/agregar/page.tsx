@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PenLine, ScanBarcode } from "lucide-react";
@@ -8,6 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { getLibroGlobal, agregarLibroABiblioteca } from "@/lib/firestore/libros";
 import { buscarPorIsbn, GoogleBooksError } from "@/services/google-books";
@@ -43,6 +51,7 @@ export default function AgregarLibroPage() {
   const [comunidad, setComunidad] = useState<LibroGlobal | null>(null);
   const [form, setForm] = useState(FORM_INICIAL);
   const [escaneando, setEscaneando] = useState(false);
+  const estantes = bibliotecaActual?.estantes ?? [];
 
   function setCampo<K extends keyof typeof FORM_INICIAL>(campo: K, valor: string) {
     setForm((f) => ({ ...f, [campo]: valor }));
@@ -273,11 +282,31 @@ export default function AgregarLibroPage() {
           </div>
           <div className="flex gap-3">
             <Field label="Estante" className="flex-1">
-              <Input
-                placeholder="Estante A"
-                value={form.estante}
-                onChange={(e) => setCampo("estante", e.target.value)}
-              />
+              {estantes.length > 0 ? (
+                <Select
+                  value={form.estante}
+                  onValueChange={(v) => setCampo("estante", v)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Elegí un estante" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {estantes.map((e) => (
+                      <SelectItem key={e} value={e}>
+                        {e}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="pt-2 text-xs text-muted-foreground">
+                  Todavía no creaste ningún estante. Creá uno desde{" "}
+                  <Link href="/catalogo" className="underline">
+                    Catálogo
+                  </Link>
+                  .
+                </p>
+              )}
             </Field>
             <Field label="Tipo de tapa" className="flex-1">
               <Input
