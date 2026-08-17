@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookCheck, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { BookPlus, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -142,13 +142,7 @@ export default function CatalogoPage() {
               catalogoPublico={bibliotecaActual.catalogoPublico}
             />
           )}
-          <Button variant="outline" asChild>
-            <Link href="/leidos">
-              <BookCheck />
-              Leídos
-            </Link>
-          </Button>
-          <Button asChild>
+          <Button asChild className="hidden md:inline-flex">
             <Link href="/catalogo/agregar">
               <Plus />
               Agregar libro
@@ -156,6 +150,15 @@ export default function CatalogoPage() {
           </Button>
         </div>
       </div>
+
+      {/* Mobile: FAB flotante para agregar */}
+      <Link
+        href="/catalogo/agregar"
+        className="fixed right-4 bottom-20 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:hidden"
+        aria-label="Agregar libro"
+      >
+        <BookPlus className="size-6" />
+      </Link>
 
       <div className="mb-6 flex flex-wrap items-center gap-2">
         {FILTROS.map((f) => (

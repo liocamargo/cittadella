@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PenLine, ScanBarcode } from "lucide-react";
+import { PenLine, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -22,9 +22,11 @@ import {
   contarCopiasDelIsbn,
   getLibroGlobal,
 } from "@/lib/firestore/libros";
-import { buscarPorIsbn, GoogleBooksError } from "@/services/google-books";
+import { agregarEstante } from "@/lib/firestore/bibliotecas";
+import { buscarPorIsbn } from "@/services/google-books";
 import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
+import { IdiomaSelect } from "@/components/catalogo/idioma-select";
 import type { LibroGlobal } from "@/types";
 
 type Paso = "buscar" | "formulario";
@@ -55,8 +57,12 @@ export default function AgregarLibroPage() {
   const [guardando, setGuardando] = useState(false);
   const [comunidad, setComunidad] = useState<LibroGlobal | null>(null);
   const [form, setForm] = useState(FORM_INICIAL);
-  const [escaneando, setEscaneando] = useState(false);
+  const [escaneando, setEscaneando] = useState(true);
   const [portadaPickerOpen, setPortadaPickerOpen] = useState(false);
+  const [cargaMultiple, setCargaMultiple] = useState(false);
+  const [agregadosSesion, setAgregadosSesion] = useState(0);
+  const [creandoEstante, setCreandoEstante] = useState(false);
+  const [nuevoEstanteNombre, setNuevoEstanteNombre] = useState("");
   const estantes = bibliotecaActual?.estantes ?? [];
 
   function setCampo<K extends keyof typeof FORM_INICIAL>(campo: K, valor: string) {
@@ -90,23 +96,18 @@ export default function AgregarLibroPage() {
         });
       } else {
         try {
-          const google = await buscarPorIsbn(codigo);
-          if (google) {
-            setForm({ ...FORM_INICIAL, ...google });
+          const encontrado = await buscarPorIsbn(codigo);
+          if (encontrado) {
+            setForm({ ...FORM_INICIAL, ...encontrado });
           } else {
             toast.error(
-              "No encontramos ese ISBN en Google Books. Completá los datos a mano."
+              "No encontramos ese ISBN (Google Books ni Open Library). Completá los datos a mano."
             );
             setForm({ ...FORM_INICIAL });
           }
         } catch (err) {
-          if (err instanceof GoogleBooksError && err.esLimiteDeCuota) {
-            toast.error(
-              "Google Books alcanzó su límite de consultas por ahora. Cargá los datos manualmente."
-            );
-          } else {
-            toast.error("No pudimos consultar Google Books. Cargá los datos manualmente.");
-          }
+          console.error("Error consultando el ISBN:", err);
+          toast.error("No pudimos consultar el ISBN. Cargá los datos manualmente.");
           setForm({ ...FORM_INICIAL });
         }
       }
@@ -134,7 +135,23 @@ export default function AgregarLibroPage() {
     setIsbn("");
     setComunidad(null);
     setForm(FORM_INICIAL);
+    setEscaneando(false);
     setPaso("formulario");
+  }
+
+  async function handleCrearEstante() {
+    if (!bibliotecaActual || !nuevoEstanteNombre.trim()) return;
+    const nombre = nuevoEstanteNombre.trim();
+    try {
+      await agregarEstante(bibliotecaActual.id, nombre);
+      setCampo("estante", nombre);
+      setNuevoEstanteNombre("");
+      setCreandoEstante(false);
+      toast.success("Estante creado.");
+    } catch (err) {
+      console.error("Error creando estante:", err);
+      toast.error("No pudimos crear el estante.");
+    }
   }
 
   async function handleGuardar() {
@@ -186,8 +203,21 @@ export default function AgregarLibroPage() {
           notas: form.notas.trim() || undefined,
         }
       );
-      toast.success("Libro agregado a tu biblioteca.");
-      router.push("/catalogo");
+
+      if (cargaMultiple) {
+        const nuevoTotal = agregadosSesion + 1;
+        setAgregadosSesion(nuevoTotal);
+        toast.success(`Agregado (${nuevoTotal}). Escaneá el siguiente.`);
+        setIsbn("");
+        setIsbnInput("");
+        setComunidad(null);
+        setForm(FORM_INICIAL);
+        setPaso("buscar");
+        setEscaneando(true);
+      } else {
+        toast.success("Libro agregado a tu biblioteca.");
+        router.push("/catalogo");
+      }
     } catch (err) {
       console.error("Error guardando el libro:", err);
       const mensaje = err instanceof Error ? err.message : String(err);
@@ -200,23 +230,35 @@ export default function AgregarLibroPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">Agregar libro</h1>
-      <p className="mb-7 mt-1 text-sm text-muted-foreground">
+      <p className="mb-4 mt-1 text-sm text-muted-foreground">
         Todo libro necesita su ISBN: escaneá el código, buscalo, o cargalo a mano en el formulario.
       </p>
 
+      <label className="mb-7 flex items-center gap-2 text-sm">
+        <Checkbox
+          checked={cargaMultiple}
+          onCheckedChange={(v) => setCargaMultiple(v === true)}
+        />
+        Cargar varios seguidos (después de guardar, vuelve a la cámara)
+        {cargaMultiple && agregadosSesion > 0 && (
+          <span className="text-xs text-muted-foreground">
+            · {agregadosSesion} agregado(s) en esta sesión
+          </span>
+        )}
+      </label>
+
       {paso === "buscar" && (
-        <div className="flex flex-col gap-4">
+        <div className="flex max-w-xl flex-col gap-4">
           {escaneando ? (
-            <BarcodeScanner onDetected={handleDetected} />
+            <>
+              <BarcodeScanner onDetected={handleDetected} />
+              <Button variant="ghost" size="sm" onClick={() => setEscaneando(false)}>
+                Cancelar escaneo
+              </Button>
+            </>
           ) : (
             <Button variant="outline" onClick={() => setEscaneando(true)}>
-              <ScanBarcode />
-              Escanear con la cámara
-            </Button>
-          )}
-          {escaneando && (
-            <Button variant="ghost" size="sm" onClick={() => setEscaneando(false)}>
-              Cancelar escaneo
+              Volver a escanear
             </Button>
           )}
 
@@ -246,7 +288,7 @@ export default function AgregarLibroPage() {
       )}
 
       {paso === "formulario" && (
-        <div className="flex flex-col gap-4">
+        <div className="flex max-w-xl flex-col gap-4">
           {comunidad && (
             <div className="rounded-lg border bg-muted/40 p-3 text-xs">
               <span className="font-semibold">Ya está en la comunidad: </span>
@@ -254,10 +296,6 @@ export default function AgregarLibroPage() {
               {comunidad.ratingPromedio} promedio
             </div>
           )}
-
-          <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-            Datos del libro (comunidad)
-          </div>
 
           <div className="flex items-center gap-3">
             {form.portadaUrl ? (
@@ -285,12 +323,8 @@ export default function AgregarLibroPage() {
           <Field label="ISBN">
             <Input value={isbn} onChange={(e) => setIsbn(e.target.value.trim())} />
           </Field>
-
           <Field label="Título">
             <Input value={form.titulo} onChange={(e) => setCampo("titulo", e.target.value)} />
-          </Field>
-          <Field label="Subtítulo (opcional)">
-            <Input value={form.subtitulo} onChange={(e) => setCampo("subtitulo", e.target.value)} />
           </Field>
           <Field label="Autor(es)">
             <Input
@@ -298,6 +332,66 @@ export default function AgregarLibroPage() {
               value={form.autor}
               onChange={(e) => setCampo("autor", e.target.value)}
             />
+          </Field>
+          <Field label="Estante">
+            {creandoEstante ? (
+              <div className="flex gap-1.5">
+                <Input
+                  autoFocus
+                  value={nuevoEstanteNombre}
+                  onChange={(e) => setNuevoEstanteNombre(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleCrearEstante()}
+                  placeholder="Nombre del estante"
+                />
+                <Button type="button" onClick={handleCrearEstante}>
+                  Crear
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCreandoEstante(false)}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-1.5">
+                {estantes.length > 0 ? (
+                  <Select value={form.estante} onValueChange={(v) => setCampo("estante", v)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Elegí un estante" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {estantes.map((e) => (
+                        <SelectItem key={e} value={e}>
+                          {e}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="flex-1 pt-2 text-xs text-muted-foreground">
+                    Todavía no tenés estantes.
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCreandoEstante(true)}
+                  aria-label="Crear estante"
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </div>
+            )}
+          </Field>
+
+          <div className="mt-2 border-t pt-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            Más datos del libro (comunidad, opcional)
+          </div>
+          <Field label="Subtítulo">
+            <Input value={form.subtitulo} onChange={(e) => setCampo("subtitulo", e.target.value)} />
           </Field>
           <div className="flex gap-3">
             <Field label="Editorial" className="flex-[2]">
@@ -311,57 +405,28 @@ export default function AgregarLibroPage() {
             </Field>
           </div>
           <div className="flex gap-3">
-            <Field label="Género (opcional)" className="flex-1">
+            <Field label="Género" className="flex-1">
               <Input value={form.genero} onChange={(e) => setCampo("genero", e.target.value)} />
             </Field>
-            <Field label="Idioma" className="w-[100px]">
-              <Input placeholder="es" value={form.idioma} onChange={(e) => setCampo("idioma", e.target.value)} />
+            <Field label="Idioma" className="w-36">
+              <IdiomaSelect value={form.idioma} onValueChange={(v) => setCampo("idioma", v)} />
             </Field>
           </div>
-          <Field label="Sinopsis (opcional)">
+          <Field label="Sinopsis">
             <Textarea rows={3} value={form.sinopsis} onChange={(e) => setCampo("sinopsis", e.target.value)} />
           </Field>
 
           <div className="mt-2 border-t pt-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
             Tu copia física
           </div>
-          <div className="flex gap-3">
-            <Field label="Estante" className="flex-1">
-              {estantes.length > 0 ? (
-                <Select
-                  value={form.estante}
-                  onValueChange={(v) => setCampo("estante", v)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Elegí un estante" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {estantes.map((e) => (
-                      <SelectItem key={e} value={e}>
-                        {e}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="pt-2 text-xs text-muted-foreground">
-                  Todavía no creaste ningún estante. Creá uno desde{" "}
-                  <Link href="/catalogo" className="underline">
-                    Catálogo
-                  </Link>
-                  .
-                </p>
-              )}
-            </Field>
-            <Field label="Tipo de tapa" className="flex-1">
-              <Input
-                placeholder="Tapa blanda"
-                value={form.tipoTapa}
-                onChange={(e) => setCampo("tipoTapa", e.target.value)}
-              />
-            </Field>
-          </div>
-          <Field label="Notas privadas (opcional)">
+          <Field label="Tipo de tapa">
+            <Input
+              placeholder="Tapa blanda"
+              value={form.tipoTapa}
+              onChange={(e) => setCampo("tipoTapa", e.target.value)}
+            />
+          </Field>
+          <Field label="Notas privadas">
             <Input
               placeholder="ej: firmado por el autor"
               value={form.notas}

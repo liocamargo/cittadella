@@ -38,6 +38,7 @@ import {
   toggleLeido,
 } from "@/lib/firestore/libros";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
+import { IdiomaSelect } from "@/components/catalogo/idioma-select";
 import type { LibroEnBiblioteca, LibroGlobal, Resena } from "@/types";
 
 const CAMPOS_EDITABLES = {
@@ -378,10 +379,10 @@ export function LibroDetailSheet({
                     onChange={(e) => setCampoEdit("genero", e.target.value)}
                   />
                 </FieldEdit>
-                <FieldEdit label="Idioma" className="w-24">
-                  <Input
+                <FieldEdit label="Idioma" className="w-36">
+                  <IdiomaSelect
                     value={formEdit.idioma}
-                    onChange={(e) => setCampoEdit("idioma", e.target.value)}
+                    onValueChange={(v) => setCampoEdit("idioma", v)}
                   />
                 </FieldEdit>
               </div>

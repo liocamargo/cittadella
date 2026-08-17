@@ -44,7 +44,14 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
           (decodedText) => {
             if (detectedRef.current) return;
             detectedRef.current = true;
-            onDetected(decodedText.replace(/[^0-9Xx]/g, ""));
+            const codigo = decodedText.replace(/[^0-9Xx]/g, "");
+            // Frenamos la cámara ANTES de avisar al padre, para no seguir
+            // decodificando ni disparar más de un fetch por el mismo código.
+            scanner
+              .stop()
+              .then(() => scanner.clear())
+              .catch(() => {})
+              .finally(() => onDetected(codigo));
           },
           () => {
             // decode attempt sin resultado, ignorar (se llama constantemente)

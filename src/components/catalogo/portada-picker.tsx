@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Search, UploadCloud, Loader2 } from "lucide-react";
+import { Link2, Search, UploadCloud, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Dialog,
@@ -40,6 +41,7 @@ export function PortadaPicker({
   const [resultados, setResultados] = useState<ResultadoPortada[] | null>(null);
   const [subiendo, setSubiendo] = useState(false);
   const [arrastrando, setArrastrando] = useState(false);
+  const [linkExterno, setLinkExterno] = useState("");
 
   async function handleBuscar() {
     if (!consulta.trim()) return;
@@ -95,6 +97,15 @@ export function PortadaPicker({
     if (file) procesarArchivo(file);
   }
 
+  function handleUsarLink() {
+    const url = linkExterno.trim();
+    if (!url || !/^https?:\/\//.test(url)) {
+      toast.error("Pegá un link válido (que empiece con http:// o https://).");
+      return;
+    }
+    handleSeleccionar(url);
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -105,10 +116,13 @@ export function PortadaPicker({
         <Tabs defaultValue="buscar">
           <TabsList className="w-full">
             <TabsTrigger value="buscar" className="flex-1">
-              Buscar en Google Books
+              Google Books
             </TabsTrigger>
             <TabsTrigger value="subir" className="flex-1">
-              Subir tu foto
+              Subir foto
+            </TabsTrigger>
+            <TabsTrigger value="link" className="flex-1">
+              Link externo
             </TabsTrigger>
           </TabsList>
 
@@ -179,6 +193,36 @@ export function PortadaPicker({
                 className="hidden"
               />
             </label>
+          </TabsContent>
+
+          <TabsContent value="link" className="flex flex-col gap-3">
+            <p className="text-xs text-muted-foreground">
+              Pegá la URL de una imagen (termina en .jpg, .png, etc.).
+            </p>
+            <div className="flex gap-2">
+              <Input
+                value={linkExterno}
+                onChange={(e) => setLinkExterno(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleUsarLink()}
+                placeholder="https://..."
+                className="flex-1"
+              />
+              <Button onClick={handleUsarLink}>
+                <Link2 />
+                Usar
+              </Button>
+            </div>
+            {linkExterno.trim() && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={linkExterno.trim()}
+                alt="Vista previa"
+                className="h-[130px] w-[88px] rounded-md border object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            )}
           </TabsContent>
         </Tabs>
       </DialogContent>

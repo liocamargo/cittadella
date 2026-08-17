@@ -21,6 +21,7 @@ import {
   publicarResena,
 } from "@/lib/firestore/libros";
 import { quitarLectura } from "@/lib/firestore/lecturas";
+import { IdiomaSelect } from "@/components/catalogo/idioma-select";
 import type { LibroGlobal, Resena } from "@/types";
 
 const CAMPOS_EDITABLES = {
@@ -221,10 +222,10 @@ export function LecturaDetailDialog({
                     onChange={(e) => setCampoEdit("genero", e.target.value)}
                   />
                 </FieldEdit>
-                <FieldEdit label="Idioma" className="w-24">
-                  <Input
+                <FieldEdit label="Idioma" className="w-36">
+                  <IdiomaSelect
                     value={formEdit.idioma}
-                    onChange={(e) => setCampoEdit("idioma", e.target.value)}
+                    onValueChange={(v) => setCampoEdit("idioma", v)}
                   />
                 </FieldEdit>
               </div>

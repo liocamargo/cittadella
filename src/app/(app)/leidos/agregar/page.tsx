@@ -15,7 +15,7 @@ import {
   getLibroGlobal,
   publicarResena,
 } from "@/lib/firestore/libros";
-import { buscarPorIsbn, GoogleBooksError } from "@/services/google-books";
+import { buscarPorIsbn } from "@/services/google-books";
 import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import type { LibroGlobal } from "@/types";
@@ -78,23 +78,18 @@ export default function AgregarLeidoPage() {
         });
       } else {
         try {
-          const google = await buscarPorIsbn(codigo);
-          if (google) {
-            setForm({ ...FORM_INICIAL, ...google });
+          const encontrado = await buscarPorIsbn(codigo);
+          if (encontrado) {
+            setForm({ ...FORM_INICIAL, ...encontrado });
           } else {
             toast.error(
-              "No encontramos ese ISBN en Google Books. Completá los datos a mano."
+              "No encontramos ese ISBN (Google Books ni Open Library). Completá los datos a mano."
             );
             setForm({ ...FORM_INICIAL });
           }
         } catch (err) {
-          if (err instanceof GoogleBooksError && err.esLimiteDeCuota) {
-            toast.error(
-              "Google Books alcanzó su límite de consultas por ahora. Cargá los datos manualmente."
-            );
-          } else {
-            toast.error("No pudimos consultar Google Books. Cargá los datos manualmente.");
-          }
+          console.error("Error consultando el ISBN:", err);
+          toast.error("No pudimos consultar el ISBN. Cargá los datos manualmente.");
           setForm({ ...FORM_INICIAL });
         }
       }

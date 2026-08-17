@@ -35,8 +35,8 @@ export class GoogleBooksError extends Error {
   }
 }
 
-/** Busca un ISBN en Google Books y devuelve los datos ya mapeados a nuestro modelo. */
-export async function buscarPorIsbn(isbn: string): Promise<DatosComunidad | null> {
+/** Busca un ISBN en Google Books. Tira GoogleBooksError si la consulta falla. */
+async function buscarPorIsbnGoogle(isbn: string): Promise<DatosComunidad | null> {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
   const params = new URLSearchParams({ q: `isbn:${isbn}` });
   if (apiKey) params.set("key", apiKey);
@@ -63,6 +63,58 @@ export async function buscarPorIsbn(isbn: string): Promise<DatosComunidad | null
     sinopsis: info.description,
     portadaUrl: info.imageLinks?.thumbnail?.replace("http://", "https://"),
   };
+}
+
+interface OpenLibraryBook {
+  title?: string;
+  subtitle?: string;
+  authors?: { name: string }[];
+  publishers?: { name: string }[];
+  publish_date?: string;
+  number_of_pages?: number;
+  subjects?: { name: string }[];
+  cover?: { small?: string; medium?: string; large?: string };
+}
+
+/** Respaldo cuando Google Books falla (cuota, red) o no tiene el ISBN. */
+async function buscarPorIsbnOpenLibrary(isbn: string): Promise<DatosComunidad | null> {
+  try {
+    const res = await fetch(
+      `https://openlibrary.org/api/books?bibkeys=ISBN:${encodeURIComponent(isbn)}&format=json&jscmd=data`
+    );
+    if (!res.ok) return null;
+    const data: Record<string, OpenLibraryBook> = await res.json();
+    const libro = data[`ISBN:${isbn}`];
+    if (!libro?.title) return null;
+
+    return {
+      titulo: libro.title,
+      subtitulo: libro.subtitle,
+      autor: (libro.authors ?? []).map((a) => a.name).join(", "),
+      editorial: libro.publishers?.[0]?.name,
+      anio: libro.publish_date?.match(/\d{4}/)?.[0],
+      paginas: libro.number_of_pages ? String(libro.number_of_pages) : undefined,
+      genero: libro.subjects?.[0]?.name,
+      portadaUrl: libro.cover?.medium ?? libro.cover?.large,
+    };
+  } catch (err) {
+    console.error("Error consultando Open Library:", err);
+    return null;
+  }
+}
+
+/**
+ * Busca un ISBN en Google Books; si falla (cuota, red) o no lo encuentra,
+ * cae automáticamente a Open Library antes de rendirse.
+ */
+export async function buscarPorIsbn(isbn: string): Promise<DatosComunidad | null> {
+  try {
+    const google = await buscarPorIsbnGoogle(isbn);
+    if (google) return google;
+  } catch (err) {
+    console.error("Google Books falló, probamos Open Library:", err);
+  }
+  return buscarPorIsbnOpenLibrary(isbn);
 }
 
 export interface ResultadoPortada {

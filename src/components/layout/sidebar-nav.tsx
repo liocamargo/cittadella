@@ -63,9 +63,6 @@ export function SidebarNav() {
     .charAt(0)
     .toUpperCase();
 
-  const tituloActual =
-    NAV_ITEMS.find((item) => pathname?.startsWith(item.href))?.label ?? "Cittadella";
-
   async function handleLogout() {
     await signOutUser();
     router.replace("/login");
@@ -233,9 +230,10 @@ export function SidebarNav() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <span className="truncate text-center text-[15px] font-bold">
-          {tituloActual}
-        </span>
+        <div className="flex justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Cittadella" className="h-6 w-auto" />
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
