@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
 import { toast } from "sonner";
+import { UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
 import { agregarLibroABiblioteca, listenInventario } from "@/lib/firestore/libros";
@@ -22,6 +24,39 @@ interface FilaImportada {
   notas: string;
   favorito: boolean;
 }
+
+const COLUMNAS_RECONOCIDAS = [
+  "Title",
+  "titulo",
+  "título",
+  "Author",
+  "autor",
+  "Publisher",
+  "editorial",
+  "Published Date",
+  "year",
+  "anio",
+  "año",
+  "Pages",
+  "paginas",
+  "páginas",
+  "Genres",
+  "Genre",
+  "genero",
+  "género",
+  "Language",
+  "idioma",
+  "ISBN",
+  "isbn",
+  "BookShelf",
+  "shelf",
+  "estante",
+  "Comments",
+  "notas",
+  "Favorite",
+  "favorito",
+  "Favorito",
+];
 
 function pick(row: Record<string, string>, keys: string[]): string {
   for (const k of keys) {
@@ -64,6 +99,7 @@ export default function ImportarPage() {
   const [preview, setPreview] = useState<FilaImportada[] | null>(null);
   const [importando, setImportando] = useState(false);
   const [progreso, setProgreso] = useState(0);
+  const [arrastrando, setArrastrando] = useState(false);
 
   useEffect(() => {
     if (!bibliotecaActual) return;
@@ -72,6 +108,12 @@ export default function ImportarPage() {
 
   const isbns = copias.map((c) => c.isbn);
   const globales = useLibrosGlobales(isbns);
+
+  const titulosExistentes = new Set(
+    copias
+      .map((c) => globales[c.isbn]?.titulo?.trim().toLowerCase())
+      .filter((t): t is string => Boolean(t))
+  );
 
   function handleExportar() {
     const filas = copias.map((c) => {
@@ -103,13 +145,23 @@ export default function ImportarPage() {
     );
   }
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function procesarArchivo(file: File) {
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      toast.error("Ese archivo no es un .csv.");
+      return;
+    }
     Papa.parse<Record<string, string>>(file, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
+        const columnas = results.meta.fields ?? [];
+        const reconoce = columnas.some((c) => COLUMNAS_RECONOCIDAS.includes(c.trim()));
+        if (!reconoce) {
+          toast.error(
+            "No reconocemos las columnas de ese archivo. Esperamos algo como Title/Author/ISBN/Genres/BookShelf (HandyLib) o title/author/isbn/genre/shelf (plantilla propia)."
+          );
+          return;
+        }
         const filas = results.data.map(mapearFila).filter((f) => f.titulo);
         if (filas.length === 0) {
           toast.error("No encontramos filas con título en ese archivo.");
@@ -119,7 +171,19 @@ export default function ImportarPage() {
       },
       error: () => toast.error("No pudimos leer ese archivo."),
     });
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) procesarArchivo(file);
     e.target.value = "";
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    setArrastrando(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) procesarArchivo(file);
   }
 
   async function handleConfirmarImport() {
@@ -127,7 +191,13 @@ export default function ImportarPage() {
     setImportando(true);
     setProgreso(0);
     let ok = 0;
+    let omitidos = 0;
     for (const fila of preview) {
+      if (titulosExistentes.has(fila.titulo.trim().toLowerCase())) {
+        omitidos += 1;
+        setProgreso((p) => p + 1);
+        continue;
+      }
       try {
         const isbn = fila.isbn || `manual-${crypto.randomUUID()}`;
         await agregarLibroABiblioteca(
@@ -152,7 +222,8 @@ export default function ImportarPage() {
     }
     setImportando(false);
     setPreview(null);
-    toast.success(`Se agregaron ${ok} de ${preview.length} libro(s).`);
+    const detalle = omitidos > 0 ? ` (${omitidos} ya estaban en tu biblioteca)` : "";
+    toast.success(`Se agregaron ${ok} de ${preview.length} libro(s)${detalle}.`);
   }
 
   return (
@@ -177,7 +248,19 @@ export default function ImportarPage() {
 
       <div>
         <div className="mb-2 text-sm font-semibold">Importar desde Excel/CSV</div>
-        <label className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center">
+        <label
+          onDragOver={(e) => {
+            e.preventDefault();
+            setArrastrando(true);
+          }}
+          onDragLeave={() => setArrastrando(false)}
+          onDrop={handleDrop}
+          className={cn(
+            "flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center transition-colors",
+            arrastrando && "border-foreground bg-muted/50"
+          )}
+        >
+          <UploadCloud className="size-5 text-muted-foreground" />
           <div className="text-sm text-muted-foreground">
             Arrastrá tu archivo .csv acá o hacé clic para elegirlo
           </div>
@@ -205,11 +288,24 @@ export default function ImportarPage() {
               {preview.length} fila(s) detectadas
             </div>
             <div className="mb-3 max-h-64 overflow-y-auto rounded-lg border">
-              {preview.slice(0, 30).map((f, i) => (
-                <div key={i} className="border-b p-2.5 text-sm last:border-b-0">
-                  {f.titulo} — {f.autor}
-                </div>
-              ))}
+              {preview.slice(0, 30).map((f, i) => {
+                const duplicado = titulosExistentes.has(f.titulo.trim().toLowerCase());
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-2 border-b p-2.5 text-sm last:border-b-0"
+                  >
+                    <span className={cn(duplicado && "text-muted-foreground")}>
+                      {f.titulo} — {f.autor}
+                    </span>
+                    {duplicado && (
+                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                        ya en tu biblioteca
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
               {preview.length > 30 && (
                 <div className="p-2.5 text-xs text-muted-foreground">
                   y {preview.length - 30} más…
