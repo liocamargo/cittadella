@@ -27,8 +27,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+
+// Bump esto cuando salgamos de beta.
+const VERSION = "Beta";
 
 const NAV_ITEMS = [
   { href: "/inicio", label: "Inicio", icon: Home },
@@ -145,8 +149,13 @@ export function SidebarNav() {
         <div className="flex items-center justify-between gap-2">
           {!collapsed && (
             <div className="overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="Cittadella" className="h-6 w-auto" />
+              <div className="flex items-center gap-1.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="Cittadella" className="h-6 w-auto" />
+                <Badge variant="outline" className="px-1.5 py-0 text-[9px] font-semibold uppercase">
+                  {VERSION}
+                </Badge>
+              </div>
               <div className="mt-1 whitespace-nowrap text-xs text-muted-foreground">
                 Espacio compartido
               </div>
