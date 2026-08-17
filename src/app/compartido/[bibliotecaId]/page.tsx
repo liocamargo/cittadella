@@ -144,6 +144,9 @@ export default function CatalogoPublicoPage() {
             {detalle?.sinopsis && <p className="leading-relaxed">{detalle.sinopsis}</p>}
             <div className="flex flex-col gap-1 border-t pt-3 text-sm">
               <div>
+                <strong>ISBN:</strong> {seleccionada?.isbn || "—"}
+              </div>
+              <div>
                 <strong>Editorial:</strong> {detalle?.editorial || "—"}
               </div>
               <div>

@@ -162,10 +162,23 @@ export default function ImportarPage() {
           );
           return;
         }
-        const filas = results.data.map(mapearFila).filter((f) => f.titulo);
-        if (filas.length === 0) {
+        const conTitulo = results.data.map(mapearFila).filter((f) => f.titulo);
+        if (conTitulo.length === 0) {
           toast.error("No encontramos filas con título en ese archivo.");
           return;
+        }
+        const filas = conTitulo.filter((f) => f.isbn);
+        const sinIsbn = conTitulo.length - filas.length;
+        if (filas.length === 0) {
+          toast.error(
+            "Ninguna fila tiene ISBN. Todo libro necesita su ISBN para poder importarse."
+          );
+          return;
+        }
+        if (sinIsbn > 0) {
+          toast.warning(
+            `${sinIsbn} fila(s) sin ISBN se van a omitir (todo libro necesita su ISBN).`
+          );
         }
         setPreview(filas);
       },
@@ -199,9 +212,8 @@ export default function ImportarPage() {
         continue;
       }
       try {
-        const isbn = fila.isbn || `manual-${crypto.randomUUID()}`;
         await agregarLibroABiblioteca(
-          isbn,
+          fila.isbn,
           bibliotecaActual.id,
           {
             titulo: fila.titulo,

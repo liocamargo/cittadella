@@ -185,6 +185,9 @@ export function LibroDetailSheet({
               Datos del libro
             </div>
             <div>
+              <strong>ISBN:</strong> {copia.isbn || "—"}
+            </div>
+            <div>
               <strong>Editorial:</strong> {global?.editorial || "—"}
             </div>
             <div>

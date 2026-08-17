@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PenLine, ScanBarcode } from "lucide-react";
+import { ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -88,7 +88,9 @@ export default function AgregarLibroPage() {
           if (google) {
             setForm({ ...FORM_INICIAL, ...google });
           } else {
-            toast.error("No encontramos ese ISBN en Google Books. Cargalo manualmente.");
+            toast.error(
+              "No encontramos ese ISBN en Google Books. Completá los datos a mano."
+            );
             setForm({ ...FORM_INICIAL });
           }
         } catch (err) {
@@ -121,16 +123,13 @@ export default function AgregarLibroPage() {
     buscar(codigo);
   }
 
-  function handleManual() {
-    setIsbn("");
-    setComunidad(null);
-    setForm(FORM_INICIAL);
-    setPaso("formulario");
-  }
-
   async function handleGuardar() {
     if (!bibliotecaActual) {
       toast.error("Todavía no tenés una biblioteca activa.");
+      return;
+    }
+    if (!isbn) {
+      toast.error("Falta el ISBN.");
       return;
     }
     if (!form.titulo.trim()) {
@@ -139,9 +138,8 @@ export default function AgregarLibroPage() {
     }
     setGuardando(true);
     try {
-      const isbnFinal = isbn || `manual-${crypto.randomUUID()}`;
       await agregarLibroABiblioteca(
-        isbnFinal,
+        isbn,
         bibliotecaActual.id,
         {
           titulo: form.titulo.trim(),
@@ -174,7 +172,7 @@ export default function AgregarLibroPage() {
     <div className="max-w-xl">
       <h1 className="text-2xl font-bold">Agregar libro</h1>
       <p className="mb-7 mt-1 text-sm text-muted-foreground">
-        Buscá por ISBN o cargalo manualmente.
+        Todo libro necesita su ISBN: escaneá el código de barras o ingresalo a mano.
       </p>
 
       {paso === "buscar" && (
@@ -194,7 +192,7 @@ export default function AgregarLibroPage() {
           )}
 
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />o buscá por ISBN
+            <div className="h-px flex-1 bg-border" />o ingresá el ISBN
             <div className="h-px flex-1 bg-border" />
           </div>
           <div className="flex gap-2">
@@ -208,13 +206,6 @@ export default function AgregarLibroPage() {
               Buscar
             </Button>
           </div>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />o<div className="h-px flex-1 bg-border" />
-          </div>
-          <Button variant="outline" onClick={handleManual}>
-            <PenLine />
-            Cargar manualmente sin código
-          </Button>
         </div>
       )}
 
@@ -240,6 +231,10 @@ export default function AgregarLibroPage() {
               className="h-[130px] w-[88px] rounded-md border object-cover"
             />
           )}
+
+          <Field label="ISBN">
+            <Input value={isbn} onChange={(e) => setIsbn(e.target.value.trim())} />
+          </Field>
 
           <Field label="Título">
             <Input value={form.titulo} onChange={(e) => setCampo("titulo", e.target.value)} />
