@@ -1,7 +1,8 @@
 # Cittadella
 
-Catálogo compartido de biblioteca personal: escaneá tus libros, prestáselos a
-quien quieras y llevá el registro entre varias personas en tiempo real.
+Biblioteca de libros en casa. Catálogo compartido de biblioteca personal:
+escaneá tus libros, prestáselos a quien quieras y llevá el registro entre
+varias personas en tiempo real.
 
 Stack: Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + shadcn/ui +
 Firebase (Auth + Firestore).
