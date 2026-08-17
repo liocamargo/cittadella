@@ -20,6 +20,7 @@ import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { getLibroGlobal, agregarLibroABiblioteca } from "@/lib/firestore/libros";
 import { buscarPorIsbn, GoogleBooksError } from "@/services/google-books";
 import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
+import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import type { LibroGlobal } from "@/types";
 
 type Paso = "buscar" | "formulario";
@@ -51,6 +52,7 @@ export default function AgregarLibroPage() {
   const [comunidad, setComunidad] = useState<LibroGlobal | null>(null);
   const [form, setForm] = useState(FORM_INICIAL);
   const [escaneando, setEscaneando] = useState(false);
+  const [portadaPickerOpen, setPortadaPickerOpen] = useState(false);
   const estantes = bibliotecaActual?.estantes ?? [];
 
   function setCampo<K extends keyof typeof FORM_INICIAL>(campo: K, valor: string) {
@@ -240,14 +242,28 @@ export default function AgregarLibroPage() {
             Datos del libro (comunidad)
           </div>
 
-          {form.portadaUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={form.portadaUrl}
-              alt="Portada"
-              className="h-[130px] w-[88px] rounded-md border object-cover"
-            />
-          )}
+          <div className="flex items-center gap-3">
+            {form.portadaUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={form.portadaUrl}
+                alt="Portada"
+                className="h-[130px] w-[88px] rounded-md border object-cover"
+              />
+            ) : (
+              <div className="flex h-[130px] w-[88px] items-center justify-center rounded-md border bg-muted text-xs text-muted-foreground">
+                Sin portada
+              </div>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPortadaPickerOpen(true)}
+            >
+              {form.portadaUrl ? "Cambiar portada" : "Buscar portada"}
+            </Button>
+          </div>
 
           <Field label="ISBN">
             <Input value={isbn} onChange={(e) => setIsbn(e.target.value.trim())} />
@@ -346,6 +362,14 @@ export default function AgregarLibroPage() {
           </div>
         </div>
       )}
+
+      <PortadaPicker
+        open={portadaPickerOpen}
+        onOpenChange={setPortadaPickerOpen}
+        consultaInicial={form.titulo || form.autor}
+        isbn={isbn}
+        onSeleccionar={(url) => setCampo("portadaUrl", url)}
+      />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import {
+  actualizarPortada,
   devolverLibro,
   eliminarCopia,
   listenResenas,
@@ -26,6 +27,7 @@ import {
   toggleFavorito,
   toggleLeido,
 } from "@/lib/firestore/libros";
+import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import type { LibroEnBiblioteca, LibroGlobal, Resena } from "@/types";
 
 interface LibroDetailSheetProps {
@@ -49,6 +51,7 @@ export function LibroDetailSheet({
   const [reviewOpen, setReviewOpen] = useState(false);
   const [estrellas, setEstrellas] = useState(5);
   const [comentario, setComentario] = useState("");
+  const [portadaPickerOpen, setPortadaPickerOpen] = useState(false);
 
   useEffect(() => {
     if (!copia) return;
@@ -121,6 +124,16 @@ export function LibroDetailSheet({
     }
   }
 
+  async function handleActualizarPortada(url: string) {
+    if (!copia) return;
+    try {
+      await actualizarPortada(copia.isbn, url);
+    } catch (err) {
+      console.error("Error actualizando la portada:", err);
+      toast.error("No pudimos actualizar la portada.");
+    }
+  }
+
   const inicial = (global?.titulo ?? "?").trim().charAt(0).toUpperCase();
 
   return (
@@ -131,20 +144,29 @@ export function LibroDetailSheet({
         </SheetHeader>
 
         <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-4 pb-6 pt-1">
-          {global?.portadaUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={global.portadaUrl}
-              alt={global?.titulo ?? ""}
-              className="h-[170px] w-[120px] rounded-lg border object-cover"
-            />
-          ) : (
-            <div className="flex h-[170px] w-[120px] items-center justify-center rounded-lg border bg-muted">
-              <span className="text-3xl font-bold text-muted-foreground/60">
-                {inicial}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {global?.portadaUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={global.portadaUrl}
+                alt={global?.titulo ?? ""}
+                className="h-[170px] w-[120px] rounded-lg border object-cover"
+              />
+            ) : (
+              <div className="flex h-[170px] w-[120px] items-center justify-center rounded-lg border bg-muted">
+                <span className="text-3xl font-bold text-muted-foreground/60">
+                  {inicial}
+                </span>
+              </div>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPortadaPickerOpen(true)}
+            >
+              {global?.portadaUrl ? "Cambiar portada" : "Agregar portada"}
+            </Button>
+          </div>
 
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -368,6 +390,14 @@ export function LibroDetailSheet({
           )}
         </SheetFooter>
       </SheetContent>
+
+      <PortadaPicker
+        open={portadaPickerOpen}
+        onOpenChange={setPortadaPickerOpen}
+        consultaInicial={global?.titulo ?? ""}
+        isbn={copia.isbn}
+        onSeleccionar={handleActualizarPortada}
+      />
     </Sheet>
   );
 }

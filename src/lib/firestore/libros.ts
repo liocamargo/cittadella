@@ -6,6 +6,7 @@ import {
   getDoc,
   getDocs,
   increment,
+  limit,
   onSnapshot,
   query,
   runTransaction,
@@ -61,6 +62,10 @@ function toCopia(id: string, data: Record<string, unknown>): LibroEnBiblioteca {
 export async function getLibroGlobal(isbn: string): Promise<LibroGlobal | null> {
   const snap = await getDoc(doc(db, GLOBALES, isbn));
   return snap.exists() ? toLibroGlobal(isbn, snap.data()) : null;
+}
+
+export async function actualizarPortada(isbn: string, portadaUrl: string): Promise<void> {
+  await updateDoc(doc(db, GLOBALES, isbn), { portadaUrl });
 }
 
 export function listenInventario(
@@ -237,4 +242,57 @@ export async function publicarResena(
     ratingPromedio: Math.round(promedio * 10) / 10,
     totalResenas: valores.length,
   });
+}
+
+// --- Selección de la semana ---
+
+function claveSemanaActual(): string {
+  const ahora = new Date();
+  const inicioAnio = new Date(Date.UTC(ahora.getUTCFullYear(), 0, 1));
+  const dias = Math.floor((ahora.getTime() - inicioAnio.getTime()) / 86400000);
+  const semana = Math.ceil((dias + inicioAnio.getUTCDay() + 1) / 7);
+  return `${ahora.getUTCFullYear()}-W${semana}`;
+}
+
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  }
+  return h >>> 0;
+}
+
+/** PRNG determinístico (mulberry32) para que la selección sea estable durante la semana. */
+function crearGeneradorSeed(seed: number) {
+  let a = seed;
+  return function random() {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Libros que ya tienen otras bibliotecas (propietarios > 0) y no están en
+ * isbnsPropios. La selección es estable durante la semana ISO actual y
+ * rota la semana siguiente.
+ */
+export async function getSeleccionSemanal(
+  isbnsPropios: string[]
+): Promise<LibroGlobal[]> {
+  const snap = await getDocs(query(collection(db, GLOBALES), limit(500)));
+  const propios = new Set(isbnsPropios);
+  const candidatos = snap.docs
+    .map((d) => toLibroGlobal(d.id, d.data()))
+    .filter((l) => l.propietarios > 0 && !propios.has(l.isbn));
+
+  const random = crearGeneradorSeed(hashString(claveSemanaActual()));
+  const mezclados = [...candidatos];
+  for (let i = mezclados.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [mezclados[i], mezclados[j]] = [mezclados[j], mezclados[i]];
+  }
+  return mezclados.slice(0, 7);
 }

@@ -69,5 +69,10 @@ service cloud.firestore {
       allow update, delete: if isMemberOf(resource.data.bibliotecaId);
       allow create: if isMemberOf(request.resource.data.bibliotecaId);
     }
+
+    // Objetivo personal de lectura: solo el propio usuario (doc id = uid).
+    match /MetasLectura/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
   }
 }

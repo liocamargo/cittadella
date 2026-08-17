@@ -32,7 +32,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace("/catalogo");
+      router.replace("/inicio");
     }
   }, [loading, user, router]);
 
@@ -40,7 +40,7 @@ export default function LoginPage() {
     if (step !== "completing") return;
 
     completeEmailLinkSignIn(window.location.href)
-      .then(() => router.replace("/catalogo"))
+      .then(() => router.replace("/inicio"))
       .catch((err) => {
         if (err instanceof Error && err.message === "NEEDS_EMAIL") {
           setStep("need-email");
@@ -56,7 +56,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await signInWithGoogle();
-      router.replace("/catalogo");
+      router.replace("/inicio");
     } catch (err) {
       console.error("Error con Google Sign-In:", err);
       toast.error("No pudimos iniciar sesión con Google.");
@@ -90,7 +90,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await completeEmailLinkSignIn(window.location.href, confirmEmail.trim());
-      router.replace("/catalogo");
+      router.replace("/inicio");
     } catch (err) {
       console.error("Error completando el login por email link:", err);
       toast.error("El link no es válido o expiró. Pedí uno nuevo.");

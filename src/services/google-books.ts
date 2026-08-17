@@ -64,3 +64,37 @@ export async function buscarPorIsbn(isbn: string): Promise<DatosComunidad | null
     portadaUrl: info.imageLinks?.thumbnail?.replace("http://", "https://"),
   };
 }
+
+export interface ResultadoPortada {
+  titulo: string;
+  autor: string;
+  portadaUrl: string;
+}
+
+/** Busca por título/autor y devuelve varias portadas candidatas para elegir. */
+export async function buscarPortadas(consulta: string): Promise<ResultadoPortada[]> {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
+  const params = new URLSearchParams({ q: consulta, maxResults: "12" });
+  if (apiKey) params.set("key", apiKey);
+
+  const res = await fetch(
+    `https://www.googleapis.com/books/v1/volumes?${params.toString()}`
+  );
+  if (!res.ok) {
+    throw new GoogleBooksError(`Google Books respondió ${res.status}`, res.status);
+  }
+  const data: GoogleBooksResponse = await res.json();
+
+  const resultados: ResultadoPortada[] = [];
+  for (const item of data.items ?? []) {
+    const info = item.volumeInfo;
+    const portadaUrl = info?.imageLinks?.thumbnail?.replace("http://", "https://");
+    if (!info?.title || !portadaUrl) continue;
+    resultados.push({
+      titulo: info.title,
+      autor: (info.authors ?? []).join(", "),
+      portadaUrl,
+    });
+  }
+  return resultados;
+}

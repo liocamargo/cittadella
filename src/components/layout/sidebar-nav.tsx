@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
+  Home,
   Library,
   ArrowLeftRight,
   Users,
@@ -28,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const NAV_ITEMS = [
+  { href: "/inicio", label: "Inicio", icon: Home },
   { href: "/catalogo", label: "Catálogo", icon: Library },
   { href: "/prestamos", label: "Préstamos", icon: ArrowLeftRight },
   { href: "/espacio", label: "Espacio", icon: Users },
@@ -197,7 +199,7 @@ export function SidebarNav() {
       </aside>
 
       {/* Mobile: tab bar fija abajo */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname?.startsWith(href);
           return (
