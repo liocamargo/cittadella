@@ -98,7 +98,7 @@ export default function EspacioPage() {
   }
 
   return (
-    <div className="max-w-xl">
+    <div>
       <h1 className="text-2xl font-bold">Espacio compartido</h1>
       <p className="mb-7 mt-1 text-sm text-muted-foreground">
         Miembros de <strong>{bibliotecaActual.nombre}</strong>. Todos pueden
