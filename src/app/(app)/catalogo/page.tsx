@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
-import { cn } from "@/lib/utils";
+import { cn, normalizarBusqueda } from "@/lib/utils";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
 import { listenInventario, toggleFavorito } from "@/lib/firestore/libros";
@@ -78,7 +78,7 @@ export default function CatalogoPage() {
   }, [copias]);
 
   const filtrados = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = normalizarBusqueda(search.trim());
     return copias.filter((c) => {
       const g = globales[c.isbn];
       if (filtro === "disponible" && c.estado !== "disponible") return false;
@@ -86,7 +86,9 @@ export default function CatalogoPage() {
       if (filtro === "favorito" && !c.favorito) return false;
       if (shelfFilter !== "all" && c.estante !== shelfFilter) return false;
       if (term) {
-        const haystack = `${g?.titulo ?? ""} ${g?.autor ?? ""} ${g?.genero ?? ""}`.toLowerCase();
+        const haystack = normalizarBusqueda(
+          `${g?.titulo ?? ""} ${g?.autor ?? ""} ${g?.genero ?? ""}`
+        );
         if (!haystack.includes(term)) return false;
       }
       return true;

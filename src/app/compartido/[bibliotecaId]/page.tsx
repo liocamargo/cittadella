@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { listenBiblioteca } from "@/lib/firestore/bibliotecas";
+import { normalizarBusqueda } from "@/lib/utils";
 import { listenInventario } from "@/lib/firestore/libros";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
 import type { Biblioteca, LibroEnBiblioteca } from "@/types";
@@ -57,13 +58,13 @@ export default function CatalogoPublicoPage() {
     );
   }
 
-  const term = search.trim().toLowerCase();
+  const term = normalizarBusqueda(search.trim());
   const filtrados = copias.filter((c) => {
     if (!term) return true;
     const g = globales[c.isbn];
-    return `${g?.titulo ?? ""} ${g?.autor ?? ""} ${g?.genero ?? ""}`
-      .toLowerCase()
-      .includes(term);
+    return normalizarBusqueda(
+      `${g?.titulo ?? ""} ${g?.autor ?? ""} ${g?.genero ?? ""}`
+    ).includes(term);
   });
 
   const detalle = seleccionada ? globales[seleccionada.isbn] : undefined;
