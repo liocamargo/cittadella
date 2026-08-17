@@ -30,8 +30,8 @@ import { Button } from "@/components/ui/button";
 const NAV_ITEMS = [
   { href: "/catalogo", label: "Catálogo", icon: Library },
   { href: "/prestamos", label: "Préstamos", icon: ArrowLeftRight },
-  { href: "/espacio", label: "Espacio compartido", icon: Users },
-  { href: "/importar", label: "Importar / Exportar", icon: ArrowDownUp },
+  { href: "/espacio", label: "Espacio", icon: Users },
+  { href: "/importar", label: "Import/Export", icon: ArrowDownUp },
 ];
 
 export function SidebarNav() {
@@ -68,37 +68,135 @@ export function SidebarNav() {
     }
   }
 
-  return (
-    <aside
-      className={cn(
-        "flex h-screen shrink-0 flex-col gap-4 border-r bg-background p-4 transition-[width]",
-        collapsed ? "w-[68px]" : "w-[240px]"
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        {!collapsed && (
-          <div className="overflow-hidden">
-            <div className="whitespace-nowrap text-[15px] font-bold">
-              Cittadella
-            </div>
-            <div className="mt-0.5 whitespace-nowrap text-xs text-muted-foreground">
-              Espacio compartido
-            </div>
-          </div>
-        )}
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          className="flex size-7 shrink-0 items-center justify-center rounded-md border text-muted-foreground hover:bg-accent"
-        >
-          {collapsed ? (
-            <PanelLeftOpen className="size-4" />
-          ) : (
-            <PanelLeftClose className="size-4" />
-          )}
-        </button>
+  const accountMenuContent = (
+    <DropdownMenuContent align="start" className="w-64">
+      <div className="truncate px-1.5 py-1 text-xs text-muted-foreground">
+        {user?.email}
       </div>
+      <DropdownMenuSeparator />
+      {bibliotecas.map((b) => (
+        <DropdownMenuItem
+          key={b.id}
+          onClick={() => seleccionarBiblioteca(b.id)}
+          className="justify-between"
+        >
+          <span className="truncate">{b.nombre}</span>
+          {b.id === bibliotecaActual?.id && <Check className="size-3.5 shrink-0" />}
+        </DropdownMenuItem>
+      ))}
+      <DropdownMenuSeparator />
+      <div className="flex gap-1.5 px-1.5 py-1">
+        <Input
+          value={newLibraryName}
+          onChange={(e) => setNewLibraryName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleCreateLibrary();
+            }
+          }}
+          placeholder="Nueva biblioteca"
+          className="h-8 text-xs"
+          onClick={(e) => e.stopPropagation()}
+        />
+        <Button
+          size="sm"
+          className="h-8 shrink-0 px-2.5 text-xs"
+          disabled={creating}
+          onClick={(e) => {
+            e.preventDefault();
+            handleCreateLibrary();
+          }}
+        >
+          Crear
+        </Button>
+      </div>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem variant="destructive" onClick={handleLogout}>
+        Cerrar sesión
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  );
 
-      <nav className="flex flex-col gap-0.5">
+  return (
+    <>
+      {/* Desktop: sidebar fija a la izquierda */}
+      <aside
+        className={cn(
+          "sticky top-0 hidden h-screen shrink-0 flex-col gap-4 border-r bg-background p-4 transition-[width] md:flex",
+          collapsed ? "w-[68px]" : "w-[240px]"
+        )}
+      >
+        <div className="flex items-center justify-between gap-2">
+          {!collapsed && (
+            <div className="overflow-hidden">
+              <div className="whitespace-nowrap text-[15px] font-bold">
+                Cittadella
+              </div>
+              <div className="mt-0.5 whitespace-nowrap text-xs text-muted-foreground">
+                Espacio compartido
+              </div>
+            </div>
+          )}
+          <button
+            onClick={() => setCollapsed((c) => !c)}
+            className="flex size-7 shrink-0 items-center justify-center rounded-md border text-muted-foreground hover:bg-accent"
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="size-4" />
+            ) : (
+              <PanelLeftClose className="size-4" />
+            )}
+          </button>
+        </div>
+
+        <nav className="flex flex-col gap-0.5">
+          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            const active = pathname?.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground",
+                  active && "bg-accent text-foreground"
+                )}
+              >
+                <Icon className="size-[18px] shrink-0" />
+                {!collapsed && <span className="whitespace-nowrap">{label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="mt-auto border-t pt-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex w-full items-center gap-2.5 rounded-md p-1 text-left hover:bg-accent">
+                <Avatar className="size-7 shrink-0">
+                  <AvatarFallback className="bg-primary text-[12px] font-semibold text-primary-foreground">
+                    {initial}
+                  </AvatarFallback>
+                </Avatar>
+                {!collapsed && (
+                  <div className="overflow-hidden">
+                    <div className="truncate text-[13px] font-semibold">
+                      {bibliotecaActual?.nombre ?? "Cargando…"}
+                    </div>
+                    <div className="truncate text-[11px] text-muted-foreground">
+                      {user?.email}
+                    </div>
+                  </div>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            {accountMenuContent}
+          </DropdownMenu>
+        </div>
+      </aside>
+
+      {/* Mobile: tab bar fija abajo */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname?.startsWith(href);
           return (
@@ -106,87 +204,29 @@ export function SidebarNav() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground",
-                active && "bg-accent text-foreground"
+                "flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium text-muted-foreground",
+                active && "text-foreground"
               )}
             >
-              <Icon className="size-[18px] shrink-0" />
-              {!collapsed && <span className="whitespace-nowrap">{label}</span>}
+              <Icon className="size-5" />
+              <span className="leading-none">{label}</span>
             </Link>
           );
         })}
-      </nav>
-
-      <div className="mt-auto border-t pt-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex w-full items-center gap-2.5 rounded-md p-1 text-left hover:bg-accent">
-              <Avatar className="size-7 shrink-0">
-                <AvatarFallback className="bg-primary text-[12px] font-semibold text-primary-foreground">
+            <button className="flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium text-muted-foreground">
+              <Avatar className="size-5">
+                <AvatarFallback className="bg-primary text-[9px] font-semibold text-primary-foreground">
                   {initial}
                 </AvatarFallback>
               </Avatar>
-              {!collapsed && (
-                <div className="overflow-hidden">
-                  <div className="truncate text-[13px] font-semibold">
-                    {bibliotecaActual?.nombre ?? "Cargando…"}
-                  </div>
-                  <div className="truncate text-[11px] text-muted-foreground">
-                    {user?.email}
-                  </div>
-                </div>
-              )}
+              <span className="leading-none">Cuenta</span>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-64">
-            <div className="truncate px-1.5 py-1 text-xs text-muted-foreground">
-              {user?.email}
-            </div>
-            <DropdownMenuSeparator />
-            {bibliotecas.map((b) => (
-              <DropdownMenuItem
-                key={b.id}
-                onClick={() => seleccionarBiblioteca(b.id)}
-                className="justify-between"
-              >
-                <span className="truncate">{b.nombre}</span>
-                {b.id === bibliotecaActual?.id && <Check className="size-3.5 shrink-0" />}
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <div className="flex gap-1.5 px-1.5 py-1">
-              <Input
-                value={newLibraryName}
-                onChange={(e) => setNewLibraryName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleCreateLibrary();
-                  }
-                }}
-                placeholder="Nueva biblioteca"
-                className="h-8 text-xs"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <Button
-                size="sm"
-                className="h-8 shrink-0 px-2.5 text-xs"
-                disabled={creating}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleCreateLibrary();
-                }}
-              >
-                Crear
-              </Button>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={handleLogout}>
-              Cerrar sesión
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+          {accountMenuContent}
         </DropdownMenu>
-      </div>
-    </aside>
+      </nav>
+    </>
   );
 }

@@ -18,6 +18,10 @@ service cloud.firestore {
         request.auth.token.email in biblioteca.data.invitacionesPendientes;
     }
 
+    function isPublic(bibliotecaId) {
+      return get(/databases/$(database)/documents/Bibliotecas/$(bibliotecaId)).data.catalogoPublico == true;
+    }
+
     // Catálogo comunitario de libros, indexado por ISBN. Lectura pública
     // (permite links de solo lectura y ver ratings/dueños antes de loguearse).
     // Escritura: cualquier usuario logueado puede crear o enriquecer un libro
@@ -40,9 +44,15 @@ service cloud.firestore {
     // biblioteca; cualquier usuario logueado puede crear una nueva
     // agregándose a sí mismo como miembro. Un usuario invitado por email
     // (todavía no es miembro) puede leer/actualizar el doc únicamente para
-    // auto-aceptar la invitación (ver aceptarInvitacionesPendientes).
+    // auto-aceptar la invitación (ver aceptarInvitacionesPendientes). Si
+    // catalogoPublico es true, cualquiera (sin login) puede leer el doc
+    // para ver el nombre en la página pública /compartido/{id}.
     match /Bibliotecas/{bibliotecaId} {
-      allow read, update: if signedIn() &&
+      allow read: if
+        (signedIn() &&
+          (request.auth.uid in resource.data.miembrosUids || isInvitedTo(resource))) ||
+        resource.data.catalogoPublico == true;
+      allow update: if signedIn() &&
         (request.auth.uid in resource.data.miembrosUids || isInvitedTo(resource));
       allow delete: if signedIn() && request.auth.uid in resource.data.miembrosUids;
       allow create: if signedIn() &&
@@ -50,9 +60,13 @@ service cloud.firestore {
         request.resource.data.creadaPor == request.auth.uid;
     }
 
-    // Inventario físico: solo miembros de la biblioteca dueña de la copia.
+    // Inventario físico: los miembros pueden leer/escribir. Si la biblioteca
+    // dueña tiene catalogoPublico=true, cualquiera puede leer (solo lectura)
+    // para la página pública /compartido/{id}.
     match /Libros_En_Biblioteca/{copiaId} {
-      allow read, update, delete: if isMemberOf(resource.data.bibliotecaId);
+      allow read: if isMemberOf(resource.data.bibliotecaId) ||
+        isPublic(resource.data.bibliotecaId);
+      allow update, delete: if isMemberOf(resource.data.bibliotecaId);
       allow create: if isMemberOf(request.resource.data.bibliotecaId);
     }
   }

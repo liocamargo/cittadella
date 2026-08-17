@@ -26,9 +26,22 @@ function toBiblioteca(id: string, data: Record<string, unknown>): Biblioteca {
     nombresMiembros: (data.nombresMiembros as Record<string, string>) ?? {},
     emailsMiembros: (data.emailsMiembros as Record<string, string>) ?? {},
     estantes: (data.estantes as string[]) ?? [],
+    catalogoPublico: Boolean(data.catalogoPublico),
     creadaPor: (data.creadaPor as string) ?? "",
     creadaEn: (data.creadaEn as string) ?? "",
   };
+}
+
+/** Escucha una biblioteca puntual por id (usado por la página pública /compartido). */
+export function listenBiblioteca(
+  bibliotecaId: string,
+  onChange: (biblioteca: Biblioteca | null) => void
+): Unsubscribe {
+  return onSnapshot(
+    doc(db, COL, bibliotecaId),
+    (snap) => onChange(snap.exists() ? toBiblioteca(snap.id, snap.data()) : null),
+    () => onChange(null)
+  );
 }
 
 export function listenBibliotecasDeUsuario(
@@ -54,6 +67,7 @@ export async function crearBiblioteca(
     nombresMiembros: { [uid]: nombreMiembro },
     emailsMiembros: { [uid]: email },
     estantes: [],
+    catalogoPublico: false,
     creadaPor: uid,
     creadaEn: new Date().toISOString(),
   });
@@ -122,6 +136,12 @@ export async function agregarEstante(bibliotecaId: string, nombre: string) {
 export async function eliminarEstante(bibliotecaId: string, nombre: string) {
   await updateDoc(doc(db, COL, bibliotecaId), {
     estantes: arrayRemove(nombre),
+  });
+}
+
+export async function setCatalogoPublico(bibliotecaId: string, activo: boolean) {
+  await updateDoc(doc(db, COL, bibliotecaId), {
+    catalogoPublico: activo,
   });
 }
 

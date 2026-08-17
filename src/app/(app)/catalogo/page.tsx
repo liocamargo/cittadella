@@ -16,6 +16,7 @@ import {
 } from "@/lib/firestore/bibliotecas";
 import { LibroCard } from "@/components/catalogo/libro-card";
 import { LibroDetailSheet } from "@/components/catalogo/libro-detail-sheet";
+import { ShareCatalogPopover } from "@/components/catalogo/share-catalog-popover";
 import type { LibroEnBiblioteca } from "@/types";
 
 const PAGE_SIZE = 12;
@@ -123,6 +124,13 @@ export default function CatalogoPage() {
             }}
             className="w-[220px]"
           />
+          {bibliotecaActual && (
+            <ShareCatalogPopover
+              bibliotecaId={bibliotecaActual.id}
+              nombre={bibliotecaActual.nombre}
+              catalogoPublico={bibliotecaActual.catalogoPublico}
+            />
+          )}
           <Button asChild>
             <Link href="/catalogo/agregar">
               <Plus />

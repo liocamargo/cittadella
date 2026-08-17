@@ -6,6 +6,7 @@ import { BookMarked, Star, Trash2 } from "lucide-react";
 import {
   Sheet,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -104,12 +105,12 @@ export function LibroDetailSheet({
 
   return (
     <Sheet open={Boolean(copia)} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-full gap-5 overflow-y-auto sm:max-w-[420px]">
+      <SheetContent side="right" className="w-full gap-0 sm:max-w-[420px]">
         <SheetHeader className="sr-only">
           <SheetTitle>{global?.titulo}</SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-col gap-5 px-4 pb-6">
+        <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-4 pb-6 pt-1">
           {global?.portadaUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -284,9 +285,11 @@ export function LibroDetailSheet({
               ))}
             </div>
           </div>
+        </div>
 
+        <SheetFooter className="border-t">
           {prestando ? (
-            <div className="flex flex-col gap-3 rounded-lg border p-4">
+            <div className="flex flex-col gap-3">
               <Label>¿A quién se lo prestás?</Label>
               <Input
                 value={loanName}
@@ -309,7 +312,7 @@ export function LibroDetailSheet({
               </div>
             </div>
           ) : (
-            <div className="mt-auto flex gap-2 pt-2">
+            <div className="flex gap-2">
               {copia.estado === "disponible" ? (
                 <Button className="flex-1" onClick={() => setPrestando(true)}>
                   Prestar
@@ -330,7 +333,7 @@ export function LibroDetailSheet({
               </Button>
             </div>
           )}
-        </div>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

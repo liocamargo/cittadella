@@ -58,6 +58,8 @@ export interface Biblioteca {
   emailsMiembros: Record<string, string>;
   /** Estantes declarados explícitamente (pueden existir sin libros todavía). */
   estantes: string[];
+  /** Si es true, el catálogo se puede ver (solo lectura) sin login en /compartido/{id}. */
+  catalogoPublico: boolean;
   creadaPor: string;
   creadaEn: string;
 }
