@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase/admin";
+import { getSiteUrl } from "@/lib/site-url";
 
 interface InvitarBody {
   email: string;
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
     (biblioteca.emailsMiembros as Record<string, string> | undefined)?.[uid] ??
     "Alguien";
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
   const from = process.env.RESEND_FROM_EMAIL ?? "Cittadella <onboarding@resend.dev>";
 
   const resend = new Resend(resendKey);

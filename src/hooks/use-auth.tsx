@@ -19,6 +19,7 @@ import {
   type ReactNode,
 } from "react";
 import { auth } from "@/lib/firebase/client";
+import { normalizarSiteUrl } from "@/lib/site-url";
 
 const EMAIL_FOR_SIGN_IN_KEY = "cittadella:emailForSignIn";
 
@@ -54,8 +55,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await signInWithPopup(auth, new GoogleAuthProvider());
       },
       async sendLoginLink(email: string) {
-        const siteUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+          ? normalizarSiteUrl(process.env.NEXT_PUBLIC_SITE_URL)
+          : window.location.origin;
         await sendSignInLinkToEmail(auth, email, {
           url: `${siteUrl}/login`,
           handleCodeInApp: true,
