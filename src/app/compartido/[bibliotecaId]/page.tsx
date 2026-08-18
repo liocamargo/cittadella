@@ -18,7 +18,7 @@ import { listenInventario } from "@/lib/firestore/libros";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
 import type { Biblioteca, LibroEnBiblioteca } from "@/types";
 
-const PAGE_SIZE = 14;
+const PAGE_SIZE = 16;
 type Filtro = "all" | "disponible" | "prestado";
 
 const FILTROS: { key: Filtro; label: string }[] = [
@@ -111,7 +111,7 @@ export default function CatalogoPublicoPage() {
 
   return (
     <div className="min-h-screen bg-background px-6 py-10 md:px-12">
-      <div className="mx-auto max-w-5xl">
+      <div>
         <div className="mb-1 flex items-center gap-2 text-muted-foreground">
           <Library className="size-4" />
           <span className="text-xs font-semibold uppercase tracking-wide">
@@ -161,7 +161,7 @@ export default function CatalogoPublicoPage() {
           </div>
         )}
 
-        <div className="mb-6 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-5">
+        <div className="mb-6 grid grid-cols-2 gap-5 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
           {pageItems.map((copia) => {
             const g = globales[copia.isbn];
             const inicial = (g?.titulo ?? "?").trim().charAt(0).toUpperCase();
