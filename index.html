@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cittadella — Tu biblioteca, multiplicada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#ffffff;
+    --ink-2:#f2f2f0;
+    --line:#e2e2de;
+    --paper:#111110;
+    --paper-dim:#6e6e6b;
+    --gold:#0a0a0a;
+    --gold-dim:#9a9a97;
+    --spine-red:#3a3a38;
+    --spine-green:#55554f;
+    --spine-blue:#7a7a75;
+    --radius:2px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Inter', sans-serif;
+    font-weight:400;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--gold); color:var(--ink);}
+
+  h1,h2,h3{
+    font-family:'Fraunces', serif;
+    font-weight:450;
+    letter-spacing:-0.01em;
+    color:var(--paper);
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--gold);
+  }
+  a{color:inherit;}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 32px;}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    background:rgba(255,255,255,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    height:68px;
+  }
+  .logo{
+    font-family:'Fraunces', serif;
+    font-size:20px;
+    font-weight:500;
+    letter-spacing:0.01em;
+    display:flex; align-items:center; gap:8px;
+  }
+  .logo .mark{
+    display:inline-flex; gap:2px;
+  }
+  .logo .mark span{
+    width:3px; height:16px; background:var(--gold); display:inline-block; border-radius:1px;
+  }
+  .logo .mark span:nth-child(2){height:20px; background:var(--paper-dim);}
+  .logo .mark span:nth-child(3){height:12px; background:var(--spine-red);}
+  @media (max-width:760px){ .nav-cta{font-size:12px; padding:6px 12px;} }
+  .nav-cta{
+    font-size:13px;
+    font-family:'JetBrains Mono', monospace;
+    border:1px solid var(--gold-dim);
+    color:var(--gold);
+    padding:8px 16px;
+    border-radius:var(--radius);
+    transition:all .2s;
+    white-space:nowrap;
+  }
+  .nav-cta:hover{background:var(--gold); color:var(--ink); border-color:var(--gold);}
+
+  /* ---------- HERO ---------- */
+  header.hero{
+    position:relative;
+    padding:168px 0 80px;
+    overflow:hidden;
+  }
+  header.hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,0,0,0.045), transparent 60%);
+    pointer-events:none;
+  }
+  .hero-inner{
+    max-width:720px; margin:0 auto; text-align:center;
+  }
+  .hero h1{
+    font-size:clamp(40px, 6vw, 68px);
+    line-height:1.04;
+    max-width:720px;
+    margin:0 auto;
+  }
+  .hero h1 em{
+    font-style:italic; color:var(--gold); font-weight:400;
+  }
+  .hero p.lede{
+    margin:24px auto 0;
+    font-size:18px;
+    color:var(--paper-dim);
+    max-width:460px;
+  }
+  .hero-ctas{
+    display:flex; gap:14px; margin-top:36px; flex-wrap:wrap;
+    justify-content:center;
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:13px 24px;
+    border-radius:var(--radius);
+    font-size:14px; font-weight:500;
+    text-decoration:none;
+    transition:all .2s;
+    cursor:pointer;
+    border:1px solid transparent;
+  }
+  .btn-primary{background:var(--gold); color:var(--ink);}
+  .btn-primary:hover{background:#2b2b2a;}
+  .btn-ghost{border-color:var(--line); color:var(--paper);}
+  .btn-ghost:hover{border-color:var(--paper-dim);}
+
+  /* ---------- CAROUSEL (signature element) ---------- */
+  .carousel-wrap{
+    position:relative;
+    margin-top:88px;
+    width:100vw; margin-left:calc(50% - 50vw);
+    overflow:hidden;
+    -webkit-mask-image:linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image:linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .carousel-track{
+    display:flex; gap:20px; width:max-content;
+    animation:scrollLeft 42s linear infinite;
+  }
+  .carousel-wrap:hover .carousel-track{ animation-play-state:paused; }
+  .book-cover{
+    position:relative;
+    width:148px; height:216px; flex-shrink:0;
+    border-radius:16px;
+    border:1px solid var(--line);
+    box-shadow:0 4px 12px rgba(0,0,0,0.05);
+    display:flex; flex-direction:column; justify-content:space-between;
+    padding:16px 14px;
+    transition:transform .3s ease;
+    overflow:hidden;
+  }
+  .book-cover:hover{ transform:translateY(-6px); }
+  .book-cover .spine-edge{
+    position:absolute; left:0; top:0; bottom:0; width:6px;
+  }
+  .book-cover .bc-title{
+    font-family:'Fraunces', serif; font-weight:500; font-size:15px; line-height:1.2;
+  }
+  .book-cover .bc-author{
+    font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:0.05em; text-transform:uppercase;
+  }
+  @keyframes scrollLeft{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  @media (max-width:700px){
+    .book-cover{ width:120px; height:176px; padding:12px 11px; }
+  }
+
+  /* ---------- CALL NUMBER DIVIDER ---------- */
+  .divider{
+    display:flex; align-items:center; gap:16px;
+    margin:0 0 48px;
+    color:var(--paper-dim);
+  }
+  .divider .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; letter-spacing:0.06em;
+    border:1px solid var(--line);
+    padding:5px 10px; border-radius:2px;
+    color:var(--gold);
+    white-space:nowrap;
+  }
+  .divider .rule{flex:1; height:1px; background:var(--line);}
+
+  #catalogo, #publico, footer{
+    --ink:#0a0a0a;
+    --ink-2:#161616;
+    --line:#2c2c2c;
+    --paper:#f5f5f4;
+    --paper-dim:#9a9a97;
+    --gold:#ffffff;
+    --gold-dim:#5c5c5a;
+    background:var(--ink);
+    color:var(--paper);
+  }
+  section{padding:104px 0; border-top:1px solid var(--line);}
+  .section-head{
+    display:grid; grid-template-columns:1fr 1.2fr; gap:64px; margin-bottom:64px;
+  }
+  .section-head h2{font-size:clamp(28px,3.4vw,40px); line-height:1.12;}
+  .section-head .support{color:var(--paper-dim); font-size:16px; max-width:440px; align-self:end;}
+
+  .feature-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+  }
+  .feature{
+    background:var(--ink); padding:32px 28px;
+    transition:background .2s;
+  }
+  .feature:hover{background:var(--ink-2);}
+  .feature .num{
+    font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--gold-dim); display:block; margin-bottom:18px;
+  }
+  .feature h3{font-size:19px; font-weight:500; margin-bottom:10px; font-family:'Fraunces',serif;}
+  .feature p{font-size:14.5px; color:var(--paper-dim);}
+  @media (max-width:900px){
+    .feature-grid{grid-template-columns:1fr;}
+    .section-head{grid-template-columns:1fr; gap:20px;}
+    .hero-grid{grid-template-columns:1fr;}
+  }
+
+  /* ---------- SPLIT (público / whatsapp) ---------- */
+  .split{
+    display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center;
+  }
+  .split .visual{
+    border:1px solid var(--line); background:var(--ink-2); border-radius:6px; padding:28px;
+  }
+  .catalog-card{
+    display:flex; gap:16px; align-items:flex-start; padding:14px 0; border-bottom:1px solid var(--line);
+  }
+  .catalog-card:last-child{border-bottom:none;}
+  .catalog-card .cover{
+    width:38px; height:54px; border-radius:2px; flex-shrink:0;
+  }
+  .catalog-card .meta h4{font-family:'Fraunces',serif; font-size:15px; font-weight:500; color:var(--paper);}
+  .catalog-card .meta span{font-size:12.5px; color:var(--paper-dim);}
+  .wa-btn{
+    margin-top:14px; display:inline-flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono', monospace; font-size:11.5px;
+    color:var(--paper); border:1px solid var(--line); padding:6px 10px; border-radius:2px;
+  }
+  @media (max-width:900px){ .split{grid-template-columns:1fr;} }
+
+  /* ---------- STATS / DASHBOARD ---------- */
+  .dash{
+    border:1px solid var(--line); border-radius:6px; padding:36px;
+    background:linear-gradient(180deg, var(--ink-2), var(--ink));
+  }
+  .dash-row{display:grid; grid-template-columns:repeat(4,1fr); gap:24px; margin-bottom:32px;}
+  .dash-stat .n{font-family:'Fraunces',serif; font-size:34px; color:var(--gold); font-weight:500;}
+  .dash-stat .l{font-size:12px; color:var(--paper-dim); font-family:'JetBrains Mono', monospace; margin-top:4px;}
+  .progress{height:6px; background:var(--line); border-radius:4px; overflow:hidden; margin-top:8px;}
+  .progress i{display:block; height:100%; width:64%; background:var(--gold); border-radius:4px;}
+  .week-pick{display:flex; gap:10px; margin-top:24px; flex-wrap:wrap;}
+  .week-pick .p{width:34px; height:50px; border-radius:2px;}
+  @media (max-width:700px){ .dash-row{grid-template-columns:repeat(2,1fr); row-gap:20px;} }
+
+  /* ---------- LIST FEATURES (import, cuenta, integraciones) ---------- */
+  .checklist{display:grid; grid-template-columns:1fr 1fr; gap:20px 48px;}
+  .checklist li{
+    list-style:none; display:flex; gap:14px; align-items:flex-start; padding:16px 0; border-bottom:1px solid var(--line);
+  }
+  .checklist li .dot{width:6px; height:6px; border-radius:50%; background:var(--gold); margin-top:8px; flex-shrink:0;}
+  .checklist li .icon-badge{
+    width:34px; height:34px; border-radius:8px; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    color:var(--gold);
+  }
+  .checklist li .icon-badge i{width:16px; height:16px; display:block;}
+  .checklist li .icon-badge svg{width:16px; height:16px; stroke-width:1.75;}
+  .checklist li strong{font-family:'Fraunces',serif; font-weight:500; display:block; margin-bottom:3px;}
+  .checklist li span{color:var(--paper-dim); font-size:14px;}
+  @media (max-width:700px){ .checklist{grid-template-columns:1fr;} }
+
+  /* ---------- QUOTE / PRINCIPLE ---------- */
+  .principle{
+    text-align:center; padding:88px 0; border-top:1px solid var(--line);
+  }
+  .principle p{
+    font-family:'Fraunces', serif; font-style:italic; font-weight:400;
+    font-size:clamp(22px,3vw,32px); color:var(--paper); max-width:760px; margin:0 auto; line-height:1.4;
+  }
+  .principle .eyebrow{display:block; margin-bottom:20px;}
+
+  /* ---------- CTA FOOTER ---------- */
+  footer{
+    padding:96px 0 48px; border-top:1px solid var(--line);
+  }
+  .cta-final{text-align:center; padding-bottom:80px;}
+  .cta-final h2{font-size:clamp(30px,5vw,52px); max-width:680px; margin:0 auto 28px;}
+  .foot-bottom{
+    display:flex; justify-content:space-between; align-items:center; padding-top:32px; border-top:1px solid var(--line);
+    font-size:13px; color:var(--paper-dim); flex-wrap:wrap; gap:16px;
+  }
+  .foot-links{display:flex; gap:24px;}
+  .foot-links a{transition:color .2s;} .foot-links a:hover{color:var(--gold);}
+
+  .reveal{opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="logo"><span class="mark"><span></span><span></span><span></span></span>Cittadella</div>
+    <a href="#empezar" class="nav-cta">Crear mi biblioteca</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-inner">
+      <span class="eyebrow">Gestión de bibliotecas personales</span>
+      <h1 style="margin-top:18px;">Cada libro que tenés, cada libro que <em>prestás</em>, en un solo lugar.</h1>
+      <p class="lede">Cittadella convierte tu estantería en una biblioteca de verdad: catalogada, prestable y compartida con quien vos elijas. Sin planillas, sin post-its, sin "¿a quién le presté esto?".</p>
+      <div class="hero-ctas">
+        <a href="#empezar" class="btn btn-primary">Crear mi biblioteca — gratis</a>
+      </div>
+    </div>
+  </div>
+  <div class="carousel-wrap">
+    <div class="carousel-track" id="carouselTrack"></div>
+  </div>
+</header>
+
+<section id="catalogo">
+  <div class="wrap">
+    <div class="divider"><span class="tag">Catálogo</span><span class="rule"></span></div>
+    <div class="section-head">
+      <h2>Escaneá un código de barras. Listo, ya está en tu biblioteca.</h2>
+      <p class="support">Cittadella busca el libro en Google Books —con respaldo en Open Library— y completa título, autor, editorial y portada por vos. Cargá uno o encadená diez seguidos.</p>
+    </div>
+    <div class="feature-grid reveal">
+      <div class="feature">
+        <span class="num">01</span>
+        <h3>Escaneo y autocompletado</h3>
+        <p>Cámara del celular, código ISBN, y el libro aparece completo. Si ya tenés una copia, te avisa antes de duplicarla.</p>
+      </div>
+      <div class="feature">
+        <span class="num">02</span>
+        <h3>Estantes y favoritos</h3>
+        <p>Organizá por estante propio, marcá disponibilidad y favoritos, y buscá por título, autor o género sin pelearte con acentos ni mayúsculas.</p>
+      </div>
+      <div class="feature">
+        <span class="num">03</span>
+        <h3>Reseñas con cara, no con estrellas</h3>
+        <p>Cada libro tiene su rating comunitario y sus reseñas —con "caras" de color en vez de estrellitas genéricas— además de la ficha completa de tu copia.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="prestamos">
+  <div class="wrap">
+    <div class="divider"><span class="tag">Préstamos</span><span class="rule"></span></div>
+    <div class="section-head">
+      <h2>Prestar un libro no debería ser un acto de fe.</h2>
+      <p class="support">Elegís el libro, elegís a quién —un socio registrado o alguien nuevo— y anotás la fecha. Cittadella se acuerda por vos, y el historial completo de cada persona queda a un clic.</p>
+    </div>
+    <ul class="checklist reveal">
+      <li><div class="icon-badge"><i data-lucide="rotate-ccw"></i></div><div><strong>Un botón para devolver</strong><span>Marcás "devuelto" y el libro vuelve a estar disponible al instante para toda la biblioteca.</span></div></li>
+      <li><div class="icon-badge"><i data-lucide="users"></i></div><div><strong>Socios con historial</strong><span>Nombre, teléfono, email y notas de cada persona, con todos sus préstamos pasados y presentes.</span></div></li>
+      <li><div class="icon-badge"><i data-lucide="toggle-left"></i></div><div><strong>Modo socios opcional</strong><span>Si tu biblioteca es informal, prestá con texto libre. Si es un club o una institución, activá socios registrados.</span></div></li>
+      <li><div class="icon-badge"><i data-lucide="history"></i></div><div><strong>Historial que no se pierde</strong><span>Cada préstamo y cada devolución queda registrado, para siempre, aunque cambien los libros de estante.</span></div></li>
+    </ul>
+  </div>
+</section>
+
+<section id="publico">
+  <div class="wrap">
+    <div class="divider"><span class="tag">Catálogo público</span><span class="rule"></span></div>
+    <div class="split">
+      <div>
+        <h2 style="margin-bottom:20px;">Compartí tu biblioteca sin pedirle a nadie que se registre.</h2>
+        <p style="color:var(--paper-dim); font-size:16px; max-width:440px; margin-bottom:20px;">Activás un link, y cualquiera puede explorar tu catálogo en modo solo lectura —hasta ocho columnas en desktop, filtros incluidos. Cuando alguien quiere un libro, te escribe directo.</p>
+        <p style="color:var(--paper-dim); font-size:16px; max-width:440px;">Vos —la persona dueña de la biblioteca— sos quien recibe cada pedido. Sin intermediarios, sin cuentas nuevas.</p>
+      </div>
+      <div class="visual reveal">
+        <div class="catalog-card">
+          <div class="cover" style="background:var(--spine-red);"></div>
+          <div class="meta"><h4>Rayuela</h4><span>Julio Cortázar · Disponible</span></div>
+        </div>
+        <div class="catalog-card">
+          <div class="cover" style="background:var(--spine-green);"></div>
+          <div class="meta"><h4>Ficciones</h4><span>Jorge Luis Borges · Prestado</span></div>
+        </div>
+        <div class="catalog-card">
+          <div class="cover" style="background:var(--gold-dim);"></div>
+          <div class="meta"><h4>Los detectives salvajes</h4><span>Roberto Bolaño · Disponible</span></div>
+        </div>
+        <span class="wa-btn">↳ Pedir por WhatsApp</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="comunidad">
+  <div class="wrap">
+    <div class="divider"><span class="tag">Descubrimiento</span><span class="rule"></span></div>
+    <div class="section-head">
+      <h2>Tu biblioteca sabe lo que leíste. Y también lo que todavía no.</h2>
+      <p class="support">El inicio muestra cuánto leíste, cuánto prestaste, y tu objetivo del año en progreso. Cada semana, además, te sugiere hasta siete libros que otras bibliotecas de la comunidad tienen y la tuya no —solo para descubrir, no para envidiar.</p>
+    </div>
+    <div class="dash reveal">
+      <div class="dash-row">
+        <div class="dash-stat"><div class="n">214</div><div class="l">libros en tu biblioteca</div></div>
+        <div class="dash-stat"><div class="n">12</div><div class="l">prestados hoy</div></div>
+        <div class="dash-stat"><div class="n">38</div><div class="l">leídos este año</div></div>
+        <div class="dash-stat">
+          <div class="n">64%</div>
+          <div class="l">objetivo de lectura</div>
+          <div class="progress"><i></i></div>
+        </div>
+      </div>
+      <span class="eyebrow" style="display:block; margin-bottom:14px;">Selección de la semana</span>
+      <div class="week-pick">
+        <div class="p" style="background:var(--spine-red);"></div>
+        <div class="p" style="background:var(--gold-dim);"></div>
+        <div class="p" style="background:var(--spine-green);"></div>
+        <div class="p" style="background:var(--spine-blue);"></div>
+        <div class="p" style="background:#3d3d3b;"></div>
+        <div class="p" style="background:var(--gold);"></div>
+        <div class="p" style="background:#232322;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="divider"><span class="tag">Espacio compartido</span><span class="rule"></span></div>
+    <div class="section-head">
+      <h2>Una biblioteca es de todos los que la usan, no de quien apretó "crear".</h2>
+      <p class="support">Invitá por email a quien quieras: el lugar te espera hasta que se loguee. Cualquier miembro puede editar el inventario completo. Solo quien creó la biblioteca —la persona dueña— no puede ser removida, y es quien recibe los pedidos del catálogo público.</p>
+    </div>
+    <ul class="checklist reveal">
+      <li><div class="dot"></div><div><strong>Sin jerarquías de admin</strong><span>El permiso es de membresía, no de rol. Todos editan, todos cuidan la biblioteca por igual.</span></div></li>
+      <li><div class="dot"></div><div><strong>Varias bibliotecas a la vez</strong><span>La tuya, la del club de lectura, la de tu familia: un selector en el menú de cuenta y listo.</span></div></li>
+      <li><div class="dot"></div><div><strong>Cambios en tiempo real</strong><span>Lo que edita una persona lo ve toda la biblioteca al instante, en cualquier pantalla que tenga abierta.</span></div></li>
+      <li><div class="dot"></div><div><strong>Idioma propio, catálogo global</strong><span>Interfaz en español, inglés, portugués o italiano; y tus idiomas de lectura priorizan cada búsqueda de libros.</span></div></li>
+    </ul>
+  </div>
+</section>
+
+<section class="principle" style="padding-top:0; border-top:none;">
+  <div class="wrap">
+    <span class="eyebrow">Principio</span>
+    <p>Cittadella no reemplaza tu estantería. Le pone memoria.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="cta-final reveal">
+      <span class="eyebrow" style="display:block; margin-bottom:20px;">Empezar</span>
+      <h2 id="empezar">Tu primera estantería tarda cinco minutos en convertirse en biblioteca.</h2>
+      <a href="#" class="btn btn-primary">Crear mi biblioteca — gratis</a>
+    </div>
+    <div class="foot-bottom">
+      <div class="logo" style="font-size:16px;"><span class="mark"><span></span><span></span><span></span></span>Cittadella</div>
+      <div class="foot-links">
+        <a href="#catalogo">Catálogo</a>
+        <a href="#prestamos">Préstamos</a>
+        <a href="#publico">Catálogo público</a>
+        <a href="#comunidad">Comunidad</a>
+      </div>
+      <span>Hecho para gente que presta libros y quiere que se los devuelvan.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+  if (window.lucide) { lucide.createIcons(); }
+</script>
+<script>
+  // Carrusel de tapas: paleta en escala de grises, cada tapa con título/autor y un canto lateral
+  const covers = [
+    {t:'Rayuela', a:'Julio Cortázar', bg:'#28282a', edge:'#e8e6e1'},
+    {t:'Ficciones', a:'J. L. Borges', bg:'#e8e6e1', edge:'#28282a'},
+    {t:'Los detectives salvajes', a:'Roberto Bolaño', bg:'#4a4a49', edge:'#e8e6e1'},
+    {t:'Cien años de soledad', a:'G. García Márquez', bg:'#d6d3cb', edge:'#28282a'},
+    {t:'Pedro Páramo', a:'Juan Rulfo', bg:'#63625d', edge:'#e8e6e1'},
+    {t:'El túnel', a:'Ernesto Sábato', bg:'#28282a', edge:'#8f8d87'},
+    {t:'La invención de Morel', a:'A. Bioy Casares', bg:'#cbc7bd', edge:'#28282a'},
+    {t:'Cuentos completos', a:'Silvina Ocampo', bg:'#8f8d87', edge:'#e8e6e1'},
+    {t:'Aura', a:'Carlos Fuentes', bg:'#28282a', edge:'#d6d3cb'},
+    {t:'Bestiario', a:'Julio Cortázar', bg:'#e8e6e1', edge:'#4a4a49'}
+  ];
+  const track = document.getElementById('carouselTrack');
+  function paintCovers(){
+    covers.forEach(c=>{
+      const el = document.createElement('div');
+      el.className = 'book-cover';
+      el.style.background = c.bg;
+      const isDark = ['#28282a','#4a4a49','#63625d'].includes(c.bg);
+      const fg = isDark ? '#f2f2f0' : '#111110';
+      el.innerHTML = `<div class="spine-edge" style="background:${c.edge}"></div>
+        <div class="bc-title" style="color:${fg}">${c.t}</div>
+        <div class="bc-author" style="color:${fg}; opacity:.65">${c.a}</div>`;
+      track.appendChild(el);
+    });
+  }
+  paintCovers(); // set original
+  paintCovers(); // duplicate for seamless loop
+
+  // Reveal on scroll
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); } });
+  }, {threshold:0.15});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+
+</body>
+</html>

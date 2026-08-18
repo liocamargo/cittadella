@@ -254,6 +254,11 @@ export default function CatalogoPublicoPage() {
               <div>
                 <strong>Año:</strong> {detalle?.anio || "—"}
               </div>
+              {detalle?.volumen && (
+                <div>
+                  <strong>Volumen:</strong> {detalle.volumen}
+                </div>
+              )}
               <div>
                 <strong>Género:</strong> {detalle?.genero || "—"}
               </div>

@@ -49,6 +49,7 @@ import { listenSocios } from "@/lib/firestore/socios";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { RatingCara, RatingCaraPicker } from "@/components/catalogo/rating-cara";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
+import { GeneroSelect } from "@/components/catalogo/genero-select";
 import type { LibroEnBiblioteca, LibroGlobal, Resena, Socio } from "@/types";
 
 const CAMPOS_EDITABLES = {
@@ -58,6 +59,7 @@ const CAMPOS_EDITABLES = {
   editorial: "",
   anio: "",
   paginas: "",
+  volumen: "",
   idioma: "",
   genero: "",
   sinopsis: "",
@@ -131,6 +133,7 @@ export function LibroDetailSheet({
       editorial: global?.editorial ?? "",
       anio: global?.anio ?? "",
       paginas: global?.paginas ?? "",
+      volumen: global?.volumen ?? "",
       idioma: global?.idioma ?? "",
       genero: global?.genero ?? "",
       sinopsis: global?.sinopsis ?? "",
@@ -156,6 +159,7 @@ export function LibroDetailSheet({
         editorial: formEdit.editorial.trim() || undefined,
         anio: formEdit.anio.trim() || undefined,
         paginas: formEdit.paginas.trim() || undefined,
+        volumen: formEdit.volumen.trim() || undefined,
         idioma: formEdit.idioma.trim() || undefined,
         genero: formEdit.genero.trim() || undefined,
         sinopsis: formEdit.sinopsis.trim() || undefined,
@@ -381,6 +385,11 @@ export function LibroDetailSheet({
                 <strong>Páginas:</strong> {global.paginas}
               </div>
             )}
+            {global?.volumen && (
+              <div>
+                <strong>Volumen:</strong> {global.volumen}
+              </div>
+            )}
             <div>
               <strong>Idioma:</strong> {global?.idioma || "—"}
             </div>
@@ -595,12 +604,19 @@ export function LibroDetailSheet({
                   onChange={(e) => setCampoEdit("paginas", e.target.value)}
                 />
               </FieldEdit>
+              <FieldEdit label="Volumen" className="w-24">
+                <Input
+                  placeholder="Tomo 1"
+                  value={formEdit.volumen}
+                  onChange={(e) => setCampoEdit("volumen", e.target.value)}
+                />
+              </FieldEdit>
             </div>
             <div className="flex gap-3">
               <FieldEdit label="Género" className="flex-1">
-                <Input
+                <GeneroSelect
                   value={formEdit.genero}
-                  onChange={(e) => setCampoEdit("genero", e.target.value)}
+                  onValueChange={(v) => setCampoEdit("genero", v)}
                 />
               </FieldEdit>
               <FieldEdit label="Idioma" className="w-40">

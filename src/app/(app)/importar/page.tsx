@@ -21,6 +21,7 @@ interface FilaImportada {
   editorial: string;
   anio: string;
   paginas: string;
+  volumen: string;
   genero: string;
   idioma: string;
   isbn: string;
@@ -44,6 +45,9 @@ const COLUMNAS_RECONOCIDAS = [
   "Pages",
   "paginas",
   "páginas",
+  "Volume",
+  "volumen",
+  "tomo",
   "Genres",
   "Genre",
   "genero",
@@ -78,6 +82,7 @@ function mapearFila(row: Record<string, string>): FilaImportada {
     editorial: pick(row, ["Publisher", "editorial"]),
     anio: pick(row, ["Published Date", "year", "anio", "año"]).slice(0, 4),
     paginas: pick(row, ["Pages", "paginas", "páginas"]),
+    volumen: pick(row, ["Volume", "volumen", "tomo"]),
     genero: pick(row, ["Genres", "Genre", "genero", "género"]),
     idioma: pick(row, ["Language", "idioma"]),
     isbn: pick(row, ["ISBN", "isbn"]).replace(/[^0-9Xx]/g, ""),
@@ -124,6 +129,7 @@ export default function ImportarPage() {
         autor: g?.autor ?? "",
         editorial: g?.editorial ?? "",
         anio: g?.anio ?? "",
+        volumen: g?.volumen ?? "",
         genero: g?.genero ?? "",
         isbn: c.isbn.startsWith("manual-") ? "" : c.isbn,
         estante: c.estante,
@@ -141,7 +147,16 @@ export default function ImportarPage() {
     descargarArchivo(
       "plantilla-cittadella.csv",
       Papa.unparse([
-        { title: "", author: "", publisher: "", year: "", genre: "", isbn: "", shelf: "" },
+        {
+          title: "",
+          author: "",
+          publisher: "",
+          year: "",
+          genre: "",
+          volume: "",
+          isbn: "",
+          shelf: "",
+        },
       ])
     );
   }
@@ -240,6 +255,7 @@ export default function ImportarPage() {
             editorial: fila.editorial || undefined,
             anio: fila.anio || undefined,
             paginas: fila.paginas || undefined,
+            volumen: fila.volumen || undefined,
             idioma: fila.idioma || undefined,
             genero: fila.genero || undefined,
           },

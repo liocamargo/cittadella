@@ -48,6 +48,8 @@ const es = {
     idiomaLectura: "Idiomas en que leo",
     idiomaLecturaDesc:
       "Podés elegir más de uno. Se usan para priorizar los resultados de Google Books en esos idiomas al buscar un libro.",
+    generosFavoritos: "Géneros que te gustan",
+    generosFavoritosDesc: "Elegí los que quieras, sin límite.",
     guardado: "Preferencias guardadas.",
     errorGuardando: "No pudimos guardar tus preferencias.",
     conectadoComo: "Conectado como",

@@ -29,6 +29,7 @@ import { buscarPorIsbn } from "@/services/google-books";
 import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
+import { GeneroSelect } from "@/components/catalogo/genero-select";
 import type { LibroGlobal } from "@/types";
 
 type Paso = "buscar" | "formulario";
@@ -45,6 +46,7 @@ const FORM_INICIAL = {
   editorial: "",
   anio: "",
   paginas: "",
+  volumen: "",
   genero: "",
   idioma: "",
   sinopsis: "",
@@ -128,6 +130,7 @@ export default function AgregarLibroPage() {
           editorial: local.editorial ?? "",
           anio: local.anio ?? "",
           paginas: local.paginas ?? "",
+          volumen: local.volumen ?? "",
           genero: local.genero ?? "",
           idioma: local.idioma ?? "",
           sinopsis: local.sinopsis ?? "",
@@ -275,6 +278,7 @@ export default function AgregarLibroPage() {
           editorial: (form.editorial ?? "").trim() || undefined,
           anio: (form.anio ?? "").trim() || undefined,
           paginas: (form.paginas ?? "").trim() || undefined,
+          volumen: (form.volumen ?? "").trim() || undefined,
           idioma: (form.idioma ?? "").trim() || undefined,
           genero: (form.genero ?? "").trim() || undefined,
           sinopsis: (form.sinopsis ?? "").trim() || undefined,
@@ -505,10 +509,17 @@ export default function AgregarLibroPage() {
             <Field label="Páginas" className="w-[90px]">
               <Input value={form.paginas} onChange={(e) => setCampo("paginas", e.target.value)} />
             </Field>
+            <Field label="Volumen / Tomo" className="w-[110px]">
+              <Input
+                placeholder="Tomo 1"
+                value={form.volumen}
+                onChange={(e) => setCampo("volumen", e.target.value)}
+              />
+            </Field>
           </div>
           <div className="flex gap-3">
             <Field label="Género" className="flex-1">
-              <Input value={form.genero} onChange={(e) => setCampo("genero", e.target.value)} />
+              <GeneroSelect value={form.genero} onValueChange={(v) => setCampo("genero", v)} />
             </Field>
             <Field label="Idioma" className="w-36">
               <IdiomaSelect value={form.idioma} onValueChange={(v) => setCampo("idioma", v)} />

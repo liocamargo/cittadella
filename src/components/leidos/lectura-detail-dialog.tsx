@@ -22,6 +22,7 @@ import {
 } from "@/lib/firestore/libros";
 import { quitarLectura } from "@/lib/firestore/lecturas";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
+import { GeneroSelect } from "@/components/catalogo/genero-select";
 import { RatingCara, RatingCaraPicker } from "@/components/catalogo/rating-cara";
 import type { LibroGlobal, Resena } from "@/types";
 
@@ -32,6 +33,7 @@ const CAMPOS_EDITABLES = {
   editorial: "",
   anio: "",
   paginas: "",
+  volumen: "",
   idioma: "",
   genero: "",
   sinopsis: "",
@@ -83,6 +85,7 @@ export function LecturaDetailDialog({
       editorial: global?.editorial ?? "",
       anio: global?.anio ?? "",
       paginas: global?.paginas ?? "",
+      volumen: global?.volumen ?? "",
       idioma: global?.idioma ?? "",
       genero: global?.genero ?? "",
       sinopsis: global?.sinopsis ?? "",
@@ -105,6 +108,7 @@ export function LecturaDetailDialog({
         editorial: formEdit.editorial.trim() || undefined,
         anio: formEdit.anio.trim() || undefined,
         paginas: formEdit.paginas.trim() || undefined,
+        volumen: formEdit.volumen.trim() || undefined,
         idioma: formEdit.idioma.trim() || undefined,
         genero: formEdit.genero.trim() || undefined,
         sinopsis: formEdit.sinopsis.trim() || undefined,
@@ -220,12 +224,19 @@ export function LecturaDetailDialog({
                     onChange={(e) => setCampoEdit("paginas", e.target.value)}
                   />
                 </FieldEdit>
+                <FieldEdit label="Volumen" className="w-20">
+                  <Input
+                    placeholder="Tomo 1"
+                    value={formEdit.volumen}
+                    onChange={(e) => setCampoEdit("volumen", e.target.value)}
+                  />
+                </FieldEdit>
               </div>
               <div className="flex gap-2">
                 <FieldEdit label="Género" className="flex-1">
-                  <Input
+                  <GeneroSelect
                     value={formEdit.genero}
-                    onChange={(e) => setCampoEdit("genero", e.target.value)}
+                    onValueChange={(v) => setCampoEdit("genero", v)}
                   />
                 </FieldEdit>
                 <FieldEdit label="Idioma" className="w-36">

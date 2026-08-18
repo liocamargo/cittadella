@@ -7,6 +7,8 @@ export interface Perfil {
   idiomaUI: Locale;
   /** Idiomas que se priorizan al buscar libros (Google Books), en orden. */
   idiomaLectura: Locale[];
+  /** Géneros favoritos, elegidos en Mi cuenta. */
+  generosFavoritos: string[];
 }
 
 /** Documento en `Libros_Globales`, indexado por ISBN (doc id = isbn). */
@@ -18,6 +20,7 @@ export interface LibroGlobal {
   editorial?: string;
   anio?: string;
   paginas?: string;
+  volumen?: string;
   idioma?: string;
   genero?: string;
   sinopsis?: string;

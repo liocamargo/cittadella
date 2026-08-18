@@ -32,6 +32,7 @@ function toLibroGlobal(isbn: string, data: Record<string, unknown>): LibroGlobal
     editorial: data.editorial as string | undefined,
     anio: data.anio as string | undefined,
     paginas: data.paginas as string | undefined,
+    volumen: data.volumen as string | undefined,
     idioma: data.idioma as string | undefined,
     genero: data.genero as string | undefined,
     sinopsis: data.sinopsis as string | undefined,
@@ -121,6 +122,7 @@ export interface DatosComunidad {
   editorial?: string;
   anio?: string;
   paginas?: string;
+  volumen?: string;
   idioma?: string;
   genero?: string;
   sinopsis?: string;

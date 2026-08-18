@@ -13,11 +13,16 @@ function normalizarIdiomaLectura(valor: unknown): Locale[] {
   return [LOCALE_POR_DEFECTO];
 }
 
+function normalizarGenerosFavoritos(valor: unknown): string[] {
+  return Array.isArray(valor) ? (valor as string[]) : [];
+}
+
 function toPerfil(uid: string, data: Record<string, unknown> | undefined): Perfil {
   return {
     uid,
     idiomaUI: (data?.idiomaUI as Locale) ?? LOCALE_POR_DEFECTO,
     idiomaLectura: normalizarIdiomaLectura(data?.idiomaLectura),
+    generosFavoritos: normalizarGenerosFavoritos(data?.generosFavoritos),
   };
 }
 
@@ -35,7 +40,7 @@ export function listenPerfil(
 
 export async function guardarPerfil(
   uid: string,
-  datos: Partial<Pick<Perfil, "idiomaUI" | "idiomaLectura">>
+  datos: Partial<Pick<Perfil, "idiomaUI" | "idiomaLectura" | "generosFavoritos">>
 ): Promise<void> {
   await setDoc(doc(db, COL, uid), datos, { merge: true });
 }

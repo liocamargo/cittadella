@@ -50,6 +50,8 @@ const en: Dictionary = {
     idiomaLectura: "Languages I read in",
     idiomaLecturaDesc:
       "You can pick more than one. Used to prioritize Google Books results in those languages when searching for a book.",
+    generosFavoritos: "Genres you like",
+    generosFavoritosDesc: "Pick as many as you want.",
     guardado: "Preferences saved.",
     errorGuardando: "We couldn't save your preferences.",
     conectadoComo: "Signed in as",

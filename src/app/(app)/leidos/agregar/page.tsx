@@ -20,6 +20,7 @@ import { buscarPorIsbn } from "@/services/google-books";
 import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { RatingCaraPicker } from "@/components/catalogo/rating-cara";
+import { GeneroSelect } from "@/components/catalogo/genero-select";
 import type { LibroGlobal } from "@/types";
 
 type Paso = "buscar" | "formulario";
@@ -36,6 +37,7 @@ const FORM_INICIAL = {
   editorial: "",
   anio: "",
   paginas: "",
+  volumen: "",
   genero: "",
   idioma: "",
   sinopsis: "",
@@ -81,6 +83,7 @@ export default function AgregarLeidoPage() {
           editorial: local.editorial ?? "",
           anio: local.anio ?? "",
           paginas: local.paginas ?? "",
+          volumen: local.volumen ?? "",
           genero: local.genero ?? "",
           idioma: local.idioma ?? "",
           sinopsis: local.sinopsis ?? "",
@@ -187,6 +190,7 @@ export default function AgregarLeidoPage() {
         editorial: (form.editorial ?? "").trim() || undefined,
         anio: (form.anio ?? "").trim() || undefined,
         paginas: (form.paginas ?? "").trim() || undefined,
+        volumen: (form.volumen ?? "").trim() || undefined,
         idioma: (form.idioma ?? "").trim() || undefined,
         genero: (form.genero ?? "").trim() || undefined,
         sinopsis: (form.sinopsis ?? "").trim() || undefined,
@@ -338,9 +342,16 @@ export default function AgregarLeidoPage() {
             <Field label="Año" className="w-[90px]">
               <Input value={form.anio} onChange={(e) => setCampo("anio", e.target.value)} />
             </Field>
+            <Field label="Volumen / Tomo" className="w-[110px]">
+              <Input
+                placeholder="Tomo 1"
+                value={form.volumen}
+                onChange={(e) => setCampo("volumen", e.target.value)}
+              />
+            </Field>
           </div>
           <Field label="Género (opcional)">
-            <Input value={form.genero} onChange={(e) => setCampo("genero", e.target.value)} />
+            <GeneroSelect value={form.genero} onValueChange={(v) => setCampo("genero", v)} />
           </Field>
           <Field label="Sinopsis (opcional)">
             <Textarea rows={3} value={form.sinopsis} onChange={(e) => setCampo("sinopsis", e.target.value)} />
