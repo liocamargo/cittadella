@@ -23,14 +23,17 @@ import {
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
 import { devolverLibro, listenInventario, prestarLibro } from "@/lib/firestore/libros";
-import type { LibroEnBiblioteca } from "@/types";
+import { listenSocios } from "@/lib/firestore/socios";
+import type { LibroEnBiblioteca, Socio } from "@/types";
 
 export default function PrestamosPage() {
   const { bibliotecaActual } = useBiblioteca();
   const [copias, setCopias] = useState<LibroEnBiblioteca[]>([]);
+  const [socios, setSocios] = useState<Socio[]>([]);
   const [prestarOpen, setPrestarOpen] = useState(false);
   const [copiaAPrestar, setCopiaAPrestar] = useState("");
   const [nombrePrestamo, setNombrePrestamo] = useState("");
+  const [socioIdPrestamo, setSocioIdPrestamo] = useState("");
   const [fechaPrestamo, setFechaPrestamo] = useState(() =>
     new Date().toISOString().slice(0, 10)
   );
@@ -44,6 +47,14 @@ export default function PrestamosPage() {
     return listenInventario(bibliotecaActual.id, setCopias);
   }, [bibliotecaActual]);
 
+  useEffect(() => {
+    if (!bibliotecaActual?.modoSocios) {
+      setSocios([]);
+      return;
+    }
+    return listenSocios(bibliotecaActual.id, setSocios);
+  }, [bibliotecaActual]);
+
   const prestados = useMemo(
     () => copias.filter((c) => c.estado === "prestado"),
     [copias]
@@ -55,9 +66,9 @@ export default function PrestamosPage() {
   const isbns = useMemo(() => copias.map((c) => c.isbn), [copias]);
   const globales = useLibrosGlobales(isbns);
 
-  async function handleDevolver(id: string) {
+  async function handleDevolver(copia: LibroEnBiblioteca) {
     try {
-      await devolverLibro(id);
+      await devolverLibro(copia.id, copia.historialActivoId);
       toast.success("Marcado como devuelto.");
     } catch (err) {
       console.error("Error marcando devolución:", err);
@@ -68,22 +79,37 @@ export default function PrestamosPage() {
   function abrirPrestar() {
     setCopiaAPrestar("");
     setNombrePrestamo("");
+    setSocioIdPrestamo("");
     setFechaPrestamo(new Date().toISOString().slice(0, 10));
     setPrestarOpen(true);
   }
 
   async function handlePrestar() {
-    if (!copiaAPrestar) {
+    const copia = copias.find((c) => c.id === copiaAPrestar);
+    if (!copia) {
       toast.error("Elegí qué libro prestás.");
       return;
     }
-    if (!nombrePrestamo.trim()) {
+    const modoSocios = Boolean(bibliotecaActual?.modoSocios);
+    const nombreDestino = modoSocios
+      ? socios.find((s) => s.id === socioIdPrestamo)?.nombre ?? ""
+      : nombrePrestamo.trim();
+    if (modoSocios && !socioIdPrestamo) {
+      toast.error("Elegí a qué socio se lo prestás.");
+      return;
+    }
+    if (!modoSocios && !nombreDestino) {
       toast.error("Ingresá a quién se lo prestás.");
       return;
     }
     setGuardandoPrestamo(true);
     try {
-      await prestarLibro(copiaAPrestar, nombrePrestamo.trim(), fechaPrestamo);
+      await prestarLibro(
+        copia,
+        nombreDestino,
+        fechaPrestamo,
+        modoSocios ? socioIdPrestamo : undefined
+      );
       toast.success("Préstamo registrado.");
       setPrestarOpen(false);
     } catch (err) {
@@ -150,7 +176,7 @@ export default function PrestamosPage() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => handleDevolver(copia.id)}
+                onClick={() => handleDevolver(copia)}
               >
                 Marcar como devuelto
               </Button>
@@ -196,11 +222,32 @@ export default function PrestamosPage() {
               <Label className="mb-1.5 block text-xs text-muted-foreground">
                 ¿A quién se lo prestás?
               </Label>
-              <Input
-                value={nombrePrestamo}
-                onChange={(e) => setNombrePrestamo(e.target.value)}
-                placeholder="Nombre"
-              />
+              {bibliotecaActual?.modoSocios ? (
+                <Select value={socioIdPrestamo} onValueChange={setSocioIdPrestamo}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Elegí un socio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {socios.length === 0 ? (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                        No hay socios cargados todavía.
+                      </div>
+                    ) : (
+                      socios.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.nombre}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  value={nombrePrestamo}
+                  onChange={(e) => setNombrePrestamo(e.target.value)}
+                  placeholder="Nombre"
+                />
+              )}
             </div>
             <div>
               <Label className="mb-1.5 block text-xs text-muted-foreground">

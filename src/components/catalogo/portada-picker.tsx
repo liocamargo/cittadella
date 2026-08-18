@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/use-locale";
 import {
   buscarPortadas,
   GoogleBooksError,
@@ -42,12 +43,13 @@ export function PortadaPicker({
   const [subiendo, setSubiendo] = useState(false);
   const [arrastrando, setArrastrando] = useState(false);
   const [linkExterno, setLinkExterno] = useState("");
+  const { localeLectura } = useLocale();
 
   async function handleBuscar() {
     if (!consulta.trim()) return;
     setBuscando(true);
     try {
-      const r = await buscarPortadas(consulta.trim());
+      const r = await buscarPortadas(consulta.trim(), localeLectura);
       setResultados(r);
       if (r.length === 0) {
         toast.error("No encontramos portadas para esa búsqueda.");

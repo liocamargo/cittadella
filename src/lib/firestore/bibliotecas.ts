@@ -28,6 +28,7 @@ function toBiblioteca(id: string, data: Record<string, unknown>): Biblioteca {
     whatsappMiembros: (data.whatsappMiembros as Record<string, string>) ?? {},
     estantes: (data.estantes as string[]) ?? [],
     catalogoPublico: Boolean(data.catalogoPublico),
+    modoSocios: Boolean(data.modoSocios),
     creadaPor: (data.creadaPor as string) ?? "",
     creadaEn: (data.creadaEn as string) ?? "",
   };
@@ -70,6 +71,7 @@ export async function crearBiblioteca(
     whatsappMiembros: {},
     estantes: [],
     catalogoPublico: false,
+    modoSocios: false,
     creadaPor: uid,
     creadaEn: new Date().toISOString(),
   });
@@ -156,6 +158,14 @@ export async function eliminarEstante(bibliotecaId: string, nombre: string) {
 export async function setCatalogoPublico(bibliotecaId: string, activo: boolean) {
   await updateDoc(doc(db, COL, bibliotecaId), {
     catalogoPublico: activo,
+  });
+}
+
+/** Modo socios y modo libre no conviven: prender uno no borra los préstamos
+ * ya anotados con el otro modo, pero cambia cómo se cargan los nuevos. */
+export async function setModoSocios(bibliotecaId: string, activo: boolean) {
+  await updateDoc(doc(db, COL, bibliotecaId), {
+    modoSocios: activo,
   });
 }
 

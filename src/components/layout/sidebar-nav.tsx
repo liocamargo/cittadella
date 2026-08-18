@@ -10,6 +10,7 @@ import {
   BookCheck,
   Users,
   ArrowDownUp,
+  IdCard,
   PanelLeftClose,
   PanelLeftOpen,
   Check,
@@ -19,6 +20,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
+import { useLocale } from "@/hooks/use-locale";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,33 +36,37 @@ import { Button } from "@/components/ui/button";
 // Bump esto cuando salgamos de beta.
 const VERSION = "Beta";
 
-const NAV_ITEMS = [
-  { href: "/inicio", label: "Inicio", icon: Home },
-  { href: "/catalogo", label: "Catálogo", icon: Library },
-  { href: "/leidos", label: "Leídos", icon: BookCheck },
-  { href: "/prestamos", label: "Préstamos", icon: ArrowLeftRight },
-  { href: "/espacio", label: "Espacio", icon: Users },
-  { href: "/importar", label: "Import/Export", icon: ArrowDownUp },
-];
+const NAV_ITEMS_BASE = [
+  { href: "/inicio", i18nKey: "nav.inicio", icon: Home },
+  { href: "/catalogo", i18nKey: "nav.catalogo", icon: Library },
+  { href: "/leidos", i18nKey: "nav.leidos", icon: BookCheck },
+  { href: "/prestamos", i18nKey: "nav.prestamos", icon: ArrowLeftRight },
+  { href: "/espacio", i18nKey: "nav.espacio", icon: Users },
+  { href: "/importar", i18nKey: "nav.importar", icon: ArrowDownUp },
+] as const;
+
+const SOCIOS_ITEM = { href: "/socios", i18nKey: "nav.socios", icon: IdCard } as const;
 
 // En mobile, la tab bar de abajo solo tiene lugar para lo más usado; el
-// resto (Espacio, Importar) vive en el menú de arriba.
-const MOBILE_TAB_ITEMS = NAV_ITEMS.filter(
-  (item) => item.href !== "/espacio" && item.href !== "/importar"
-);
-const MOBILE_MENU_ITEMS = NAV_ITEMS.filter(
-  (item) => item.href === "/espacio" || item.href === "/importar"
-);
+// resto (Espacio, Importar, Socios) vive en el menú de arriba.
+const HREFS_MENU_MOBILE = new Set(["/espacio", "/importar", "/socios"]);
 
 export function SidebarNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOutUser } = useAuth();
+  const { t } = useLocale();
   const { bibliotecas, bibliotecaActual, seleccionarBiblioteca, crearYSeleccionar } =
     useBiblioteca();
   const [collapsed, setCollapsed] = useState(false);
   const [newLibraryName, setNewLibraryName] = useState("");
   const [creating, setCreating] = useState(false);
+
+  const navItems = bibliotecaActual?.modoSocios
+    ? [...NAV_ITEMS_BASE.slice(0, 4), SOCIOS_ITEM, ...NAV_ITEMS_BASE.slice(4)]
+    : NAV_ITEMS_BASE;
+  const mobileTabItems = navItems.filter((item) => !HREFS_MENU_MOBILE.has(item.href));
+  const mobileMenuItems = navItems.filter((item) => HREFS_MENU_MOBILE.has(item.href));
 
   const initial = (user?.displayName ?? user?.email ?? "?")
     .trim()
@@ -78,10 +84,10 @@ export function SidebarNav() {
     try {
       await crearYSeleccionar(newLibraryName.trim());
       setNewLibraryName("");
-      toast.success("Biblioteca creada.");
+      toast.success(t("nav.bibliotecaCreada"));
     } catch (err) {
       console.error("Error creando biblioteca:", err);
-      toast.error("No pudimos crear la biblioteca.");
+      toast.error(t("nav.errorCreandoBiblioteca"));
     } finally {
       setCreating(false);
     }
@@ -114,7 +120,7 @@ export function SidebarNav() {
               handleCreateLibrary();
             }
           }}
-          placeholder="Nueva biblioteca"
+          placeholder={t("nav.nuevaBiblioteca")}
           className="h-8 text-xs"
           onClick={(e) => e.stopPropagation()}
         />
@@ -127,12 +133,17 @@ export function SidebarNav() {
             handleCreateLibrary();
           }}
         >
-          Crear
+          {t("common.crear")}
         </Button>
       </div>
       <DropdownMenuSeparator />
+      <DropdownMenuItem asChild>
+        <Link href="/cuenta" className="flex items-center gap-2">
+          {t("nav.miCuenta")}
+        </Link>
+      </DropdownMenuItem>
       <DropdownMenuItem variant="destructive" onClick={handleLogout}>
-        Cerrar sesión
+        {t("nav.cerrarSesion")}
       </DropdownMenuItem>
     </DropdownMenuContent>
   );
@@ -157,7 +168,7 @@ export function SidebarNav() {
                 </Badge>
               </div>
               <div className="mt-1 whitespace-nowrap text-xs text-muted-foreground">
-                Espacio compartido
+                {t("nav.espacioCompartido")}
               </div>
             </div>
           )}
@@ -174,7 +185,7 @@ export function SidebarNav() {
         </div>
 
         <nav className="flex flex-col gap-0.5">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {navItems.map(({ href, i18nKey, icon: Icon }) => {
             const active = pathname?.startsWith(href);
             return (
               <Link
@@ -186,7 +197,7 @@ export function SidebarNav() {
                 )}
               >
                 <Icon className="size-[18px] shrink-0" />
-                {!collapsed && <span className="whitespace-nowrap">{label}</span>}
+                {!collapsed && <span className="whitespace-nowrap">{t(i18nKey)}</span>}
               </Link>
             );
           })}
@@ -204,7 +215,7 @@ export function SidebarNav() {
                 {!collapsed && (
                   <div className="overflow-hidden">
                     <div className="truncate text-[13px] font-semibold">
-                      {bibliotecaActual?.nombre ?? "Cargando…"}
+                      {bibliotecaActual?.nombre ?? t("common.cargando")}
                     </div>
                     <div className="truncate text-[11px] text-muted-foreground">
                       {user?.email}
@@ -227,11 +238,11 @@ export function SidebarNav() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            {MOBILE_MENU_ITEMS.map(({ href, label, icon: Icon }) => (
+            {mobileMenuItems.map(({ href, i18nKey, icon: Icon }) => (
               <DropdownMenuItem key={href} asChild>
                 <Link href={href} className="flex items-center gap-2">
                   <Icon className="size-4" />
-                  {label}
+                  {t(i18nKey)}
                 </Link>
               </DropdownMenuItem>
             ))}
@@ -259,7 +270,7 @@ export function SidebarNav() {
 
       {/* Mobile: tab bar fija abajo */}
       <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
-        {MOBILE_TAB_ITEMS.map(({ href, label, icon: Icon }) => {
+        {mobileTabItems.map(({ href, i18nKey, icon: Icon }) => {
           const active = pathname?.startsWith(href);
           return (
             <Link
@@ -271,7 +282,7 @@ export function SidebarNav() {
               )}
             >
               <Icon className="size-5" />
-              <span className="leading-none">{label}</span>
+              <span className="leading-none">{t(i18nKey)}</span>
             </Link>
           );
         })}

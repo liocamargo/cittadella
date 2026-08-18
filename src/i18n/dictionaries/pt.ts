@@ -1,0 +1,59 @@
+import type { Dictionary } from "./es";
+
+const pt: Dictionary = {
+  common: {
+    cargando: "Carregando…",
+    crear: "Criar",
+    cancelar: "Cancelar",
+    guardar: "Salvar",
+  },
+  nav: {
+    inicio: "Início",
+    catalogo: "Catálogo",
+    leidos: "Lidos",
+    prestamos: "Empréstimos",
+    espacio: "Espaço",
+    importar: "Importar/Exportar",
+    socios: "Sócios",
+    miCuenta: "Minha conta",
+    espacioCompartido: "Espaço compartilhado",
+    nuevaBiblioteca: "Nova biblioteca",
+    bibliotecaCreada: "Biblioteca criada.",
+    errorCreandoBiblioteca: "Não conseguimos criar a biblioteca.",
+    cerrarSesion: "Sair",
+  },
+  login: {
+    subtitulo: "Catálogo compartilhado da sua biblioteca",
+    continuarGoogle: "Continuar com Google",
+    oConCorreo: "ou com seu e-mail",
+    placeholderCorreo: "voce@email.com",
+    enviarLink: "Enviar link de acesso",
+    linkEnviadoA: "Enviamos um link de acesso para",
+    abrirDesdeDispositivo: "Abra neste dispositivo para entrar.",
+    volver: "Voltar",
+    ingresando: "Entrando…",
+    confirmarCorreo: "Confirme seu e-mail para concluir o login.",
+    correo: "E-mail",
+    ingresar: "Entrar",
+    errorGoogle: "Não conseguimos entrar com o Google.",
+    errorCorreoVacio: "Digite seu e-mail.",
+    errorEnviandoLink: "Não conseguimos enviar o link. Tente novamente.",
+    errorCompletando: "Não conseguimos concluir o login. Tente novamente.",
+    errorCorreoConfirmVacio: "Digite seu e-mail para confirmar.",
+    errorLinkInvalido: "O link é inválido ou expirou. Peça um novo.",
+  },
+  cuenta: {
+    titulo: "Minha conta",
+    subtitulo: "Preferências pessoais de idioma.",
+    idiomaPagina: "Idioma da página",
+    idiomaPaginaDesc: "Em que idioma os textos do aplicativo aparecem.",
+    idiomaLectura: "Idioma em que leio",
+    idiomaLecturaDesc:
+      "Usado para priorizar resultados do Google Books nesse idioma ao buscar um livro.",
+    guardado: "Preferências salvas.",
+    errorGuardando: "Não conseguimos salvar suas preferências.",
+    conectadoComo: "Conectado como",
+  },
+};
+
+export default pt;

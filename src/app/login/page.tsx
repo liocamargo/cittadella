@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocale } from "@/hooks/use-locale";
 
 function GoogleIcon() {
   return (
@@ -43,6 +44,7 @@ export default function LoginPage() {
     isEmailSignInLink,
     completeEmailLinkSignIn,
   } = useAuth();
+  const { t } = useLocale();
 
   const [step, setStep] = useState<Step>(() =>
     typeof window !== "undefined" && isEmailSignInLink(window.location.href)
@@ -68,7 +70,7 @@ export default function LoginPage() {
         if (err instanceof Error && err.message === "NEEDS_EMAIL") {
           setStep("need-email");
         } else {
-          toast.error("No pudimos completar el ingreso. Probá de nuevo.");
+          toast.error(t("login.errorCompletando"));
           setStep("start");
         }
       });
@@ -82,7 +84,7 @@ export default function LoginPage() {
       router.replace("/inicio");
     } catch (err) {
       console.error("Error con Google Sign-In:", err);
-      toast.error("No pudimos iniciar sesión con Google.");
+      toast.error(t("login.errorGoogle"));
     } finally {
       setSubmitting(false);
     }
@@ -90,7 +92,7 @@ export default function LoginPage() {
 
   async function handleSendLink() {
     if (!email.trim()) {
-      toast.error("Ingresá tu correo.");
+      toast.error(t("login.errorCorreoVacio"));
       return;
     }
     setSubmitting(true);
@@ -99,7 +101,7 @@ export default function LoginPage() {
       setStep("sent");
     } catch (err) {
       console.error("Error enviando el link de acceso:", err);
-      toast.error("No pudimos enviar el link. Probá de nuevo.");
+      toast.error(t("login.errorEnviandoLink"));
     } finally {
       setSubmitting(false);
     }
@@ -107,7 +109,7 @@ export default function LoginPage() {
 
   async function handleConfirmEmail() {
     if (!confirmEmail.trim()) {
-      toast.error("Ingresá tu correo para confirmar.");
+      toast.error(t("login.errorCorreoConfirmVacio"));
       return;
     }
     setSubmitting(true);
@@ -116,7 +118,7 @@ export default function LoginPage() {
       router.replace("/inicio");
     } catch (err) {
       console.error("Error completando el login por email link:", err);
-      toast.error("El link no es válido o expiró. Pedí uno nuevo.");
+      toast.error(t("login.errorLinkInvalido"));
       setStep("start");
     } finally {
       setSubmitting(false);
@@ -130,7 +132,7 @@ export default function LoginPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="Cittadella" className="mb-3 h-9 w-auto" />
           <p className="mt-1 text-sm text-muted-foreground">
-            Catálogo compartido de tu biblioteca
+            {t("login.subtitulo")}
           </p>
         </div>
 
@@ -143,24 +145,24 @@ export default function LoginPage() {
               disabled={submitting}
             >
               <GoogleIcon />
-              Continuar con Google
+              {t("login.continuarGoogle")}
             </Button>
 
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <div className="h-px flex-1 bg-border" />
-              o con tu correo
+              {t("login.oConCorreo")}
               <div className="h-px flex-1 bg-border" />
             </div>
 
             <Input
               type="email"
-              placeholder="tu@correo.com"
+              placeholder={t("login.placeholderCorreo")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={submitting}
             />
             <Button onClick={handleSendLink} disabled={submitting}>
-              Enviar link de acceso
+              {t("login.enviarLink")}
             </Button>
           </div>
         )}
@@ -168,36 +170,36 @@ export default function LoginPage() {
         {step === "sent" && (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
-              Te enviamos un link de acceso a{" "}
-              <strong className="text-foreground">{email}</strong>. Abrilo
-              desde este dispositivo para ingresar.
+              {t("login.linkEnviadoA")}{" "}
+              <strong className="text-foreground">{email}</strong>.{" "}
+              {t("login.abrirDesdeDispositivo")}
             </p>
             <Button variant="ghost" onClick={() => setStep("start")}>
-              Volver
+              {t("login.volver")}
             </Button>
           </div>
         )}
 
         {step === "completing" && (
-          <p className="text-sm text-muted-foreground">Ingresando…</p>
+          <p className="text-sm text-muted-foreground">{t("login.ingresando")}</p>
         )}
 
         {step === "need-email" && (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
-              Confirmá tu correo para completar el ingreso.
+              {t("login.confirmarCorreo")}
             </p>
-            <Label htmlFor="confirm-email">Correo</Label>
+            <Label htmlFor="confirm-email">{t("login.correo")}</Label>
             <Input
               id="confirm-email"
               type="email"
-              placeholder="tu@correo.com"
+              placeholder={t("login.placeholderCorreo")}
               value={confirmEmail}
               onChange={(e) => setConfirmEmail(e.target.value)}
               disabled={submitting}
             />
             <Button onClick={handleConfirmEmail} disabled={submitting}>
-              Ingresar
+              {t("login.ingresar")}
             </Button>
           </div>
         )}

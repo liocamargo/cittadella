@@ -32,6 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
+import { useSugerenciasComunidad } from "@/hooks/use-sugerencias-comunidad";
 import {
   actualizarCopia,
   actualizarLibroGlobal,
@@ -44,10 +45,11 @@ import {
   toggleFavorito,
   toggleLeido,
 } from "@/lib/firestore/libros";
+import { listenSocios } from "@/lib/firestore/socios";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { RatingCara, RatingCaraPicker } from "@/components/catalogo/rating-cara";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
-import type { LibroEnBiblioteca, LibroGlobal, Resena } from "@/types";
+import type { LibroEnBiblioteca, LibroGlobal, Resena, Socio } from "@/types";
 
 const CAMPOS_EDITABLES = {
   titulo: "",
@@ -77,14 +79,18 @@ export function LibroDetailSheet({
 }: LibroDetailSheetProps) {
   const { user } = useAuth();
   const { bibliotecaActual } = useBiblioteca();
+  const { autores: sugerenciasAutor, editoriales: sugerenciasEditorial } =
+    useSugerenciasComunidad();
   const [prestando, setPrestando] = useState(false);
   const [editando, setEditando] = useState(false);
   const [guardandoEdicion, setGuardandoEdicion] = useState(false);
   const [formEdit, setFormEdit] = useState(CAMPOS_EDITABLES);
   const [loanName, setLoanName] = useState("");
+  const [loanSocioId, setLoanSocioId] = useState("");
   const [loanDate, setLoanDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
+  const [socios, setSocios] = useState<Socio[]>([]);
   const [resenas, setResenas] = useState<Resena[]>([]);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [estrellas, setEstrellas] = useState(5);
@@ -98,6 +104,14 @@ export function LibroDetailSheet({
     setEditando(false);
     return listenResenas(copia.isbn, setResenas);
   }, [copia]);
+
+  useEffect(() => {
+    if (!bibliotecaActual?.modoSocios) {
+      setSocios([]);
+      return;
+    }
+    return listenSocios(bibliotecaActual.id, setSocios);
+  }, [bibliotecaActual]);
 
   if (!copia) return null;
 
@@ -163,13 +177,27 @@ export function LibroDetailSheet({
 
   async function handlePrestar() {
     if (!copia) return;
-    if (!loanName.trim()) {
+    const modoSocios = Boolean(bibliotecaActual?.modoSocios);
+    const nombreDestino = modoSocios
+      ? socios.find((s) => s.id === loanSocioId)?.nombre ?? ""
+      : loanName.trim();
+    if (modoSocios && !loanSocioId) {
+      toast.error("Elegí a qué socio se lo prestás.");
+      return;
+    }
+    if (!modoSocios && !nombreDestino) {
       toast.error("Ingresá a quién se lo prestás.");
       return;
     }
     try {
-      await prestarLibro(copia.id, loanName.trim(), loanDate);
+      await prestarLibro(
+        copia,
+        nombreDestino,
+        loanDate,
+        modoSocios ? loanSocioId : undefined
+      );
       setLoanName("");
+      setLoanSocioId("");
       setPrestando(false);
     } catch (err) {
       console.error("Error registrando el préstamo:", err);
@@ -180,7 +208,7 @@ export function LibroDetailSheet({
   async function handleDevolver() {
     if (!copia) return;
     try {
-      await devolverLibro(copia.id);
+      await devolverLibro(copia.id, copia.historialActivoId);
     } catch (err) {
       console.error("Error registrando la devolución:", err);
       toast.error("No pudimos registrar la devolución.");
@@ -434,11 +462,32 @@ export function LibroDetailSheet({
           {prestando ? (
             <div className="flex flex-col gap-3">
               <Label>¿A quién se lo prestás?</Label>
-              <Input
-                value={loanName}
-                onChange={(e) => setLoanName(e.target.value)}
-                placeholder="Nombre"
-              />
+              {bibliotecaActual?.modoSocios ? (
+                <Select value={loanSocioId} onValueChange={setLoanSocioId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Elegí un socio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {socios.length === 0 ? (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                        No hay socios cargados todavía.
+                      </div>
+                    ) : (
+                      socios.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.nombre}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  value={loanName}
+                  onChange={(e) => setLoanName(e.target.value)}
+                  placeholder="Nombre"
+                />
+              )}
               <Label>Fecha de salida</Label>
               <Input
                 type="date"
@@ -523,6 +572,7 @@ export function LibroDetailSheet({
               <Input
                 value={formEdit.autor}
                 onChange={(e) => setCampoEdit("autor", e.target.value)}
+                list="sugerencias-autor"
               />
             </FieldEdit>
             <div className="flex gap-3">
@@ -530,6 +580,7 @@ export function LibroDetailSheet({
                 <Input
                   value={formEdit.editorial}
                   onChange={(e) => setCampoEdit("editorial", e.target.value)}
+                  list="sugerencias-editorial"
                 />
               </FieldEdit>
               <FieldEdit label="Año" className="w-24">
@@ -624,6 +675,17 @@ export function LibroDetailSheet({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <datalist id="sugerencias-autor">
+        {sugerenciasAutor.map((a) => (
+          <option key={a} value={a} />
+        ))}
+      </datalist>
+      <datalist id="sugerencias-editorial">
+        {sugerenciasEditorial.map((e) => (
+          <option key={e} value={e} />
+        ))}
+      </datalist>
     </Sheet>
   );
 }

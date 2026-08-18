@@ -1,0 +1,58 @@
+const es = {
+  common: {
+    cargando: "Cargando…",
+    crear: "Crear",
+    cancelar: "Cancelar",
+    guardar: "Guardar",
+  },
+  nav: {
+    inicio: "Inicio",
+    catalogo: "Catálogo",
+    leidos: "Leídos",
+    prestamos: "Préstamos",
+    espacio: "Espacio",
+    importar: "Import/Export",
+    socios: "Socios",
+    miCuenta: "Mi cuenta",
+    espacioCompartido: "Espacio compartido",
+    nuevaBiblioteca: "Nueva biblioteca",
+    bibliotecaCreada: "Biblioteca creada.",
+    errorCreandoBiblioteca: "No pudimos crear la biblioteca.",
+    cerrarSesion: "Cerrar sesión",
+  },
+  login: {
+    subtitulo: "Catálogo compartido de tu biblioteca",
+    continuarGoogle: "Continuar con Google",
+    oConCorreo: "o con tu correo",
+    placeholderCorreo: "tu@correo.com",
+    enviarLink: "Enviar link de acceso",
+    linkEnviadoA: "Te enviamos un link de acceso a",
+    abrirDesdeDispositivo: "Abrilo desde este dispositivo para ingresar.",
+    volver: "Volver",
+    ingresando: "Ingresando…",
+    confirmarCorreo: "Confirmá tu correo para completar el ingreso.",
+    correo: "Correo",
+    ingresar: "Ingresar",
+    errorGoogle: "No pudimos iniciar sesión con Google.",
+    errorCorreoVacio: "Ingresá tu correo.",
+    errorEnviandoLink: "No pudimos enviar el link. Probá de nuevo.",
+    errorCompletando: "No pudimos completar el ingreso. Probá de nuevo.",
+    errorCorreoConfirmVacio: "Ingresá tu correo para confirmar.",
+    errorLinkInvalido: "El link no es válido o expiró. Pedí uno nuevo.",
+  },
+  cuenta: {
+    titulo: "Mi cuenta",
+    subtitulo: "Preferencias personales de idioma.",
+    idiomaPagina: "Idioma de la página",
+    idiomaPaginaDesc: "En qué idioma ves los textos de la aplicación.",
+    idiomaLectura: "Idioma en que leo",
+    idiomaLecturaDesc:
+      "Se usa para priorizar los resultados de Google Books en ese idioma al buscar un libro.",
+    guardado: "Preferencias guardadas.",
+    errorGuardando: "No pudimos guardar tus preferencias.",
+    conectadoComo: "Conectado como",
+  },
+};
+
+export default es;
+export type Dictionary = typeof es;

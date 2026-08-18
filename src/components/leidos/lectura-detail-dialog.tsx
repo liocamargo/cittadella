@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
+import { useSugerenciasComunidad } from "@/hooks/use-sugerencias-comunidad";
 import {
   actualizarLibroGlobal,
   listenResenas,
@@ -48,6 +49,8 @@ export function LecturaDetailDialog({
   onClose,
 }: LecturaDetailDialogProps) {
   const { user } = useAuth();
+  const { autores: sugerenciasAutor, editoriales: sugerenciasEditorial } =
+    useSugerenciasComunidad();
   const [resenas, setResenas] = useState<Resena[]>([]);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [estrellas, setEstrellas] = useState(5);
@@ -155,6 +158,7 @@ export function LecturaDetailDialog({
   const inicial = (global?.titulo ?? "?").trim().charAt(0).toUpperCase();
 
   return (
+    <>
     <Dialog open={Boolean(isbn)} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
@@ -193,6 +197,7 @@ export function LecturaDetailDialog({
                 <Input
                   value={formEdit.autor}
                   onChange={(e) => setCampoEdit("autor", e.target.value)}
+                  list="sugerencias-autor"
                 />
               </FieldEdit>
               <div className="flex gap-2">
@@ -200,6 +205,7 @@ export function LecturaDetailDialog({
                   <Input
                     value={formEdit.editorial}
                     onChange={(e) => setCampoEdit("editorial", e.target.value)}
+                    list="sugerencias-editorial"
                   />
                 </FieldEdit>
                 <FieldEdit label="Año" className="w-20">
@@ -328,6 +334,18 @@ export function LecturaDetailDialog({
         </div>
       </DialogContent>
     </Dialog>
+
+    <datalist id="sugerencias-autor">
+      {sugerenciasAutor.map((a) => (
+        <option key={a} value={a} />
+      ))}
+    </datalist>
+    <datalist id="sugerencias-editorial">
+      {sugerenciasEditorial.map((e) => (
+        <option key={e} value={e} />
+      ))}
+    </datalist>
+    </>
   );
 }
 

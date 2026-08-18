@@ -81,5 +81,25 @@ service cloud.firestore {
       allow read, delete: if signedIn() && resource.data.uid == request.auth.uid;
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
     }
+
+    // Preferencias personales (idioma de la página / de lectura). Doc id = uid.
+    match /Perfiles/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Base de socios de una biblioteca (modo socios en Préstamos).
+    match /Socios/{socioId} {
+      allow read: if isMemberOf(resource.data.bibliotecaId);
+      allow update, delete: if isMemberOf(resource.data.bibliotecaId);
+      allow create: if isMemberOf(request.resource.data.bibliotecaId);
+    }
+
+    // Historial de préstamos (para el detalle de cada socio y, a futuro,
+    // estadísticas). Se crea al prestar y se completa al devolver.
+    match /HistorialPrestamos/{historialId} {
+      allow read: if isMemberOf(resource.data.bibliotecaId);
+      allow update: if isMemberOf(resource.data.bibliotecaId);
+      allow create: if isMemberOf(request.resource.data.bibliotecaId);
+    }
   }
 }

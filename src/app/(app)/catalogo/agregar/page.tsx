@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
+import { useLocale } from "@/hooks/use-locale";
+import { useSugerenciasComunidad } from "@/hooks/use-sugerencias-comunidad";
 import {
   agregarLibroABiblioteca,
   contarCopiasDelIsbn,
@@ -55,6 +57,9 @@ const FORM_INICIAL = {
 export default function AgregarLibroPage() {
   const router = useRouter();
   const { bibliotecaActual } = useBiblioteca();
+  const { localeLectura } = useLocale();
+  const { autores: sugerenciasAutor, editoriales: sugerenciasEditorial } =
+    useSugerenciasComunidad();
   const [paso, setPaso] = useState<Paso>("buscar");
   const [isbnInput, setIsbnInput] = useState("");
   const [isbn, setIsbn] = useState("");
@@ -133,7 +138,7 @@ export default function AgregarLibroPage() {
         });
       } else {
         try {
-          const encontrado = await buscarPorIsbn(codigo);
+          const encontrado = await buscarPorIsbn(codigo, localeLectura);
           if (encontrado) {
             setForm({
               ...FORM_INICIAL,
@@ -423,6 +428,7 @@ export default function AgregarLibroPage() {
               placeholder="separados por coma"
               value={form.autor}
               onChange={(e) => setCampo("autor", e.target.value)}
+              list="sugerencias-autor"
             />
           </Field>
           <Field label="Estante">
@@ -487,7 +493,11 @@ export default function AgregarLibroPage() {
           </Field>
           <div className="flex gap-3">
             <Field label="Editorial" className="flex-[2]">
-              <Input value={form.editorial} onChange={(e) => setCampo("editorial", e.target.value)} />
+              <Input
+                value={form.editorial}
+                onChange={(e) => setCampo("editorial", e.target.value)}
+                list="sugerencias-editorial"
+              />
             </Field>
             <Field label="Año" className="w-[90px]">
               <Input value={form.anio} onChange={(e) => setCampo("anio", e.target.value)} />
@@ -547,6 +557,17 @@ export default function AgregarLibroPage() {
         isbn={isbn}
         onSeleccionar={(url) => setCampo("portadaUrl", url)}
       />
+
+      <datalist id="sugerencias-autor">
+        {sugerenciasAutor.map((a) => (
+          <option key={a} value={a} />
+        ))}
+      </datalist>
+      <datalist id="sugerencias-editorial">
+        {sugerenciasEditorial.map((e) => (
+          <option key={e} value={e} />
+        ))}
+      </datalist>
     </div>
   );
 }

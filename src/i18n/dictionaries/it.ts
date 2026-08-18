@@ -1,0 +1,59 @@
+import type { Dictionary } from "./es";
+
+const it: Dictionary = {
+  common: {
+    cargando: "Caricamento…",
+    crear: "Crea",
+    cancelar: "Annulla",
+    guardar: "Salva",
+  },
+  nav: {
+    inicio: "Home",
+    catalogo: "Catalogo",
+    leidos: "Letti",
+    prestamos: "Prestiti",
+    espacio: "Spazio",
+    importar: "Importa/Esporta",
+    socios: "Soci",
+    miCuenta: "Il mio account",
+    espacioCompartido: "Spazio condiviso",
+    nuevaBiblioteca: "Nuova biblioteca",
+    bibliotecaCreada: "Biblioteca creata.",
+    errorCreandoBiblioteca: "Non siamo riusciti a creare la biblioteca.",
+    cerrarSesion: "Esci",
+  },
+  login: {
+    subtitulo: "Il catalogo condiviso della tua biblioteca",
+    continuarGoogle: "Continua con Google",
+    oConCorreo: "oppure con la tua email",
+    placeholderCorreo: "tu@email.com",
+    enviarLink: "Invia link di accesso",
+    linkEnviadoA: "Abbiamo inviato un link di accesso a",
+    abrirDesdeDispositivo: "Aprilo su questo dispositivo per accedere.",
+    volver: "Indietro",
+    ingresando: "Accesso in corso…",
+    confirmarCorreo: "Conferma la tua email per completare l'accesso.",
+    correo: "Email",
+    ingresar: "Accedi",
+    errorGoogle: "Non siamo riusciti ad accedere con Google.",
+    errorCorreoVacio: "Inserisci la tua email.",
+    errorEnviandoLink: "Non siamo riusciti a inviare il link. Riprova.",
+    errorCompletando: "Non siamo riusciti a completare l'accesso. Riprova.",
+    errorCorreoConfirmVacio: "Inserisci la tua email per confermare.",
+    errorLinkInvalido: "Il link non è valido o è scaduto. Richiedine uno nuovo.",
+  },
+  cuenta: {
+    titulo: "Il mio account",
+    subtitulo: "Preferenze personali di lingua.",
+    idiomaPagina: "Lingua della pagina",
+    idiomaPaginaDesc: "La lingua in cui vedi i testi dell'app.",
+    idiomaLectura: "Lingua in cui leggo",
+    idiomaLecturaDesc:
+      "Usata per dare priorità ai risultati di Google Books in quella lingua quando cerchi un libro.",
+    guardado: "Preferenze salvate.",
+    errorGuardando: "Non siamo riusciti a salvare le tue preferenze.",
+    conectadoComo: "Connesso come",
+  },
+};
+
+export default it;

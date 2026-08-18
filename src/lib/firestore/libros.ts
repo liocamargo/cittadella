@@ -17,10 +17,11 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
-import type { LibroEnBiblioteca, LibroGlobal, Resena } from "@/types";
+import type { HistorialPrestamo, LibroEnBiblioteca, LibroGlobal, Resena } from "@/types";
 
 const GLOBALES = "Libros_Globales";
 const COPIAS = "Libros_En_Biblioteca";
+const HISTORIAL = "HistorialPrestamos";
 
 function toLibroGlobal(isbn: string, data: Record<string, unknown>): LibroGlobal {
   return {
@@ -51,6 +52,8 @@ function toCopia(id: string, data: Record<string, unknown>): LibroEnBiblioteca {
     notas: data.notas as string | undefined,
     estado: (data.estado as LibroEnBiblioteca["estado"]) ?? "disponible",
     prestadoA: data.prestadoA as string | undefined,
+    prestadoASocioId: data.prestadoASocioId as string | undefined,
+    historialActivoId: data.historialActivoId as string | undefined,
     fechaPrestamo: data.fechaPrestamo as string | undefined,
     fechaLimite: data.fechaLimite as string | undefined,
     favorito: Boolean(data.favorito),
@@ -205,24 +208,51 @@ export async function actualizarCopia(
   await updateDoc(doc(db, COPIAS, copiaId), data);
 }
 
+/**
+ * Registra el préstamo en la copia y abre un registro en HistorialPrestamos
+ * (se cierra recién al devolver). `copia` solo necesita id/bibliotecaId/isbn.
+ */
 export async function prestarLibro(
-  copiaId: string,
+  copia: Pick<LibroEnBiblioteca, "id" | "bibliotecaId" | "isbn">,
   prestadoA: string,
-  fechaPrestamo: string
-) {
-  await updateDoc(doc(db, COPIAS, copiaId), {
-    estado: "prestado",
+  fechaPrestamo: string,
+  socioId?: string
+): Promise<void> {
+  const historialRef = doc(collection(db, HISTORIAL));
+  await setDoc(historialRef, {
+    bibliotecaId: copia.bibliotecaId,
+    copiaId: copia.id,
+    isbn: copia.isbn,
+    socioId: socioId || undefined,
     prestadoA,
     fechaPrestamo,
   });
+  await updateDoc(doc(db, COPIAS, copia.id), {
+    estado: "prestado",
+    prestadoA,
+    prestadoASocioId: socioId || deleteField(),
+    fechaPrestamo,
+    historialActivoId: historialRef.id,
+  });
 }
 
-export async function devolverLibro(copiaId: string) {
+/** `historialActivoId` es el que quedó guardado en la copia al prestarlo. */
+export async function devolverLibro(
+  copiaId: string,
+  historialActivoId?: string
+): Promise<void> {
+  if (historialActivoId) {
+    await updateDoc(doc(db, HISTORIAL, historialActivoId), {
+      fechaDevolucion: new Date().toISOString(),
+    }).catch((err) => console.error("Error cerrando el historial del préstamo:", err));
+  }
   await updateDoc(doc(db, COPIAS, copiaId), {
     estado: "disponible",
     prestadoA: deleteField(),
+    prestadoASocioId: deleteField(),
     fechaPrestamo: deleteField(),
     fechaLimite: deleteField(),
+    historialActivoId: deleteField(),
   });
 }
 
@@ -360,4 +390,59 @@ export async function getSeleccionSemanal(
     [mezclados[i], mezclados[j]] = [mezclados[j], mezclados[i]];
   }
   return mezclados.slice(0, 7);
+}
+
+/** Autores y editoriales ya cargados en la comunidad, para autocompletar formularios. */
+export async function obtenerSugerenciasComunidad(): Promise<{
+  autores: string[];
+  editoriales: string[];
+}> {
+  const snap = await getDocs(query(collection(db, GLOBALES), limit(500)));
+  const autores = new Set<string>();
+  const editoriales = new Set<string>();
+  snap.docs.forEach((d) => {
+    const data = d.data();
+    const autor = ((data.autor as string) ?? "").trim();
+    const editorial = ((data.editorial as string) ?? "").trim();
+    if (autor) autores.add(autor);
+    if (editorial) editoriales.add(editorial);
+  });
+  return {
+    autores: Array.from(autores).sort((a, b) => a.localeCompare(b)),
+    editoriales: Array.from(editoriales).sort((a, b) => a.localeCompare(b)),
+  };
+}
+
+// --- Historial de préstamos (modo socios) ---
+
+function toHistorialPrestamo(
+  id: string,
+  data: Record<string, unknown>
+): HistorialPrestamo {
+  return {
+    id,
+    bibliotecaId: (data.bibliotecaId as string) ?? "",
+    copiaId: (data.copiaId as string) ?? "",
+    isbn: (data.isbn as string) ?? "",
+    socioId: data.socioId as string | undefined,
+    prestadoA: (data.prestadoA as string) ?? "",
+    fechaPrestamo: (data.fechaPrestamo as string) ?? "",
+    fechaLimite: data.fechaLimite as string | undefined,
+    fechaDevolucion: data.fechaDevolucion as string | undefined,
+  };
+}
+
+/** Historial de préstamos de un socio puntual, más recientes primero. */
+export function listenHistorialDeSocio(
+  socioId: string,
+  onChange: (historial: HistorialPrestamo[]) => void
+): Unsubscribe {
+  const q = query(collection(db, HISTORIAL), where("socioId", "==", socioId));
+  return onSnapshot(q, (snap) => {
+    onChange(
+      snap.docs
+        .map((d) => toHistorialPrestamo(d.id, d.data()))
+        .sort((a, b) => b.fechaPrestamo.localeCompare(a.fechaPrestamo))
+    );
+  });
 }

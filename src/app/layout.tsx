@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/hooks/use-auth";
+import { LocaleProvider } from "@/hooks/use-locale";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -31,8 +32,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          {children}
-          <Toaster position="top-right" />
+          <LocaleProvider>
+            {children}
+            <Toaster position="top-right" />
+          </LocaleProvider>
         </AuthProvider>
       </body>
     </html>

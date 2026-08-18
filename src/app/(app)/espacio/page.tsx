@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import {
@@ -13,6 +15,7 @@ import {
   invitarMiembro,
   quitarMiembro,
   renombrarMiembro,
+  setModoSocios,
 } from "@/lib/firestore/bibliotecas";
 
 export default function EspacioPage() {
@@ -104,6 +107,24 @@ export default function EspacioPage() {
     await cancelarInvitacion(bibliotecaActual.id, email);
   }
 
+  async function handleToggleModoSocios(activo: boolean) {
+    if (!bibliotecaActual) return;
+    if (
+      activo &&
+      !window.confirm(
+        "Al activar el modo socios, los préstamos nuevos se van a asignar a socios registrados en vez de anotar un nombre libre. ¿Continuar?"
+      )
+    ) {
+      return;
+    }
+    try {
+      await setModoSocios(bibliotecaActual.id, activo);
+    } catch (err) {
+      console.error("Error actualizando el modo socios:", err);
+      toast.error("No pudimos actualizar el modo de préstamos.");
+    }
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-bold">Espacio compartido</h1>
@@ -115,6 +136,20 @@ export default function EspacioPage() {
         Si cargás tu WhatsApp, quien vea el catálogo público va a poder
         pedirte libros directo desde ahí.
       </p>
+
+      <div className="mb-7 flex items-center justify-between gap-4 rounded-lg border p-3.5">
+        <div>
+          <Label className="text-sm font-semibold">Modo socios</Label>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Los préstamos se asignan a socios registrados (con historial) en
+            vez de anotar un nombre libre. Los dos modos no conviven.
+          </p>
+        </div>
+        <Switch
+          checked={bibliotecaActual.modoSocios}
+          onCheckedChange={handleToggleModoSocios}
+        />
+      </div>
 
       <div className="mb-6 flex flex-col divide-y overflow-hidden rounded-lg border">
         {miembros.map((m) => (
