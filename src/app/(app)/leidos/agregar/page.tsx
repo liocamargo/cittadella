@@ -16,11 +16,12 @@ import {
   getLibroGlobal,
   publicarResena,
 } from "@/lib/firestore/libros";
-import { buscarPorIsbn } from "@/services/google-books";
+import { buscarPorIsbn, type ResultadoBusquedaTitulo } from "@/services/google-books";
 import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { RatingCaraPicker } from "@/components/catalogo/rating-cara";
 import { GeneroSelect } from "@/components/catalogo/genero-select";
+import { BuscarPorTitulo } from "@/components/catalogo/buscar-por-titulo";
 import type { LibroGlobal } from "@/types";
 
 type Paso = "buscar" | "formulario";
@@ -170,6 +171,30 @@ export default function AgregarLeidoPage() {
     setPaso("formulario");
   }
 
+  function handleSeleccionarPorTitulo(resultado: ResultadoBusquedaTitulo) {
+    if (resultado.isbn) {
+      setIsbnInput(resultado.isbn);
+      buscar(resultado.isbn);
+      return;
+    }
+    setIsbn("");
+    setComunidad(null);
+    setForm({
+      ...FORM_INICIAL,
+      titulo: resultado.titulo ?? "",
+      subtitulo: resultado.subtitulo ?? "",
+      autor: resultado.autor ?? "",
+      editorial: resultado.editorial ?? "",
+      anio: resultado.anio ?? "",
+      paginas: resultado.paginas ?? "",
+      idioma: resultado.idioma ?? "",
+      genero: resultado.genero ?? "",
+      sinopsis: resultado.sinopsis ?? "",
+      portadaUrl: resultado.portadaUrl ?? "",
+    });
+    setPaso("formulario");
+  }
+
   async function handleGuardar() {
     if (!user) return;
     if (!(form.titulo ?? "").trim()) {
@@ -265,6 +290,15 @@ export default function AgregarLeidoPage() {
               Buscando el libro…
             </div>
           )}
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="h-px flex-1 bg-border" />
+            o buscá por título
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <BuscarPorTitulo
+            idiomasLectura={localeLectura}
+            onSeleccionar={handleSeleccionarPorTitulo}
+          />
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <div className="h-px flex-1 bg-border" />o<div className="h-px flex-1 bg-border" />
           </div>

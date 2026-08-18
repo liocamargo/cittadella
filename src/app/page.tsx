@@ -97,14 +97,8 @@ export default function LandingPage() {
 
       <nav>
         <div className={styles.wrap}>
-          <div className={styles.logo}>
-            <span className={styles.mark}>
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-            Cittadella
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Cittadella" className={styles.logoImg} />
           <Link href="/login" className={styles.navCta}>
             Crear mi biblioteca
           </Link>
@@ -465,19 +459,14 @@ export default function LandingPage() {
             </Link>
           </Reveal>
           <div className={styles.footBottom}>
-            <div className={styles.logo} style={{ fontSize: 16 }}>
-              <span className={styles.mark}>
-                <span></span>
-                <span></span>
-                <span></span>
-              </span>
-              Cittadella
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Cittadella" className={styles.logoImgInvertido} />
             <div className={styles.footLinks}>
               <a href="#catalogo">Catálogo</a>
               <a href="#prestamos">Préstamos</a>
               <a href="#publico">Catálogo público</a>
               <a href="#comunidad">Comunidad</a>
+              <Link href="/privacidad">Privacidad</Link>
             </div>
             <span>
               Hecho para gente que presta libros y quiere que se los

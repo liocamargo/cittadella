@@ -11,6 +11,7 @@ interface GoogleBooksVolumeInfo {
   description?: string;
   language?: string;
   imageLinks?: { thumbnail?: string; smallThumbnail?: string };
+  industryIdentifiers?: { type: string; identifier: string }[];
 }
 
 interface GoogleBooksVolume {
@@ -35,6 +36,15 @@ export class GoogleBooksError extends Error {
   get esLimiteDeCuota() {
     return this.status === 429;
   }
+}
+
+/** ISBN-13 si está disponible; si no, ISBN-10 como respaldo. */
+function extraerIsbn(info: GoogleBooksVolumeInfo): string | undefined {
+  const ids = info.industryIdentifiers ?? [];
+  return (
+    ids.find((i) => i.type === "ISBN_13")?.identifier ??
+    ids.find((i) => i.type === "ISBN_10")?.identifier
+  );
 }
 
 function mapVolumeInfo(info: GoogleBooksVolumeInfo): DatosComunidad {
@@ -182,6 +192,34 @@ export async function buscarPortadas(
       autor: (info.authors ?? []).join(", "),
       portadaUrl,
     });
+  }
+  return resultados;
+}
+
+export interface ResultadoBusquedaTitulo extends DatosComunidad {
+  /** Si Google Books trae el ISBN de esa edición, para poder buscarlo bien y evitar duplicados. */
+  isbn?: string;
+}
+
+/**
+ * Busca libros por título/autor (texto libre) y devuelve varios candidatos
+ * con sus datos completos, para elegir cuál cargar cuando no se tiene el
+ * ISBN a mano.
+ */
+export async function buscarPorTitulo(
+  consulta: string,
+  idiomasLectura?: string[]
+): Promise<ResultadoBusquedaTitulo[]> {
+  const data = await consultarConIdiomas(
+    { q: consulta, maxResults: "10" },
+    idiomasLectura
+  );
+
+  const resultados: ResultadoBusquedaTitulo[] = [];
+  for (const item of data.items ?? []) {
+    const info = item.volumeInfo;
+    if (!info?.title) continue;
+    resultados.push({ ...mapVolumeInfo(info), isbn: extraerIsbn(info) });
   }
   return resultados;
 }

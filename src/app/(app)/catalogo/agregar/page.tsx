@@ -25,11 +25,12 @@ import {
   getLibroGlobal,
 } from "@/lib/firestore/libros";
 import { agregarEstante } from "@/lib/firestore/bibliotecas";
-import { buscarPorIsbn } from "@/services/google-books";
+import { buscarPorIsbn, type ResultadoBusquedaTitulo } from "@/services/google-books";
 import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
 import { GeneroSelect } from "@/components/catalogo/genero-select";
+import { BuscarPorTitulo } from "@/components/catalogo/buscar-por-titulo";
 import type { LibroGlobal } from "@/types";
 
 type Paso = "buscar" | "formulario";
@@ -221,6 +222,33 @@ export default function AgregarLibroPage() {
     setPaso("formulario");
   }
 
+  function handleSeleccionarPorTitulo(resultado: ResultadoBusquedaTitulo) {
+    // Si Google nos dio el ISBN de esa edición, seguimos el flujo normal
+    // (chequea copias existentes, prioriza los datos de la comunidad).
+    if (resultado.isbn) {
+      setIsbnInput(resultado.isbn);
+      buscar(resultado.isbn);
+      return;
+    }
+    setIsbn("");
+    setComunidad(null);
+    setForm({
+      ...FORM_INICIAL,
+      titulo: resultado.titulo ?? "",
+      subtitulo: resultado.subtitulo ?? "",
+      autor: resultado.autor ?? "",
+      editorial: resultado.editorial ?? "",
+      anio: resultado.anio ?? "",
+      paginas: resultado.paginas ?? "",
+      idioma: resultado.idioma ?? "",
+      genero: resultado.genero ?? "",
+      sinopsis: resultado.sinopsis ?? "",
+      portadaUrl: resultado.portadaUrl ?? "",
+    });
+    setEscaneando(false);
+    setPaso("formulario");
+  }
+
   async function handleCrearEstante() {
     if (!bibliotecaActual || !nuevoEstanteNombre.trim()) return;
     const nombre = nuevoEstanteNombre.trim();
@@ -373,6 +401,15 @@ export default function AgregarLibroPage() {
               Buscando el libro…
             </div>
           )}
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="h-px flex-1 bg-border" />
+            o buscá por título
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <BuscarPorTitulo
+            idiomasLectura={localeLectura}
+            onSeleccionar={handleSeleccionarPorTitulo}
+          />
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <div className="h-px flex-1 bg-border" />o<div className="h-px flex-1 bg-border" />
           </div>

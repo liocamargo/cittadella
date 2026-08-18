@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -203,6 +204,14 @@ export default function LoginPage() {
             </Button>
           </div>
         )}
+
+        <p className="text-center text-xs text-muted-foreground">
+          Al continuar, aceptás nuestra{" "}
+          <Link href="/privacidad" className="underline">
+            Política de Privacidad
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );
