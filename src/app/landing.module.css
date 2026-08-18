@@ -210,34 +210,17 @@
   border-radius: 16px;
   border: 1px solid var(--line);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 16px 14px;
   transition: transform 0.3s ease;
   overflow: hidden;
 }
 .bookCover:hover {
   transform: translateY(-6px);
 }
-.spineEdge {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 6px;
-}
-.bcTitle {
-  font-family: var(--font-heading-family);
-  font-weight: 500;
-  font-size: 15px;
-  line-height: 1.2;
-}
-.bcAuthor {
-  font-family: var(--font-geist-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+.bookCoverImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 @keyframes cittadellaScrollLeft {
   from {
@@ -251,7 +234,6 @@
   .bookCover {
     width: 120px;
     height: 176px;
-    padding: 12px 11px;
   }
 }
 

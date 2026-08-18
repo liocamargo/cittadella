@@ -21,52 +21,62 @@ export const metadata: Metadata = {
   ],
 };
 
+// Portadas reales (ediciones en español, vía Open Library Covers API).
 const COVERS = [
-  { t: "Rayuela", a: "Julio Cortázar", bg: "#28282a", edge: "#e8e6e1" },
-  { t: "Ficciones", a: "J. L. Borges", bg: "#e8e6e1", edge: "#28282a" },
+  { t: "Rayuela", a: "Julio Cortázar", portada: "https://covers.openlibrary.org/b/id/1047466-L.jpg" },
+  { t: "Ficciones", a: "Jorge Luis Borges", portada: "https://covers.openlibrary.org/b/id/10832290-L.jpg" },
   {
     t: "Los detectives salvajes",
     a: "Roberto Bolaño",
-    bg: "#4a4a49",
-    edge: "#e8e6e1",
+    portada: "https://covers.openlibrary.org/b/id/3706128-L.jpg",
   },
   {
     t: "Cien años de soledad",
-    a: "G. García Márquez",
-    bg: "#d6d3cb",
-    edge: "#28282a",
+    a: "Gabriel García Márquez",
+    portada: "https://covers.openlibrary.org/b/id/13215914-L.jpg",
   },
-  { t: "Pedro Páramo", a: "Juan Rulfo", bg: "#63625d", edge: "#e8e6e1" },
-  { t: "El túnel", a: "Ernesto Sábato", bg: "#28282a", edge: "#8f8d87" },
+  {
+    t: "Pedro Páramo",
+    a: "Juan Rulfo",
+    portada: "https://covers.openlibrary.org/b/id/4901502-L.jpg",
+  },
+  {
+    t: "El túnel",
+    a: "Ernesto Sábato",
+    portada: "https://covers.openlibrary.org/b/id/5517733-L.jpg",
+  },
   {
     t: "La invención de Morel",
-    a: "A. Bioy Casares",
-    bg: "#cbc7bd",
-    edge: "#28282a",
+    a: "Adolfo Bioy Casares",
+    portada: "https://covers.openlibrary.org/b/id/1046845-L.jpg",
   },
   {
     t: "Cuentos completos",
     a: "Silvina Ocampo",
-    bg: "#8f8d87",
-    edge: "#e8e6e1",
+    portada: "https://covers.openlibrary.org/b/id/3711230-L.jpg",
   },
-  { t: "Aura", a: "Carlos Fuentes", bg: "#28282a", edge: "#d6d3cb" },
-  { t: "Bestiario", a: "Julio Cortázar", bg: "#e8e6e1", edge: "#4a4a49" },
+  {
+    t: "Aura",
+    a: "Carlos Fuentes",
+    portada: "https://covers.openlibrary.org/b/id/5314209-L.jpg",
+  },
+  {
+    t: "Bestiario",
+    a: "Julio Cortázar",
+    portada: "https://covers.openlibrary.org/b/id/5721778-L.jpg",
+  },
 ];
 
-const DARK_BG = new Set(["#28282a", "#4a4a49", "#63625d"]);
-
 function BookCover({ cover }: { cover: (typeof COVERS)[number] }) {
-  const fg = DARK_BG.has(cover.bg) ? "#f2f2f0" : "#111110";
   return (
-    <div className={styles.bookCover} style={{ background: cover.bg }}>
-      <div className={styles.spineEdge} style={{ background: cover.edge }} />
-      <div className={styles.bcTitle} style={{ color: fg }}>
-        {cover.t}
-      </div>
-      <div className={styles.bcAuthor} style={{ color: fg, opacity: 0.65 }}>
-        {cover.a}
-      </div>
+    <div className={styles.bookCover}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={cover.portada}
+        alt={`${cover.t} — ${cover.a}`}
+        className={styles.bookCoverImg}
+        loading="eager"
+      />
     </div>
   );
 }
@@ -108,18 +118,14 @@ export default function LandingPage() {
       <header className={styles.hero}>
         <div className={styles.wrap}>
           <div className={styles.heroInner}>
-            <span className={styles.eyebrow}>
-              App para organizar tu biblioteca en casa
-            </span>
+            <span className={styles.eyebrow}>Tu biblioteca en casa</span>
             <h1>
               Cada libro que tenés, cada libro que <em>prestás</em>, en un
               solo lugar.
             </h1>
             <p className={styles.lede}>
-              Cittadella convierte tu estantería en una biblioteca de
-              verdad: catalogada, prestable y compartida con quien vos
-              elijas. Sin planillas, sin post-its, sin &quot;¿a quién le
-              presté esto?&quot;.
+              Convierte tu estantería en una biblioteca de verdad:
+              catalogada, prestable y compartida con quien vos elijas.
             </p>
             <div className={styles.heroCtas}>
               <Link href="/login" className={`${styles.btn} ${styles.btnPrimary}`}>
@@ -147,9 +153,7 @@ export default function LandingPage() {
             <span className={styles.rule}></span>
           </div>
           <div className={styles.sectionHead}>
-            <h2>
-              Escaneá un código de barras. Listo, ya está en tu biblioteca.
-            </h2>
+            <h2>Escaneá un código. ¡Listo! Ya está en tu biblioteca.</h2>
             <p className={styles.support}>
               Cittadella busca el libro en Google Books —con respaldo en
               Open Library— y completa título, autor, editorial y portada
