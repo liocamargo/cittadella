@@ -1,14 +1,16 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { GENEROS } from "@/lib/generos";
+import { GENEROS, type Genero } from "@/lib/generos";
 
 interface GeneroMultiSelectProps {
   value: string[];
   onChange: (value: string[]) => void;
+  /** Texto alternativo por género (ej: frases divertidas en el onboarding). El valor guardado sigue siendo el nombre real. */
+  labels?: Partial<Record<Genero, string>>;
 }
 
-export function GeneroMultiSelect({ value, onChange }: GeneroMultiSelectProps) {
+export function GeneroMultiSelect({ value, onChange, labels }: GeneroMultiSelectProps) {
   function toggle(genero: string) {
     if (value.includes(genero)) {
       onChange(value.filter((g) => g !== genero));
@@ -33,7 +35,7 @@ export function GeneroMultiSelect({ value, onChange }: GeneroMultiSelectProps) {
                 : "text-muted-foreground"
             )}
           >
-            {g}
+            {labels?.[g] ?? g}
           </button>
         );
       })}

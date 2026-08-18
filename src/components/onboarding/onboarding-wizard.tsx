@@ -10,6 +10,7 @@ import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLocale } from "@/hooks/use-locale";
 import { LocaleMultiSelect } from "@/components/cuenta/locale-multi-select";
 import { GeneroMultiSelect } from "@/components/cuenta/genero-multi-select";
+import { GENERO_FRASES } from "@/lib/generos";
 import { guardarPerfil } from "@/lib/firestore/perfiles";
 
 const TOTAL_PASOS = 3;
@@ -111,12 +112,17 @@ export function OnboardingWizard() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Paso 3 de {TOTAL_PASOS}
                 </p>
-                <h1 className="mt-1 text-2xl font-bold">¿Qué géneros te gustan leer?</h1>
+                <h1 className="mt-1 text-2xl font-bold">¿Qué clase de lector sos?</h1>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  Opcional. Podés cambiarlo cuando quieras desde Mi cuenta.
+                  Elegí con lo que te identifiques. Opcional, y lo podés
+                  cambiar cuando quieras desde Mi cuenta.
                 </p>
               </div>
-              <GeneroMultiSelect value={generos} onChange={setGeneros} />
+              <GeneroMultiSelect
+                value={generos}
+                onChange={setGeneros}
+                labels={GENERO_FRASES}
+              />
               <div className="flex gap-2">
                 <Button
                   variant="outline"
