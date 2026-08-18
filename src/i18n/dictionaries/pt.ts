@@ -47,9 +47,9 @@ const pt: Dictionary = {
     subtitulo: "Preferências pessoais de idioma.",
     idiomaPagina: "Idioma da página",
     idiomaPaginaDesc: "Em que idioma os textos do aplicativo aparecem.",
-    idiomaLectura: "Idioma em que leio",
+    idiomaLectura: "Idiomas em que leio",
     idiomaLecturaDesc:
-      "Usado para priorizar resultados do Google Books nesse idioma ao buscar um livro.",
+      "Você pode escolher mais de um. Usados para priorizar resultados do Google Books nesses idiomas ao buscar um livro.",
     guardado: "Preferências salvas.",
     errorGuardando: "Não conseguimos salvar suas preferências.",
     conectadoComo: "Conectado como",

@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocale } from "@/hooks/use-locale";
 import { Label } from "@/components/ui/label";
 import { LocaleSelect } from "@/components/cuenta/locale-select";
+import { LocaleMultiSelect } from "@/components/cuenta/locale-multi-select";
 
 export default function CuentaPage() {
   const { user } = useAuth();
@@ -14,7 +15,7 @@ export default function CuentaPage() {
       <h1 className="text-2xl font-bold">{t("cuenta.titulo")}</h1>
       <p className="mb-7 mt-1 text-sm text-muted-foreground">{t("cuenta.subtitulo")}</p>
 
-      <div className="flex max-w-sm flex-col gap-6">
+      <div className="flex max-w-md flex-col gap-6">
         <div>
           <Label className="mb-1.5 block text-sm font-semibold">
             {t("cuenta.idiomaPagina")}
@@ -32,7 +33,7 @@ export default function CuentaPage() {
           <p className="mb-2 text-xs text-muted-foreground">
             {t("cuenta.idiomaLecturaDesc")}
           </p>
-          <LocaleSelect value={localeLectura} onValueChange={setLocaleLectura} />
+          <LocaleMultiSelect value={localeLectura} onChange={setLocaleLectura} />
         </div>
       </div>
 

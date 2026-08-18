@@ -5,8 +5,8 @@ export interface Perfil {
   uid: string;
   /** Idioma en que se muestran los textos de la aplicación. */
   idiomaUI: Locale;
-  /** Idioma que se prioriza al buscar libros (Google Books). */
-  idiomaLectura: Locale;
+  /** Idiomas que se priorizan al buscar libros (Google Books), en orden. */
+  idiomaLectura: Locale[];
 }
 
 /** Documento en `Libros_Globales`, indexado por ISBN (doc id = isbn). */

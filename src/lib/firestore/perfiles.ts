@@ -6,11 +6,18 @@ import type { Perfil } from "@/types";
 
 const COL = "Perfiles";
 
+/** Perfiles viejos guardaron idiomaLectura como un string suelto, no un array. */
+function normalizarIdiomaLectura(valor: unknown): Locale[] {
+  if (Array.isArray(valor) && valor.length > 0) return valor as Locale[];
+  if (typeof valor === "string" && valor) return [valor as Locale];
+  return [LOCALE_POR_DEFECTO];
+}
+
 function toPerfil(uid: string, data: Record<string, unknown> | undefined): Perfil {
   return {
     uid,
     idiomaUI: (data?.idiomaUI as Locale) ?? LOCALE_POR_DEFECTO,
-    idiomaLectura: (data?.idiomaLectura as Locale) ?? LOCALE_POR_DEFECTO,
+    idiomaLectura: normalizarIdiomaLectura(data?.idiomaLectura),
   };
 }
 

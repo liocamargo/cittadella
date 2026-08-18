@@ -45,9 +45,9 @@ const es = {
     subtitulo: "Preferencias personales de idioma.",
     idiomaPagina: "Idioma de la página",
     idiomaPaginaDesc: "En qué idioma ves los textos de la aplicación.",
-    idiomaLectura: "Idioma en que leo",
+    idiomaLectura: "Idiomas en que leo",
     idiomaLecturaDesc:
-      "Se usa para priorizar los resultados de Google Books en ese idioma al buscar un libro.",
+      "Podés elegir más de uno. Se usan para priorizar los resultados de Google Books en esos idiomas al buscar un libro.",
     guardado: "Preferencias guardadas.",
     errorGuardando: "No pudimos guardar tus preferencias.",
     conectadoComo: "Conectado como",

@@ -24,10 +24,10 @@ const STORAGE_KEY = "cittadella:idiomaUI";
 
 interface LocaleContextValue {
   locale: Locale;
-  localeLectura: Locale;
+  localeLectura: Locale[];
   t: (key: string, vars?: Record<string, string | number>) => string;
   setLocale: (locale: Locale) => void;
-  setLocaleLectura: (locale: Locale) => void;
+  setLocaleLectura: (locales: Locale[]) => void;
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -55,7 +55,7 @@ async function detectarLocalePorDefecto(): Promise<Locale> {
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [locale, setLocaleState] = useState<Locale>(LOCALE_POR_DEFECTO);
-  const [localeLectura, setLocaleLecturaState] = useState<Locale>(LOCALE_POR_DEFECTO);
+  const [localeLectura, setLocaleLecturaState] = useState<Locale[]>([LOCALE_POR_DEFECTO]);
   const creandoPerfilRef = useRef(false);
 
   // Sin sesión (ej. /login): preferencia guardada en este navegador, si existe.
@@ -64,11 +64,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     const guardado = localStorage.getItem(STORAGE_KEY);
     if (esLocaleValido(guardado)) {
       setLocaleState(guardado);
-      setLocaleLecturaState(guardado);
+      setLocaleLecturaState([guardado]);
     } else {
       detectarLocalePorDefecto().then((detectado) => {
         setLocaleState(detectado);
-        setLocaleLecturaState(detectado);
+        setLocaleLecturaState([detectado]);
       });
     }
   }, [user]);
@@ -93,10 +93,10 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
       promesa.then((detectado) => {
         setLocaleState(detectado);
-        setLocaleLecturaState(detectado);
+        setLocaleLecturaState([detectado]);
         guardarPerfil(user.uid, {
           idiomaUI: detectado,
-          idiomaLectura: detectado,
+          idiomaLectura: [detectado],
         }).catch((err) => console.error("Error creando el perfil:", err));
       });
     });
@@ -137,10 +137,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
           localStorage.setItem(STORAGE_KEY, nuevo);
         }
       },
-      setLocaleLectura(nuevo: Locale) {
-        setLocaleLecturaState(nuevo);
+      setLocaleLectura(nuevos: Locale[]) {
+        if (nuevos.length === 0) return;
+        setLocaleLecturaState(nuevos);
         if (user) {
-          guardarPerfil(user.uid, { idiomaLectura: nuevo }).catch((err) =>
+          guardarPerfil(user.uid, { idiomaLectura: nuevos }).catch((err) =>
             console.error("Error guardando el idioma de lectura:", err)
           );
         }

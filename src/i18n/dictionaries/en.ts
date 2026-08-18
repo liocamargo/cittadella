@@ -47,9 +47,9 @@ const en: Dictionary = {
     subtitulo: "Personal language preferences.",
     idiomaPagina: "Page language",
     idiomaPaginaDesc: "The language the app's text is shown in.",
-    idiomaLectura: "Language I read in",
+    idiomaLectura: "Languages I read in",
     idiomaLecturaDesc:
-      "Used to prioritize Google Books results in that language when searching for a book.",
+      "You can pick more than one. Used to prioritize Google Books results in those languages when searching for a book.",
     guardado: "Preferences saved.",
     errorGuardando: "We couldn't save your preferences.",
     conectadoComo: "Signed in as",

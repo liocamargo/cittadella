@@ -1,18 +1,20 @@
 import type { DatosComunidad } from "@/lib/firestore/libros";
 
+interface GoogleBooksVolumeInfo {
+  title?: string;
+  subtitle?: string;
+  authors?: string[];
+  publisher?: string;
+  publishedDate?: string;
+  pageCount?: number;
+  categories?: string[];
+  description?: string;
+  language?: string;
+  imageLinks?: { thumbnail?: string; smallThumbnail?: string };
+}
+
 interface GoogleBooksVolume {
-  volumeInfo?: {
-    title?: string;
-    subtitle?: string;
-    authors?: string[];
-    publisher?: string;
-    publishedDate?: string;
-    pageCount?: number;
-    categories?: string[];
-    description?: string;
-    language?: string;
-    imageLinks?: { thumbnail?: string; smallThumbnail?: string };
-  };
+  volumeInfo?: GoogleBooksVolumeInfo;
 }
 
 interface GoogleBooksResponse {
@@ -35,44 +37,7 @@ export class GoogleBooksError extends Error {
   }
 }
 
-/** Una consulta puntual a la API de Google Books, con langRestrict opcional. */
-async function consultarGoogleBooks(
-  query: Record<string, string>,
-  idiomaLectura?: string
-): Promise<GoogleBooksResponse> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
-  const params = new URLSearchParams(query);
-  if (apiKey) params.set("key", apiKey);
-  if (idiomaLectura) params.set("langRestrict", idiomaLectura);
-
-  const res = await fetch(
-    `https://www.googleapis.com/books/v1/volumes?${params.toString()}`
-  );
-  if (!res.ok) {
-    throw new GoogleBooksError(`Google Books respondió ${res.status}`, res.status);
-  }
-  return res.json();
-}
-
-/**
- * Busca un ISBN en Google Books. Si se pasa idiomaLectura, intenta primero
- * priorizando ese idioma; si no encuentra nada así (el langRestrict de
- * Google puede dejar afuera la única edición que existe), reintenta sin
- * restricción antes de darse por vencido. Tira GoogleBooksError si la
- * consulta en sí falla (red, cuota).
- */
-async function buscarPorIsbnGoogle(
-  isbn: string,
-  idiomaLectura?: string
-): Promise<DatosComunidad | null> {
-  const query = { q: `isbn:${isbn}` };
-  let data = await consultarGoogleBooks(query, idiomaLectura);
-  if (!data.items?.length && idiomaLectura) {
-    data = await consultarGoogleBooks(query);
-  }
-  const info = data.items?.[0]?.volumeInfo;
-  if (!info) return null;
-
+function mapVolumeInfo(info: GoogleBooksVolumeInfo): DatosComunidad {
   return {
     titulo: info.title ?? "",
     subtitulo: info.subtitle,
@@ -85,6 +50,55 @@ async function buscarPorIsbnGoogle(
     sinopsis: info.description,
     portadaUrl: info.imageLinks?.thumbnail?.replace("http://", "https://"),
   };
+}
+
+/** Una consulta puntual a la API de Google Books, con langRestrict opcional. */
+async function consultarGoogleBooks(
+  query: Record<string, string>,
+  langRestrict?: string
+): Promise<GoogleBooksResponse> {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
+  const params = new URLSearchParams(query);
+  if (apiKey) params.set("key", apiKey);
+  if (langRestrict) params.set("langRestrict", langRestrict);
+
+  const res = await fetch(
+    `https://www.googleapis.com/books/v1/volumes?${params.toString()}`
+  );
+  if (!res.ok) {
+    throw new GoogleBooksError(`Google Books respondió ${res.status}`, res.status);
+  }
+  return res.json();
+}
+
+/**
+ * Prueba la consulta priorizando cada idioma de lectura en orden hasta que
+ * uno devuelva resultados; si ninguno encuentra nada (el langRestrict de
+ * Google puede dejar afuera la única edición que existe), reintenta sin
+ * restricción antes de darse por vencido.
+ */
+async function consultarConIdiomas(
+  query: Record<string, string>,
+  idiomasLectura?: string[]
+): Promise<GoogleBooksResponse> {
+  for (const idioma of idiomasLectura ?? []) {
+    const data = await consultarGoogleBooks(query, idioma);
+    if (data.items?.length) return data;
+  }
+  return consultarGoogleBooks(query);
+}
+
+/**
+ * Busca un ISBN en Google Books. Tira GoogleBooksError si la consulta en sí
+ * falla (red, cuota).
+ */
+async function buscarPorIsbnGoogle(
+  isbn: string,
+  idiomasLectura?: string[]
+): Promise<DatosComunidad | null> {
+  const data = await consultarConIdiomas({ q: `isbn:${isbn}` }, idiomasLectura);
+  const info = data.items?.[0]?.volumeInfo;
+  return info ? mapVolumeInfo(info) : null;
 }
 
 interface OpenLibraryBook {
@@ -131,10 +145,10 @@ async function buscarPorIsbnOpenLibrary(isbn: string): Promise<DatosComunidad | 
  */
 export async function buscarPorIsbn(
   isbn: string,
-  idiomaLectura?: string
+  idiomasLectura?: string[]
 ): Promise<DatosComunidad | null> {
   try {
-    const google = await buscarPorIsbnGoogle(isbn, idiomaLectura);
+    const google = await buscarPorIsbnGoogle(isbn, idiomasLectura);
     if (google) return google;
   } catch (err) {
     console.error("Google Books falló, probamos Open Library:", err);
@@ -151,13 +165,12 @@ export interface ResultadoPortada {
 /** Busca por título/autor y devuelve varias portadas candidatas para elegir. */
 export async function buscarPortadas(
   consulta: string,
-  idiomaLectura?: string
+  idiomasLectura?: string[]
 ): Promise<ResultadoPortada[]> {
-  const query = { q: consulta, maxResults: "12" };
-  let data = await consultarGoogleBooks(query, idiomaLectura);
-  if (!data.items?.length && idiomaLectura) {
-    data = await consultarGoogleBooks(query);
-  }
+  const data = await consultarConIdiomas(
+    { q: consulta, maxResults: "12" },
+    idiomasLectura
+  );
 
   const resultados: ResultadoPortada[] = [];
   for (const item of data.items ?? []) {
