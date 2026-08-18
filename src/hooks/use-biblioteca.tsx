@@ -36,15 +36,17 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
   const [bibliotecas, setBibliotecas] = useState<Biblioteca[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const autoCreateAttempted = useRef(false);
   const invitesAccepted = useRef(false);
 
+  // Si el usuario todavía no tiene ninguna biblioteca (cuenta nueva, o
+  // ninguna invitación resuelta todavía), no creamos nada sola: el
+  // OnboardingWizard le pregunta nombre/idioma/géneros y crea la primera
+  // biblioteca recién cuando termina ese flujo (ver crearYSeleccionar).
   useEffect(() => {
     if (!user) {
       setBibliotecas([]);
       setCurrentId(null);
       setLoading(true);
-      autoCreateAttempted.current = false;
       invitesAccepted.current = false;
       return;
     }
@@ -60,29 +62,6 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
     const unsubscribe = listenBibliotecasDeUsuario(user.uid, (lista) => {
       setBibliotecas(lista);
       setLoading(false);
-
-      if (lista.length > 0) {
-        // Vuelve a armar la guarda: si más adelante te quedás sin
-        // bibliotecas (p.ej. la borraste a mano en Firestore), se
-        // puede volver a crear una por defecto sin recargar la página.
-        autoCreateAttempted.current = false;
-        return;
-      }
-
-      if (!autoCreateAttempted.current) {
-        autoCreateAttempted.current = true;
-        const nombre = user.displayName
-          ? `Biblioteca de ${user.displayName.split(" ")[0]}`
-          : "Mi biblioteca";
-        crearBiblioteca(
-          nombre,
-          user.uid,
-          user.displayName ?? user.email ?? "Yo",
-          user.email ?? ""
-        ).catch(() => {
-          autoCreateAttempted.current = false;
-        });
-      }
     });
 
     return unsubscribe;

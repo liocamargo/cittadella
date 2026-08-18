@@ -122,6 +122,10 @@ export async function quitarMiembro(bibliotecaId: string, uid: string) {
   });
 }
 
+export async function renombrarBiblioteca(bibliotecaId: string, nombre: string) {
+  await updateDoc(doc(db, COL, bibliotecaId), { nombre });
+}
+
 export async function renombrarMiembro(
   bibliotecaId: string,
   uid: string,

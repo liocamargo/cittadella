@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import {
   cancelarInvitacion,
   invitarMiembro,
   quitarMiembro,
+  renombrarBiblioteca,
   renombrarMiembro,
   setModoSocios,
 } from "@/lib/firestore/bibliotecas";
@@ -26,6 +28,9 @@ export default function EspacioPage() {
   const [editWhatsapp, setEditWhatsapp] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [editingNombre, setEditingNombre] = useState(false);
+  const [nombreEspacio, setNombreEspacio] = useState("");
+  const [guardandoNombre, setGuardandoNombre] = useState(false);
 
   if (!bibliotecaActual) {
     return (
@@ -43,6 +48,21 @@ export default function EspacioPage() {
     whatsapp: bibliotecaActual.whatsappMiembros[uid] ?? "",
     esOwner: uid === bibliotecaActual.creadaPor,
   }));
+
+  async function handleGuardarNombreEspacio() {
+    if (!bibliotecaActual) return;
+    if (!nombreEspacio.trim()) return;
+    setGuardandoNombre(true);
+    try {
+      await renombrarBiblioteca(bibliotecaActual.id, nombreEspacio.trim());
+      setEditingNombre(false);
+    } catch (err) {
+      console.error("Error renombrando el espacio:", err);
+      toast.error("No pudimos renombrar el espacio.");
+    } finally {
+      setGuardandoNombre(false);
+    }
+  }
 
   async function handleGuardarNombre(uid: string) {
     if (!bibliotecaActual) return;
@@ -128,9 +148,55 @@ export default function EspacioPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">Espacio compartido</h1>
+
+      {editingNombre ? (
+        <div className="mb-1 mt-2 flex items-center gap-1.5">
+          <Input
+            autoFocus
+            value={nombreEspacio}
+            onChange={(e) => setNombreEspacio(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleGuardarNombreEspacio()}
+            className="h-8 max-w-xs text-sm font-semibold"
+          />
+          <Button
+            size="sm"
+            className="h-8"
+            onClick={handleGuardarNombreEspacio}
+            disabled={guardandoNombre}
+          >
+            Guardar
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8"
+            onClick={() => setEditingNombre(false)}
+            disabled={guardandoNombre}
+          >
+            Cancelar
+          </Button>
+        </div>
+      ) : (
+        <div className="mb-1 mt-2 flex items-center gap-1.5">
+          <p className="text-sm text-muted-foreground">
+            Nombre del espacio: <strong>{bibliotecaActual.nombre}</strong>
+          </p>
+          <button
+            onClick={() => {
+              setNombreEspacio(bibliotecaActual.nombre);
+              setEditingNombre(true);
+            }}
+            className="text-muted-foreground"
+            aria-label="Editar nombre del espacio"
+          >
+            <Pencil className="size-3.5" />
+          </button>
+        </div>
+      )}
+
       <p className="mb-1 mt-1 text-sm text-muted-foreground">
-        Miembros de <strong>{bibliotecaActual.nombre}</strong>. Todos pueden
-        agregar, editar y prestar libros de esta biblioteca.
+        Todos los miembros pueden agregar, editar y prestar libros de esta
+        biblioteca.
       </p>
       <p className="mb-7 text-xs text-muted-foreground">
         Si cargás tu WhatsApp, quien vea el catálogo público va a poder
