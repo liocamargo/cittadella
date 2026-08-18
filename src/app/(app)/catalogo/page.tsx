@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookPlus, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { BookPlus, ChevronLeft, ChevronRight, LayoutGrid, List, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
   eliminarEstante,
 } from "@/lib/firestore/bibliotecas";
 import { LibroCard } from "@/components/catalogo/libro-card";
+import { LibroListItem } from "@/components/catalogo/libro-list-item";
 import { LibroDetailSheet } from "@/components/catalogo/libro-detail-sheet";
 import { ShareCatalogPopover } from "@/components/catalogo/share-catalog-popover";
 import type { LibroEnBiblioteca } from "@/types";
@@ -39,6 +40,17 @@ export default function CatalogoPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newShelf, setNewShelf] = useState("");
   const [shelfCreateOpen, setShelfCreateOpen] = useState(false);
+  const [vista, setVista] = useState<"grilla" | "lista">("grilla");
+
+  useEffect(() => {
+    const guardada = localStorage.getItem("catalogo-vista");
+    if (guardada === "grilla" || guardada === "lista") setVista(guardada);
+  }, []);
+
+  function cambiarVista(v: "grilla" | "lista") {
+    setVista(v);
+    localStorage.setItem("catalogo-vista", v);
+  }
 
   useEffect(() => {
     if (!bibliotecaActual) {
@@ -141,6 +153,28 @@ export default function CatalogoPage() {
               catalogoPublico={bibliotecaActual.catalogoPublico}
             />
           )}
+          <div className="flex items-center gap-0.5 rounded-md border p-0.5">
+            <button
+              onClick={() => cambiarVista("grilla")}
+              className={cn(
+                "flex size-7 items-center justify-center rounded text-muted-foreground",
+                vista === "grilla" && "bg-accent text-foreground"
+              )}
+              aria-label="Vista en grilla"
+            >
+              <LayoutGrid className="size-4" />
+            </button>
+            <button
+              onClick={() => cambiarVista("lista")}
+              className={cn(
+                "flex size-7 items-center justify-center rounded text-muted-foreground",
+                vista === "lista" && "bg-accent text-foreground"
+              )}
+              aria-label="Vista en lista"
+            >
+              <List className="size-4" />
+            </button>
+          </div>
           <Button asChild className="hidden md:inline-flex">
             <Link href="/catalogo/agregar">
               <Plus />
@@ -238,22 +272,41 @@ export default function CatalogoPage() {
         </div>
       )}
 
-      <div className="mb-6 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
-        {pageItems.map((copia) => (
-          <LibroCard
-            key={copia.id}
-            copia={copia}
-            global={globales[copia.isbn]}
-            onClick={() => setSelectedId(copia.id)}
-            onToggleFavorito={() =>
-              toggleFavorito(copia.id, !copia.favorito).catch((err) => {
-                console.error("Error actualizando favorito:", err);
-                toast.error("No pudimos actualizar el favorito.");
-              })
-            }
-          />
-        ))}
-      </div>
+      {vista === "grilla" ? (
+        <div className="mb-6 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
+          {pageItems.map((copia) => (
+            <LibroCard
+              key={copia.id}
+              copia={copia}
+              global={globales[copia.isbn]}
+              onClick={() => setSelectedId(copia.id)}
+              onToggleFavorito={() =>
+                toggleFavorito(copia.id, !copia.favorito).catch((err) => {
+                  console.error("Error actualizando favorito:", err);
+                  toast.error("No pudimos actualizar el favorito.");
+                })
+              }
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="mb-6 flex flex-col gap-2">
+          {pageItems.map((copia) => (
+            <LibroListItem
+              key={copia.id}
+              copia={copia}
+              global={globales[copia.isbn]}
+              onClick={() => setSelectedId(copia.id)}
+              onToggleFavorito={() =>
+                toggleFavorito(copia.id, !copia.favorito).catch((err) => {
+                  console.error("Error actualizando favorito:", err);
+                  toast.error("No pudimos actualizar el favorito.");
+                })
+              }
+            />
+          ))}
+        </div>
+      )}
 
       {totalPages > 1 && (
         <div className="flex items-center gap-1.5">
