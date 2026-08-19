@@ -16,7 +16,7 @@ export function FeedbackButton() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-1 rounded-full border bg-card py-1 pl-3 pr-1 shadow-lg">
+    <div className="fixed bottom-20 right-4 z-50 flex items-center gap-1 rounded-full border bg-card py-1 pl-3 pr-1 shadow-lg md:bottom-4">
       <a
         href={FORM_URL}
         target="_blank"

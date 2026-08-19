@@ -372,39 +372,6 @@ export function LibroDetailSheet({
               : `Prestado a ${copia.prestadoA}`}
           </Badge>
 
-          {global?.subtitulo && (
-            <p className="text-sm italic text-muted-foreground">
-              {global.subtitulo}
-            </p>
-          )}
-          {global?.sinopsis && (
-            <p className="text-sm leading-relaxed">{global.sinopsis}</p>
-          )}
-
-          {linkLectura && (
-            <Button asChild variant="outline" className="w-full">
-              <a href={linkLectura} target="_blank" rel="noopener noreferrer">
-                <BookOpen className="size-4" />
-                {global?.previewLink ? "Leer online" : "Buscarlo"}
-              </a>
-            </Button>
-          )}
-
-          <div className="flex gap-4 border-y py-3">
-            <div>
-              <div className="text-base font-bold">
-                ★ {global?.ratingPromedio ?? 0}
-              </div>
-              <div className="text-[11px] text-muted-foreground">
-                {global?.totalResenas ?? 0} reseña(s)
-              </div>
-            </div>
-            <div>
-              <div className="text-base font-bold">{global?.propietarios ?? 0}</div>
-              <div className="text-[11px] text-muted-foreground">propietario(s)</div>
-            </div>
-          </div>
-
           <div className="flex flex-col gap-1.5 text-sm">
             <div className="flex items-center justify-between">
               <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
@@ -447,6 +414,39 @@ export function LibroDetailSheet({
             </div>
             <div>
               <strong>Género:</strong> {global?.genero || "—"}
+            </div>
+          </div>
+
+          {global?.subtitulo && (
+            <p className="text-sm italic text-muted-foreground">
+              {global.subtitulo}
+            </p>
+          )}
+          {global?.sinopsis && (
+            <p className="text-sm leading-relaxed">{global.sinopsis}</p>
+          )}
+
+          {linkLectura && (
+            <Button asChild variant="outline" className="w-full">
+              <a href={linkLectura} target="_blank" rel="noopener noreferrer">
+                <BookOpen className="size-4" />
+                {global?.previewLink ? "Leer online" : "Buscarlo"}
+              </a>
+            </Button>
+          )}
+
+          <div className="flex gap-4 border-y py-3">
+            <div>
+              <div className="text-base font-bold">
+                ★ {global?.ratingPromedio ?? 0}
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                {global?.totalResenas ?? 0} reseña(s)
+              </div>
+            </div>
+            <div>
+              <div className="text-base font-bold">{global?.propietarios ?? 0}</div>
+              <div className="text-[11px] text-muted-foreground">propietario(s)</div>
             </div>
           </div>
 

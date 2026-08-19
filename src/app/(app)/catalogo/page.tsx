@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookPlus, ChevronLeft, ChevronRight, LayoutGrid, List, Plus } from "lucide-react";
+import { BookPlus, LayoutGrid, List, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,6 @@ import { LibroDetailSheet } from "@/components/catalogo/libro-detail-sheet";
 import { ShareCatalogPopover } from "@/components/catalogo/share-catalog-popover";
 import type { LibroEnBiblioteca } from "@/types";
 
-const PAGE_SIZE = 14;
 type Filtro = "all" | "disponible" | "favorito";
 
 const FILTROS: { key: Filtro; label: string }[] = [
@@ -31,13 +30,26 @@ const FILTROS: { key: Filtro; label: string }[] = [
   { key: "favorito", label: "★ Favoritos" },
 ];
 
+/** Primera letra para agrupar/indexar; todo lo que no sea A-Z cae en "#". */
+function letraDe(titulo: string): string {
+  const letra = normalizarBusqueda(titulo).trim().charAt(0).toUpperCase();
+  return /[A-Z]/.test(letra) ? letra : "#";
+}
+
+function idLetra(letra: string) {
+  return `catalogo-letra-${letra === "#" ? "num" : letra}`;
+}
+
+function irALetra(letra: string) {
+  document.getElementById(idLetra(letra))?.scrollIntoView({ block: "start" });
+}
+
 export default function CatalogoPage() {
   const { bibliotecaActual } = useBiblioteca();
   const [copias, setCopias] = useState<LibroEnBiblioteca[]>([]);
   const [search, setSearch] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("all");
   const [shelfFilter, setShelfFilter] = useState("all");
-  const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newShelf, setNewShelf] = useState("");
   const [shelfCreateOpen, setShelfCreateOpen] = useState(false);
@@ -105,8 +117,34 @@ export default function CatalogoPage() {
     });
   }, [copias, globales, search, filtro, shelfFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE));
-  const pageItems = filtrados.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const ordenados = useMemo(() => {
+    const collator = new Intl.Collator("es", { sensitivity: "base" });
+    return [...filtrados].sort((a, b) => {
+      const ta = globales[a.isbn]?.titulo ?? "";
+      const tb = globales[b.isbn]?.titulo ?? "";
+      return collator.compare(ta, tb);
+    });
+  }, [filtrados, globales]);
+
+  const grupos = useMemo(() => {
+    const acumulado: { letra: string; items: LibroEnBiblioteca[] }[] = [];
+    for (const copia of ordenados) {
+      const letra = letraDe(globales[copia.isbn]?.titulo ?? "");
+      const ultimo = acumulado[acumulado.length - 1];
+      if (ultimo?.letra === letra) {
+        ultimo.items.push(copia);
+      } else {
+        acumulado.push({ letra, items: [copia] });
+      }
+    }
+    return acumulado;
+  }, [ordenados, globales]);
+
+  const letrasDisponibles = useMemo(
+    () => grupos.map((g) => g.letra),
+    [grupos]
+  );
+
   const selected = copias.find((c) => c.id === selectedId) ?? null;
 
   async function handleCreateShelf() {
@@ -141,10 +179,7 @@ export default function CatalogoPage() {
           <SearchInput
             placeholder="Buscar por título, autor o género"
             value={search}
-            onValueChange={(v) => {
-              setSearch(v);
-              setPage(1);
-            }}
+            onValueChange={setSearch}
             className="w-[220px]"
           />
           {bibliotecaActual && (
@@ -198,10 +233,7 @@ export default function CatalogoPage() {
         {FILTROS.map((f) => (
           <button
             key={f.key}
-            onClick={() => {
-              setFiltro(f.key);
-              setPage(1);
-            }}
+            onClick={() => setFiltro(f.key)}
             className={cn(
               "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
               filtro === f.key && "border-foreground bg-foreground text-background"
@@ -273,74 +305,72 @@ export default function CatalogoPage() {
         </div>
       )}
 
-      {vista === "grilla" ? (
-        <div className="mb-6 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
-          {pageItems.map((copia) => (
-            <LibroCard
-              key={copia.id}
-              copia={copia}
-              global={globales[copia.isbn]}
-              onClick={() => setSelectedId(copia.id)}
-              onToggleFavorito={() =>
-                toggleFavorito(copia.id, !copia.favorito).catch((err) => {
-                  logError("Error actualizando favorito:", err);
-                  toast.error("No pudimos actualizar el favorito.");
-                })
-              }
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="mb-6 flex flex-col gap-2">
-          {pageItems.map((copia) => (
-            <LibroListItem
-              key={copia.id}
-              copia={copia}
-              global={globales[copia.isbn]}
-              onClick={() => setSelectedId(copia.id)}
-              onToggleFavorito={() =>
-                toggleFavorito(copia.id, !copia.favorito).catch((err) => {
-                  logError("Error actualizando favorito:", err);
-                  toast.error("No pudimos actualizar el favorito.");
-                })
-              }
-            />
-          ))}
-        </div>
-      )}
-
-      {totalPages > 1 && (
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="flex size-8 items-center justify-center rounded-md border text-xs font-medium disabled:opacity-40"
-            aria-label="Página anterior"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-            <button
-              key={n}
-              onClick={() => setPage(n)}
-              className={cn(
-                "size-8 rounded-md border text-xs font-medium",
-                n === page && "border-foreground bg-foreground text-background"
-              )}
+      <div
+        className={cn(
+          "relative mb-16 md:mb-0",
+          letrasDisponibles.length > 3 && "pr-8"
+        )}
+      >
+        {grupos.map((grupo) => (
+          <div key={grupo.letra} className="mb-6">
+            <div
+              id={idLetra(grupo.letra)}
+              className="sticky top-0 z-10 -mx-1 bg-background px-1 py-1.5 text-xs font-bold text-muted-foreground"
             >
-              {n}
-            </button>
-          ))}
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="flex size-8 items-center justify-center rounded-md border text-xs font-medium disabled:opacity-40"
-            aria-label="Página siguiente"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-        </div>
-      )}
+              {grupo.letra}
+            </div>
+            {vista === "grilla" ? (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
+                {grupo.items.map((copia) => (
+                  <LibroCard
+                    key={copia.id}
+                    copia={copia}
+                    global={globales[copia.isbn]}
+                    onClick={() => setSelectedId(copia.id)}
+                    onToggleFavorito={() =>
+                      toggleFavorito(copia.id, !copia.favorito).catch((err) => {
+                        logError("Error actualizando favorito:", err);
+                        toast.error("No pudimos actualizar el favorito.");
+                      })
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {grupo.items.map((copia) => (
+                  <LibroListItem
+                    key={copia.id}
+                    copia={copia}
+                    global={globales[copia.isbn]}
+                    onClick={() => setSelectedId(copia.id)}
+                    onToggleFavorito={() =>
+                      toggleFavorito(copia.id, !copia.favorito).catch((err) => {
+                        logError("Error actualizando favorito:", err);
+                        toast.error("No pudimos actualizar el favorito.");
+                      })
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {letrasDisponibles.length > 3 && (
+          <div className="fixed right-1 top-1/2 z-30 flex max-h-[55vh] -translate-y-1/2 flex-col overflow-y-auto rounded-full bg-background/80 px-0.5 py-1 backdrop-blur-sm">
+            {letrasDisponibles.map((letra) => (
+              <button
+                key={letra}
+                onClick={() => irALetra(letra)}
+                className="px-1 text-[10px] font-semibold leading-[1.4] text-muted-foreground hover:text-foreground"
+              >
+                {letra}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <LibroDetailSheet
         copia={selected}
