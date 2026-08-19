@@ -16,15 +16,16 @@ export function FeedbackButton() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 flex items-center gap-1 rounded-full border bg-card py-1 pl-3 pr-1 shadow-lg md:bottom-4">
+    <div className="fixed bottom-20 right-4 z-50 flex items-center gap-1 rounded-full border bg-card py-1 pl-2.5 pr-1 shadow-lg md:bottom-4 md:pl-3">
       <a
         href={FORM_URL}
         target="_blank"
         rel="noopener noreferrer"
+        aria-label="Danos tu opinión"
         className="flex items-center gap-1.5 text-sm font-medium text-foreground"
       >
         <MessageCircle className="size-4" />
-        Danos tu opinión
+        <span className="hidden md:inline">Danos tu opinión</span>
       </a>
       <button
         onClick={() => {
