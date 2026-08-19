@@ -41,6 +41,7 @@ const en: Dictionary = {
     errorCompletando: "We couldn't complete sign-in. Try again.",
     errorCorreoConfirmVacio: "Enter your email to confirm.",
     errorLinkInvalido: "The link is invalid or expired. Request a new one.",
+    volverInicio: "Back to home",
   },
   cuenta: {
     titulo: "My account",

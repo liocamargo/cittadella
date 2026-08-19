@@ -41,6 +41,7 @@ const it: Dictionary = {
     errorCompletando: "Non siamo riusciti a completare l'accesso. Riprova.",
     errorCorreoConfirmVacio: "Inserisci la tua email per confermare.",
     errorLinkInvalido: "Il link non è valido o è scaduto. Richiedine uno nuovo.",
+    volverInicio: "Torna alla home",
   },
   cuenta: {
     titulo: "Il mio account",

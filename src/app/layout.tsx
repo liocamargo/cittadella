@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Fraunces, Inter, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LocaleProvider } from "@/hooks/use-locale";
@@ -65,6 +66,18 @@ export default function RootLayout({
       className={`${inter.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-0C8J9E3BZR"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-0C8J9E3BZR');
+          `}
+        </Script>
         <AuthProvider>
           <LocaleProvider>
             {children}

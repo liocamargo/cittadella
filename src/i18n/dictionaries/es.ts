@@ -39,6 +39,7 @@ const es = {
     errorCompletando: "No pudimos completar el ingreso. Probá de nuevo.",
     errorCorreoConfirmVacio: "Ingresá tu correo para confirmar.",
     errorLinkInvalido: "El link no es válido o expiró. Pedí uno nuevo.",
+    volverInicio: "Volver al inicio",
   },
   cuenta: {
     titulo: "Mi cuenta",

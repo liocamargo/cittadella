@@ -131,8 +131,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen w-full items-center justify-center bg-background px-4">
       <div className="flex w-full max-w-[380px] flex-col gap-6 rounded-xl border bg-card p-9 shadow-sm">
         <div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Cittadella" className="mb-3 h-9 w-auto" />
+          <Link href="/">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Cittadella" className="mb-3 h-9 w-auto" />
+          </Link>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("login.subtitulo")}
           </p>
@@ -213,6 +215,13 @@ export default function LoginPage() {
           </Link>
           .
         </p>
+
+        <Link
+          href="/"
+          className="text-center text-sm text-muted-foreground underline"
+        >
+          {t("login.volverInicio")}
+        </Link>
       </div>
     </div>
   );
