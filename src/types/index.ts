@@ -25,6 +25,8 @@ export interface LibroGlobal {
   genero?: string;
   sinopsis?: string;
   portadaUrl?: string;
+  /** Link de vista previa en Google Books, si esa edición tiene una disponible. */
+  previewLink?: string;
   propietarios: number;
   ratingPromedio: number;
   totalResenas: number;

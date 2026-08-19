@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check, Pencil, Star, Trash2 } from "lucide-react";
+import { BookOpen, Check, Pencil, Star, Trash2 } from "lucide-react";
 import { logError } from "@/lib/log";
 import {
   Sheet,
@@ -261,6 +261,7 @@ export function LibroDetailSheet({
   }
 
   function handleDatosEncontrados(datos: DatosComunidad) {
+    if (!copia) return;
     setFormEdit((f) => ({
       ...f,
       titulo: datos.titulo || f.titulo,
@@ -277,6 +278,11 @@ export function LibroDetailSheet({
     if (datos.portadaUrl && !global?.portadaUrl) {
       handleActualizarPortada(datos.portadaUrl);
     }
+    if (datos.previewLink && !global?.previewLink) {
+      actualizarLibroGlobal(copia.isbn, { previewLink: datos.previewLink }).catch((err) => {
+        logError("Error actualizando el link de vista previa:", err);
+      });
+    }
   }
 
   async function handleActualizarPortada(url: string) {
@@ -290,6 +296,11 @@ export function LibroDetailSheet({
   }
 
   const inicial = (global?.titulo ?? "?").trim().charAt(0).toUpperCase();
+  const linkLectura =
+    global?.previewLink ??
+    (global?.titulo
+      ? `https://www.google.com/search?q=${encodeURIComponent(`${global.titulo} ${global.autor ?? ""} libro`)}`
+      : undefined);
 
   return (
     <Sheet open={Boolean(copia)} onOpenChange={(open) => !open && onClose()}>
@@ -365,6 +376,18 @@ export function LibroDetailSheet({
           )}
           {global?.sinopsis && (
             <p className="text-sm leading-relaxed">{global.sinopsis}</p>
+          )}
+
+          {linkLectura && (
+            <a
+              href={linkLectura}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-primary underline"
+            >
+              <BookOpen className="size-3.5" />
+              {global?.previewLink ? "Leer online" : "Buscarlo"}
+            </a>
           )}
 
           <div className="flex gap-4 border-y py-3">

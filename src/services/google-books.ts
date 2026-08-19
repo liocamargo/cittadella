@@ -13,6 +13,7 @@ interface GoogleBooksVolumeInfo {
   language?: string;
   imageLinks?: { thumbnail?: string; smallThumbnail?: string };
   industryIdentifiers?: { type: string; identifier: string }[];
+  previewLink?: string;
 }
 
 interface GoogleBooksVolume {
@@ -72,6 +73,7 @@ function mapVolumeInfo(info: GoogleBooksVolumeInfo): DatosComunidad {
     genero: info.categories?.[0],
     sinopsis: info.description,
     portadaUrl: info.imageLinks?.thumbnail?.replace("http://", "https://"),
+    previewLink: info.previewLink,
   };
 }
 

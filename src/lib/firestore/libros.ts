@@ -38,6 +38,7 @@ function toLibroGlobal(isbn: string, data: Record<string, unknown>): LibroGlobal
     genero: data.genero as string | undefined,
     sinopsis: data.sinopsis as string | undefined,
     portadaUrl: data.portadaUrl as string | undefined,
+    previewLink: data.previewLink as string | undefined,
     propietarios: (data.propietarios as number) ?? 0,
     ratingPromedio: (data.ratingPromedio as number) ?? 0,
     totalResenas: (data.totalResenas as number) ?? 0,
@@ -128,6 +129,7 @@ export interface DatosComunidad {
   genero?: string;
   sinopsis?: string;
   portadaUrl?: string;
+  previewLink?: string;
 }
 
 export interface DatosCopia {
