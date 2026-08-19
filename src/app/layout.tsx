@@ -4,6 +4,7 @@ import { Fraunces, Inter, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LocaleProvider } from "@/hooks/use-locale";
 import { Toaster } from "@/components/ui/sonner";
+import { FeedbackButton } from "@/components/feedback-button";
 import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
@@ -84,6 +85,7 @@ export default function RootLayout({
           <LocaleProvider>
             {children}
             <Toaster position="top-right" />
+            <FeedbackButton />
           </LocaleProvider>
         </AuthProvider>
       </body>
