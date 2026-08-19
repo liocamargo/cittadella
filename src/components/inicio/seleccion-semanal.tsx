@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { getSeleccionSemanal } from "@/lib/firestore/libros";
 import type { LibroGlobal } from "@/types";
 
@@ -99,15 +100,12 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
               <p className="leading-relaxed">{seleccionado.sinopsis}</p>
             )}
             {linkLectura && (
-              <a
-                href={linkLectura}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-primary underline"
-              >
-                <BookOpen className="size-3.5" />
-                {seleccionado?.previewLink ? "Leer online" : "Buscarlo"}
-              </a>
+              <Button asChild variant="outline" className="w-full">
+                <a href={linkLectura} target="_blank" rel="noopener noreferrer">
+                  <BookOpen className="size-4" />
+                  {seleccionado?.previewLink ? "Leer online" : "Buscarlo"}
+                </a>
+              </Button>
             )}
             <div className="flex gap-5 border-t pt-3">
               <div>

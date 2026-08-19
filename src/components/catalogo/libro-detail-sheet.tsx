@@ -379,15 +379,12 @@ export function LibroDetailSheet({
           )}
 
           {linkLectura && (
-            <a
-              href={linkLectura}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-primary underline"
-            >
-              <BookOpen className="size-3.5" />
-              {global?.previewLink ? "Leer online" : "Buscarlo"}
-            </a>
+            <Button asChild variant="outline" className="w-full">
+              <a href={linkLectura} target="_blank" rel="noopener noreferrer">
+                <BookOpen className="size-4" />
+                {global?.previewLink ? "Leer online" : "Buscarlo"}
+              </a>
+            </Button>
           )}
 
           <div className="flex gap-4 border-y py-3">

@@ -470,6 +470,7 @@ export default function LandingPage() {
               <a href="#prestamos">Préstamos</a>
               <a href="#publico">Catálogo público</a>
               <a href="#comunidad">Comunidad</a>
+              <Link href="/alternativa-a-libib">Alternativa a Libib</Link>
               <Link href="/privacidad">Privacidad</Link>
             </div>
             <span>
