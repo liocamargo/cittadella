@@ -18,10 +18,6 @@ service cloud.firestore {
         request.auth.token.email in biblioteca.data.invitacionesPendientes;
     }
 
-    function isPublic(bibliotecaId) {
-      return get(/databases/$(database)/documents/Bibliotecas/$(bibliotecaId)).data.catalogoPublico == true;
-    }
-
     // Catálogo comunitario de libros, indexado por ISBN. Lectura pública
     // (permite links de solo lectura y ver ratings/dueños antes de loguearse).
     // Escritura: cualquier usuario logueado puede crear o enriquecer un libro
@@ -44,14 +40,14 @@ service cloud.firestore {
     // biblioteca; cualquier usuario logueado puede crear una nueva
     // agregándose a sí mismo como miembro. Un usuario invitado por email
     // (todavía no es miembro) puede leer/actualizar el doc únicamente para
-    // auto-aceptar la invitación (ver aceptarInvitacionesPendientes). Si
-    // catalogoPublico es true, cualquiera (sin login) puede leer el doc
-    // para ver el nombre en la página pública /compartido/{id}.
+    // auto-aceptar la invitación (ver aceptarInvitacionesPendientes). El
+    // documento completo NUNCA es de lectura pública: incluye emails y
+    // WhatsApp de todos los miembros e invitaciones pendientes. La página
+    // pública /compartido/{id} se sirve vía /api/catalogo/{id} (Admin SDK),
+    // que expone solo una proyección segura (nombre y contacto del dueño).
     match /Bibliotecas/{bibliotecaId} {
-      allow read: if
-        (signedIn() &&
-          (request.auth.uid in resource.data.miembrosUids || isInvitedTo(resource))) ||
-        resource.data.catalogoPublico == true;
+      allow read: if signedIn() &&
+        (request.auth.uid in resource.data.miembrosUids || isInvitedTo(resource));
       allow update: if signedIn() &&
         (request.auth.uid in resource.data.miembrosUids || isInvitedTo(resource));
       allow delete: if signedIn() && request.auth.uid in resource.data.miembrosUids;
@@ -60,12 +56,12 @@ service cloud.firestore {
         request.resource.data.creadaPor == request.auth.uid;
     }
 
-    // Inventario físico: los miembros pueden leer/escribir. Si la biblioteca
-    // dueña tiene catalogoPublico=true, cualquiera puede leer (solo lectura)
-    // para la página pública /compartido/{id}.
+    // Inventario físico: solo los miembros pueden leer/escribir. Incluye
+    // notas privadas y a quién se le prestó cada copia, así que tampoco es
+    // de lectura pública ni siquiera con catalogoPublico=true (ver
+    // /api/catalogo/{id} para la proyección pública segura).
     match /Libros_En_Biblioteca/{copiaId} {
-      allow read: if isMemberOf(resource.data.bibliotecaId) ||
-        isPublic(resource.data.bibliotecaId);
+      allow read: if isMemberOf(resource.data.bibliotecaId);
       allow update, delete: if isMemberOf(resource.data.bibliotecaId);
       allow create: if isMemberOf(request.resource.data.bibliotecaId);
     }

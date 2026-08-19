@@ -75,7 +75,9 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-0C8J9E3BZR');
+            gtag('config', 'G-0C8J9E3BZR', {
+              page_location: window.location.origin + window.location.pathname
+            });
           `}
         </Script>
         <AuthProvider>

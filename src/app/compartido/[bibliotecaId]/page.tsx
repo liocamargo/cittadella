@@ -12,11 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { listenBiblioteca } from "@/lib/firestore/bibliotecas";
 import { cn, normalizarBusqueda } from "@/lib/utils";
-import { listenInventario } from "@/lib/firestore/libros";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
-import type { Biblioteca, LibroEnBiblioteca } from "@/types";
+import type { CatalogoPublicoResponse, LibroCatalogoPublico } from "@/app/api/catalogo/[bibliotecaId]/route";
 
 const PAGE_SIZE = 16;
 type Filtro = "all" | "disponible" | "prestado";
@@ -31,28 +29,34 @@ export default function CatalogoPublicoPage() {
   const params = useParams<{ bibliotecaId: string }>();
   const bibliotecaId = params.bibliotecaId;
 
-  const [biblioteca, setBiblioteca] = useState<Biblioteca | null | undefined>(
+  const [catalogo, setCatalogo] = useState<CatalogoPublicoResponse | null | undefined>(
     undefined
   );
-  const [copias, setCopias] = useState<LibroEnBiblioteca[]>([]);
   const [search, setSearch] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("all");
   const [page, setPage] = useState(1);
-  const [seleccionada, setSeleccionada] = useState<LibroEnBiblioteca | null>(null);
+  const [seleccionada, setSeleccionada] = useState<LibroCatalogoPublico | null>(null);
 
   useEffect(() => {
-    return listenBiblioteca(bibliotecaId, setBiblioteca);
+    let cancelado = false;
+    fetch(`/api/catalogo/${bibliotecaId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: CatalogoPublicoResponse | null) => {
+        if (!cancelado) setCatalogo(data);
+      })
+      .catch(() => {
+        if (!cancelado) setCatalogo(null);
+      });
+    return () => {
+      cancelado = true;
+    };
   }, [bibliotecaId]);
 
-  useEffect(() => {
-    if (!biblioteca?.catalogoPublico) return;
-    return listenInventario(bibliotecaId, setCopias);
-  }, [biblioteca, bibliotecaId]);
-
+  const copias = catalogo?.libros ?? [];
   const isbns = copias.map((c) => c.isbn);
   const globales = useLibrosGlobales(isbns);
 
-  if (biblioteca === undefined) {
+  if (catalogo === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -60,7 +64,7 @@ export default function CatalogoPublicoPage() {
     );
   }
 
-  if (!biblioteca || !biblioteca.catalogoPublico) {
+  if (!catalogo) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4 text-center">
         <p className="text-sm text-muted-foreground">
@@ -92,14 +96,11 @@ export default function CatalogoPublicoPage() {
 
   const detalle = seleccionada ? globales[seleccionada.isbn] : undefined;
 
-  const nombreDueño =
-    biblioteca.nombresMiembros[biblioteca.creadaPor] ??
-    biblioteca.emailsMiembros[biblioteca.creadaPor] ??
-    "";
-  const whatsappDueño = biblioteca.whatsappMiembros[biblioteca.creadaPor] ?? "";
-  const emailDueño = biblioteca.emailsMiembros[biblioteca.creadaPor] ?? "";
+  const nombreDueño = catalogo.bibliotecarioNombre;
+  const whatsappDueño = catalogo.bibliotecarioWhatsapp;
+  const emailDueño = catalogo.bibliotecarioEmail;
 
-  const mensajePedido = `Hola! Vi "${detalle?.titulo ?? "un libro"}" en el catálogo de ${biblioteca.nombre} y quería consultar si está disponible para pedir.`;
+  const mensajePedido = `Hola! Vi "${detalle?.titulo ?? "un libro"}" en el catálogo de ${catalogo.nombre} y quería consultar si está disponible para pedir.`;
   const linkWhatsapp = whatsappDueño
     ? `https://wa.me/${whatsappDueño.replace(/\D/g, "")}?text=${encodeURIComponent(mensajePedido)}`
     : null;
@@ -118,7 +119,7 @@ export default function CatalogoPublicoPage() {
             Catálogo público · solo lectura
           </span>
         </div>
-        <h1 className="mb-1 text-2xl font-bold">{biblioteca.nombre}</h1>
+        <h1 className="mb-1 text-2xl font-bold">{catalogo.nombre}</h1>
         {nombreDueño && (
           <p className="mb-6 text-sm text-muted-foreground">
             Bibliotecario: {nombreDueño}
