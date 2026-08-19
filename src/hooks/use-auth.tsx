@@ -3,8 +3,10 @@
 import {
   GoogleAuthProvider,
   type User,
+  deleteUser,
   isSignInWithEmailLink,
   onAuthStateChanged,
+  reauthenticateWithPopup,
   sendSignInLinkToEmail,
   signInWithEmailLink,
   signInWithPopup,
@@ -31,6 +33,10 @@ interface AuthContextValue {
   isEmailSignInLink: (url: string) => boolean;
   completeEmailLinkSignIn: (url: string, email?: string) => Promise<void>;
   signOutUser: () => Promise<void>;
+  /** Borra el usuario de Firebase Auth. Si el login no es reciente, intenta
+   *  reautenticar (Google) y reintenta una vez; si no puede, tira
+   *  Error("NEEDS_RELOGIN") para que quien llama pida volver a iniciar sesión. */
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -78,6 +84,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       async signOutUser() {
         await signOut(auth);
+      },
+      async deleteAccount() {
+        const current = auth.currentUser;
+        if (!current) return;
+        try {
+          await deleteUser(current);
+        } catch (err) {
+          const code = (err as { code?: string })?.code;
+          if (code !== "auth/requires-recent-login") throw err;
+
+          const esGoogle = current.providerData.some(
+            (p) => p.providerId === "google.com"
+          );
+          if (!esGoogle) throw new Error("NEEDS_RELOGIN");
+
+          await reauthenticateWithPopup(current, new GoogleAuthProvider());
+          await deleteUser(current);
+        }
       },
     }),
     [user, loading]

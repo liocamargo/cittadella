@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { LocaleSelect } from "@/components/cuenta/locale-select";
 import { LocaleMultiSelect } from "@/components/cuenta/locale-multi-select";
 import { GeneroMultiSelect } from "@/components/cuenta/genero-multi-select";
+import { EliminarCuentaDialog } from "@/components/cuenta/eliminar-cuenta-dialog";
 import { listenPerfil, guardarPerfil } from "@/lib/firestore/perfiles";
 
 export default function CuentaPage() {
@@ -72,6 +73,10 @@ export default function CuentaPage() {
       <p className="mt-8 text-xs text-muted-foreground">
         {t("cuenta.conectadoComo")} <strong>{user?.email}</strong>
       </p>
+
+      <div className="max-w-md">
+        <EliminarCuentaDialog />
+      </div>
     </div>
   );
 }
