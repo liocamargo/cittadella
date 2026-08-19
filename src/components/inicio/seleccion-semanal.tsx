@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BookOpen } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,14 @@ import {
 } from "@/components/ui/dialog";
 import { getSeleccionSemanal } from "@/lib/firestore/libros";
 import type { LibroGlobal } from "@/types";
+
+function linkLecturaDe(libro: LibroGlobal | null) {
+  if (!libro) return undefined;
+  return (
+    libro.previewLink ??
+    `https://www.google.com/search?q=${encodeURIComponent(`${libro.titulo} ${libro.autor ?? ""} libro`)}`
+  );
+}
 
 interface SeleccionSemanalProps {
   isbnsPropios: string[];
@@ -31,6 +40,8 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
   }, [key]);
 
   if (libros !== null && libros.length === 0) return null;
+
+  const linkLectura = linkLecturaDe(seleccionado);
 
   return (
     <div>
@@ -86,6 +97,17 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
             <div className="text-muted-foreground">{seleccionado?.autor}</div>
             {seleccionado?.sinopsis && (
               <p className="leading-relaxed">{seleccionado.sinopsis}</p>
+            )}
+            {linkLectura && (
+              <a
+                href={linkLectura}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-primary underline"
+              >
+                <BookOpen className="size-3.5" />
+                {seleccionado?.previewLink ? "Leer online" : "Buscarlo"}
+              </a>
             )}
             <div className="flex gap-5 border-t pt-3">
               <div>

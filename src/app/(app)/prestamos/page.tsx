@@ -160,11 +160,20 @@ export default function PrestamosPage() {
           const inicial = (global?.titulo ?? "?").trim().charAt(0).toUpperCase();
           return (
             <div key={copia.id} className="flex flex-col gap-2">
-              <div className="flex aspect-[3/4.2] items-center justify-center rounded-lg border bg-muted">
-                <span className="text-[26px] font-bold text-muted-foreground/60">
-                  {inicial}
-                </span>
-              </div>
+              {global?.portadaUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={global.portadaUrl}
+                  alt={global.titulo}
+                  className="aspect-[3/4.2] w-full rounded-lg border object-cover"
+                />
+              ) : (
+                <div className="flex aspect-[3/4.2] items-center justify-center rounded-lg border bg-muted">
+                  <span className="text-[26px] font-bold text-muted-foreground/60">
+                    {inicial}
+                  </span>
+                </div>
+              )}
               <div className="text-[13px] font-semibold leading-tight">
                 {global?.titulo}
               </div>
