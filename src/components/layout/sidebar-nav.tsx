@@ -231,7 +231,7 @@ export function SidebarNav() {
       </aside>
 
       {/* Mobile: header fijo arriba — menú | título | cuenta */}
-      <header className="fixed inset-x-0 top-0 z-40 grid grid-cols-[auto_1fr_auto] items-center gap-2 border-b bg-background px-3 py-2.5 md:hidden">
+      <header className="fixed inset-x-0 top-0 z-40 grid h-16 grid-cols-[auto_1fr_auto] items-center gap-2 border-b bg-background px-3 md:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex size-8 items-center justify-center rounded-md border text-muted-foreground">
