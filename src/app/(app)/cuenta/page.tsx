@@ -38,7 +38,7 @@ export default function CuentaPage() {
       <h1 className="text-2xl font-bold">{t("cuenta.titulo")}</h1>
       <p className="mb-7 mt-1 text-sm text-muted-foreground">{t("cuenta.subtitulo")}</p>
 
-      <div className="flex max-w-md flex-col gap-6">
+      <div className="flex flex-col gap-6">
         <div>
           <Label className="mb-1.5 block text-sm font-semibold">
             {t("cuenta.idiomaPagina")}
@@ -74,9 +74,7 @@ export default function CuentaPage() {
         {t("cuenta.conectadoComo")} <strong>{user?.email}</strong>
       </p>
 
-      <div className="max-w-md">
-        <EliminarCuentaDialog />
-      </div>
+      <EliminarCuentaDialog />
     </div>
   );
 }
