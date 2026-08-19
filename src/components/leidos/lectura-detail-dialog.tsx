@@ -34,6 +34,7 @@ const CAMPOS_EDITABLES = {
   titulo: "",
   subtitulo: "",
   autor: "",
+  ilustrador: "",
   editorial: "",
   anio: "",
   paginas: "",
@@ -87,6 +88,7 @@ export function LecturaDetailDialog({
       titulo: global?.titulo ?? "",
       subtitulo: global?.subtitulo ?? "",
       autor: global?.autor ?? "",
+      ilustrador: global?.ilustrador ?? "",
       editorial: global?.editorial ?? "",
       anio: global?.anio ?? "",
       paginas: global?.paginas ?? "",
@@ -126,6 +128,7 @@ export function LecturaDetailDialog({
         titulo: formEdit.titulo.trim(),
         subtitulo: formEdit.subtitulo.trim() || undefined,
         autor: formEdit.autor.trim(),
+        ilustrador: formEdit.ilustrador.trim() || undefined,
         editorial: formEdit.editorial.trim() || undefined,
         anio: formEdit.anio.trim() || undefined,
         paginas: formEdit.paginas.trim() || undefined,
@@ -230,6 +233,12 @@ export function LecturaDetailDialog({
                   list="sugerencias-autor"
                 />
               </FieldEdit>
+              <FieldEdit label="Ilustrador(es)">
+                <Input
+                  value={formEdit.ilustrador}
+                  onChange={(e) => setCampoEdit("ilustrador", e.target.value)}
+                />
+              </FieldEdit>
               <div className="flex gap-2">
                 <FieldEdit label="Editorial" className="flex-[2]">
                   <Input
@@ -302,6 +311,11 @@ export function LecturaDetailDialog({
                 )}
                 <div>
                   <div className="text-muted-foreground">{global?.autor}</div>
+                  {global?.ilustrador && (
+                    <div className="text-xs text-muted-foreground">
+                      Ilustrado por {global.ilustrador}
+                    </div>
+                  )}
                   <div className="mt-1 text-xs text-muted-foreground">
                     ★ {global?.ratingPromedio ?? 0} ({global?.totalResenas ?? 0} reseña(s)) ·{" "}
                     {global?.propietarios ?? 0} biblioteca(s) lo tienen

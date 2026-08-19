@@ -17,6 +17,7 @@ export interface LibroGlobal {
   titulo: string;
   subtitulo?: string;
   autor: string;
+  ilustrador?: string;
   editorial?: string;
   anio?: string;
   paginas?: string;

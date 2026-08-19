@@ -40,6 +40,7 @@ const FORM_INICIAL = {
   titulo: "",
   subtitulo: "",
   autor: "",
+  ilustrador: "",
   editorial: "",
   anio: "",
   paginas: "",
@@ -86,6 +87,7 @@ export default function AgregarLeidoPage() {
           titulo: local.titulo,
           subtitulo: local.subtitulo ?? "",
           autor: local.autor,
+          ilustrador: local.ilustrador ?? "",
           editorial: local.editorial ?? "",
           anio: local.anio ?? "",
           paginas: local.paginas ?? "",
@@ -219,6 +221,7 @@ export default function AgregarLeidoPage() {
         titulo: (form.titulo ?? "").trim(),
         subtitulo: (form.subtitulo ?? "").trim() || undefined,
         autor: (form.autor ?? "").trim(),
+        ilustrador: (form.ilustrador ?? "").trim() || undefined,
         editorial: (form.editorial ?? "").trim() || undefined,
         anio: (form.anio ?? "").trim() || undefined,
         paginas: (form.paginas ?? "").trim() || undefined,
@@ -379,6 +382,13 @@ export default function AgregarLeidoPage() {
               value={form.autor}
               onChange={(e) => setCampo("autor", e.target.value)}
               list="sugerencias-autor"
+            />
+          </Field>
+          <Field label="Ilustrador(es) (opcional)">
+            <Input
+              placeholder="separados por coma"
+              value={form.ilustrador}
+              onChange={(e) => setCampo("ilustrador", e.target.value)}
             />
           </Field>
           <div className="flex gap-3">

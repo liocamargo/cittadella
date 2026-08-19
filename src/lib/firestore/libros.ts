@@ -30,6 +30,7 @@ function toLibroGlobal(isbn: string, data: Record<string, unknown>): LibroGlobal
     titulo: (data.titulo as string) ?? "",
     subtitulo: data.subtitulo as string | undefined,
     autor: (data.autor as string) ?? "",
+    ilustrador: data.ilustrador as string | undefined,
     editorial: data.editorial as string | undefined,
     anio: data.anio as string | undefined,
     paginas: data.paginas as string | undefined,
@@ -121,6 +122,7 @@ export interface DatosComunidad {
   titulo: string;
   subtitulo?: string;
   autor: string;
+  ilustrador?: string;
   editorial?: string;
   anio?: string;
   paginas?: string;

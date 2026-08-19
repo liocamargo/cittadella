@@ -60,6 +60,7 @@ const CAMPOS_EDITABLES = {
   titulo: "",
   subtitulo: "",
   autor: "",
+  ilustrador: "",
   editorial: "",
   anio: "",
   paginas: "",
@@ -135,6 +136,7 @@ export function LibroDetailSheet({
       titulo: global?.titulo ?? "",
       subtitulo: global?.subtitulo ?? "",
       autor: global?.autor ?? "",
+      ilustrador: global?.ilustrador ?? "",
       editorial: global?.editorial ?? "",
       anio: global?.anio ?? "",
       paginas: global?.paginas ?? "",
@@ -161,6 +163,7 @@ export function LibroDetailSheet({
         titulo: formEdit.titulo.trim(),
         subtitulo: formEdit.subtitulo.trim() || undefined,
         autor: formEdit.autor.trim(),
+        ilustrador: formEdit.ilustrador.trim() || undefined,
         editorial: formEdit.editorial.trim() || undefined,
         anio: formEdit.anio.trim() || undefined,
         paginas: formEdit.paginas.trim() || undefined,
@@ -418,6 +421,11 @@ export function LibroDetailSheet({
             <div>
               <strong>ISBN:</strong> {copia.isbn || "—"}
             </div>
+            {global?.ilustrador && (
+              <div>
+                <strong>Ilustrador:</strong> {global.ilustrador}
+              </div>
+            )}
             <div>
               <strong>Editorial:</strong> {global?.editorial || "—"}
             </div>
@@ -631,6 +639,12 @@ export function LibroDetailSheet({
                 value={formEdit.autor}
                 onChange={(e) => setCampoEdit("autor", e.target.value)}
                 list="sugerencias-autor"
+              />
+            </FieldEdit>
+            <FieldEdit label="Ilustrador(es)">
+              <Input
+                value={formEdit.ilustrador}
+                onChange={(e) => setCampoEdit("ilustrador", e.target.value)}
               />
             </FieldEdit>
             <div className="flex gap-3">
