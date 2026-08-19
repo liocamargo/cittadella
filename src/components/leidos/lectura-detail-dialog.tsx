@@ -15,15 +15,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocale } from "@/hooks/use-locale";
 import { useSugerenciasComunidad } from "@/hooks/use-sugerencias-comunidad";
 import {
   actualizarLibroGlobal,
   listenResenas,
   publicarResena,
+  type DatosComunidad,
 } from "@/lib/firestore/libros";
 import { quitarLectura } from "@/lib/firestore/lecturas";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
 import { GeneroSelect } from "@/components/catalogo/genero-select";
+import { BuscarMasInformacion } from "@/components/catalogo/buscar-mas-informacion";
 import { RatingCara, RatingCaraPicker } from "@/components/catalogo/rating-cara";
 import type { LibroGlobal, Resena } from "@/types";
 
@@ -52,6 +55,7 @@ export function LecturaDetailDialog({
   onClose,
 }: LecturaDetailDialogProps) {
   const { user } = useAuth();
+  const { localeLectura } = useLocale();
   const { autores: sugerenciasAutor, editoriales: sugerenciasEditorial } =
     useSugerenciasComunidad();
   const [resenas, setResenas] = useState<Resena[]>([]);
@@ -92,6 +96,22 @@ export function LecturaDetailDialog({
       sinopsis: global?.sinopsis ?? "",
     });
     setEditando(true);
+  }
+
+  function handleDatosEncontrados(datos: DatosComunidad) {
+    setFormEdit((f) => ({
+      ...f,
+      titulo: datos.titulo || f.titulo,
+      subtitulo: datos.subtitulo ?? f.subtitulo,
+      autor: datos.autor || f.autor,
+      editorial: datos.editorial ?? f.editorial,
+      anio: datos.anio ?? f.anio,
+      paginas: datos.paginas ?? f.paginas,
+      volumen: datos.volumen ?? f.volumen,
+      idioma: datos.idioma ?? f.idioma,
+      genero: datos.genero ?? f.genero,
+      sinopsis: datos.sinopsis ?? f.sinopsis,
+    }));
   }
 
   async function handleGuardarEdicion() {
@@ -186,6 +206,11 @@ export function LecturaDetailDialog({
                   Cancelar
                 </Button>
               </div>
+              <BuscarMasInformacion
+                isbn={isbn}
+                idiomasLectura={localeLectura}
+                onEncontrado={handleDatosEncontrados}
+              />
               <FieldEdit label="Título">
                 <Input
                   value={formEdit.titulo}

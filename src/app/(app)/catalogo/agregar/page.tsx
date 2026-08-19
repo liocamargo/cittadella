@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, PenLine, Plus, ScanBarcode } from "lucide-react";
+import { ArrowLeft, Loader2, PenLine, Plus, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,7 +26,11 @@ import {
   getLibroGlobal,
 } from "@/lib/firestore/libros";
 import { agregarEstante } from "@/lib/firestore/bibliotecas";
-import { buscarPorIsbn, type ResultadoBusquedaTitulo } from "@/services/google-books";
+import {
+  buscarPorIsbn,
+  mensajeErrorBusqueda,
+  type ResultadoBusquedaTitulo,
+} from "@/services/google-books";
 import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
@@ -166,7 +170,9 @@ export default function AgregarLibroPage() {
           }
         } catch (err) {
           logError("Error consultando el ISBN:", err);
-          toast.error("No pudimos consultar el ISBN. Cargá los datos manualmente.");
+          toast.error(
+            mensajeErrorBusqueda(err, "No pudimos consultar el ISBN. Cargá los datos manualmente.")
+          );
           setForm({ ...FORM_INICIAL });
         }
       }
@@ -345,7 +351,16 @@ export default function AgregarLibroPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Agregar libro</h1>
+      <div className="mb-1 flex items-center gap-2">
+        <button
+          onClick={() => router.push("/catalogo")}
+          className="flex size-8 items-center justify-center rounded-md border text-muted-foreground hover:bg-accent hover:text-foreground"
+          aria-label="Volver al catálogo"
+        >
+          <ArrowLeft className="size-4" />
+        </button>
+        <h1 className="text-2xl font-bold">Agregar libro</h1>
+      </div>
       <p className="mb-4 mt-1 text-sm text-muted-foreground">
         Escaneá el código o buscá el ISBN. Si no lo tenés, podés cargar el libro a mano sin ISBN.
       </p>
@@ -589,7 +604,7 @@ export default function AgregarLibroPage() {
       )}
 
       {paso === "formulario" && (
-        <div className="sticky bottom-0 -mx-5 flex gap-2.5 border-t bg-background px-5 py-3 md:-mx-12 md:px-12">
+        <div className="sticky bottom-0 -mx-5 -mb-24 flex gap-2.5 border-t bg-background px-5 pt-3 pb-24 md:-mx-12 md:-mb-12 md:px-12 md:pb-3">
           <Button variant="outline" onClick={() => setPaso("buscar")}>
             Cancelar
           </Button>
@@ -603,7 +618,6 @@ export default function AgregarLibroPage() {
         open={portadaPickerOpen}
         onOpenChange={setPortadaPickerOpen}
         consultaInicial={form.titulo || form.autor}
-        isbn={isbn}
         onSeleccionar={(url) => setCampo("portadaUrl", url)}
       />
 

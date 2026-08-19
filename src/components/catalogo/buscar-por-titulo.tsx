@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { logError } from "@/lib/log";
 import {
   buscarPorTitulo,
+  mensajeErrorBusqueda,
   type ResultadoBusquedaTitulo,
 } from "@/services/google-books";
 
@@ -34,7 +35,7 @@ export function BuscarPorTitulo({ idiomasLectura, onSeleccionar }: BuscarPorTitu
       setResultados(encontrados);
     } catch (err) {
       logError("Error buscando por título:", err);
-      toast.error("No pudimos buscar por título. Probá de nuevo.");
+      toast.error(mensajeErrorBusqueda(err, "No pudimos buscar por título. Probá de nuevo."));
     } finally {
       setBuscando(false);
     }

@@ -39,7 +39,7 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
         Libros que otras bibliotecas de la comunidad tienen y vos todavía no.
       </p>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-4">
-        {(libros ?? Array.from({ length: 7 })).map((libro, i) =>
+        {(libros ?? Array.from({ length: 8 })).map((libro, i) =>
           libro ? (
             <button
               key={libro.isbn}

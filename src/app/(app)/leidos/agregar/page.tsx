@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, PenLine, ScanBarcode } from "lucide-react";
+import { ArrowLeft, Loader2, PenLine, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,11 @@ import {
   getLibroGlobal,
   publicarResena,
 } from "@/lib/firestore/libros";
-import { buscarPorIsbn, type ResultadoBusquedaTitulo } from "@/services/google-books";
+import {
+  buscarPorIsbn,
+  mensajeErrorBusqueda,
+  type ResultadoBusquedaTitulo,
+} from "@/services/google-books";
 import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { RatingCaraPicker } from "@/components/catalogo/rating-cara";
@@ -116,7 +120,9 @@ export default function AgregarLeidoPage() {
           }
         } catch (err) {
           logError("Error consultando el ISBN:", err);
-          toast.error("No pudimos consultar el ISBN. Cargá los datos manualmente.");
+          toast.error(
+            mensajeErrorBusqueda(err, "No pudimos consultar el ISBN. Cargá los datos manualmente.")
+          );
           setForm({ ...FORM_INICIAL });
         }
       }
@@ -246,7 +252,16 @@ export default function AgregarLeidoPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Agregar a leídos</h1>
+      <div className="mb-1 flex items-center gap-2">
+        <button
+          onClick={() => router.push("/leidos")}
+          className="flex size-8 items-center justify-center rounded-md border text-muted-foreground hover:bg-accent hover:text-foreground"
+          aria-label="Volver a leídos"
+        >
+          <ArrowLeft className="size-4" />
+        </button>
+        <h1 className="text-2xl font-bold">Agregar a leídos</h1>
+      </div>
       <p className="mb-7 mt-1 text-sm text-muted-foreground">
         Para libros que leíste pero no tenés en tu biblioteca. No se agrega a
         ningún inventario físico.
@@ -407,7 +422,7 @@ export default function AgregarLeidoPage() {
       )}
 
       {paso === "formulario" && (
-        <div className="sticky bottom-0 -mx-5 flex gap-2.5 border-t bg-background px-5 py-3 md:-mx-12 md:px-12">
+        <div className="sticky bottom-0 -mx-5 -mb-24 flex gap-2.5 border-t bg-background px-5 pt-3 pb-24 md:-mx-12 md:-mb-12 md:px-12 md:pb-3">
           <Button variant="outline" onClick={() => setPaso("buscar")}>
             Cancelar
           </Button>
@@ -421,7 +436,6 @@ export default function AgregarLeidoPage() {
         open={portadaPickerOpen}
         onOpenChange={setPortadaPickerOpen}
         consultaInicial={form.titulo || form.autor}
-        isbn={isbn}
         onSeleccionar={(url) => setCampo("portadaUrl", url)}
       />
 

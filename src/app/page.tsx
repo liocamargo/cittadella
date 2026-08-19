@@ -333,7 +333,7 @@ export default function LandingPage() {
             <p className={styles.support}>
               El inicio muestra cuánto leíste, cuánto prestaste, y tu
               objetivo del año en progreso. Cada semana, además, te
-              sugiere hasta siete libros que otras bibliotecas de la
+              sugiere hasta ocho libros que otras bibliotecas de la
               comunidad tienen y la tuya no —solo para descubrir, no para
               envidiar.
             </p>
@@ -364,7 +364,7 @@ export default function LandingPage() {
               Selección de la semana
             </span>
             <div className={styles.weekPick}>
-              {["var(--spine-red)", "var(--gold-dim)", "var(--spine-green)", "var(--spine-blue)", "#3d3d3b", "var(--gold)", "#232322"].map(
+              {["var(--spine-red)", "var(--gold-dim)", "var(--spine-green)", "var(--spine-blue)", "#3d3d3b", "var(--gold)", "#232322", "#6b6b66"].map(
                 (bg, i) => (
                   <div key={i} className={styles.p} style={{ background: bg }} />
                 )

@@ -33,6 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
+import { useLocale } from "@/hooks/use-locale";
 import { useSugerenciasComunidad } from "@/hooks/use-sugerencias-comunidad";
 import {
   actualizarCopia,
@@ -45,12 +46,14 @@ import {
   publicarResena,
   toggleFavorito,
   toggleLeido,
+  type DatosComunidad,
 } from "@/lib/firestore/libros";
 import { listenSocios } from "@/lib/firestore/socios";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { RatingCara, RatingCaraPicker } from "@/components/catalogo/rating-cara";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
 import { GeneroSelect } from "@/components/catalogo/genero-select";
+import { BuscarMasInformacion } from "@/components/catalogo/buscar-mas-informacion";
 import type { LibroEnBiblioteca, LibroGlobal, Resena, Socio } from "@/types";
 
 const CAMPOS_EDITABLES = {
@@ -82,6 +85,7 @@ export function LibroDetailSheet({
 }: LibroDetailSheetProps) {
   const { user } = useAuth();
   const { bibliotecaActual } = useBiblioteca();
+  const { localeLectura } = useLocale();
   const { autores: sugerenciasAutor, editoriales: sugerenciasEditorial } =
     useSugerenciasComunidad();
   const [prestando, setPrestando] = useState(false);
@@ -253,6 +257,25 @@ export function LibroDetailSheet({
     } catch (err) {
       logError("Error publicando la reseña:", err);
       toast.error("No pudimos publicar la reseña.");
+    }
+  }
+
+  function handleDatosEncontrados(datos: DatosComunidad) {
+    setFormEdit((f) => ({
+      ...f,
+      titulo: datos.titulo || f.titulo,
+      subtitulo: datos.subtitulo ?? f.subtitulo,
+      autor: datos.autor || f.autor,
+      editorial: datos.editorial ?? f.editorial,
+      anio: datos.anio ?? f.anio,
+      paginas: datos.paginas ?? f.paginas,
+      volumen: datos.volumen ?? f.volumen,
+      idioma: datos.idioma ?? f.idioma,
+      genero: datos.genero ?? f.genero,
+      sinopsis: datos.sinopsis ?? f.sinopsis,
+    }));
+    if (datos.portadaUrl && !global?.portadaUrl) {
+      handleActualizarPortada(datos.portadaUrl);
     }
   }
 
@@ -552,7 +575,6 @@ export function LibroDetailSheet({
         open={portadaPickerOpen}
         onOpenChange={setPortadaPickerOpen}
         consultaInicial={global?.titulo ?? ""}
-        isbn={copia.isbn}
         onSeleccionar={handleActualizarPortada}
       />
 
@@ -566,6 +588,12 @@ export function LibroDetailSheet({
           </DialogHeader>
 
           <div className="flex flex-col gap-3 text-sm">
+            <BuscarMasInformacion
+              isbn={copia.isbn}
+              idiomasLectura={localeLectura}
+              onEncontrado={handleDatosEncontrados}
+            />
+
             <FieldEdit label="Título">
               <Input
                 value={formEdit.titulo}

@@ -384,7 +384,14 @@ export async function getSeleccionSemanal(
   const propios = new Set(isbnsPropios);
   const candidatos = snap.docs
     .map((d) => toLibroGlobal(d.id, d.data()))
-    .filter((l) => l.propietarios > 0 && !propios.has(l.isbn));
+    .filter(
+      (l) =>
+        l.propietarios > 0 &&
+        !propios.has(l.isbn) &&
+        Boolean(l.portadaUrl) &&
+        Boolean(l.autor) &&
+        Boolean(l.genero)
+    );
 
   const random = crearGeneradorSeed(hashString(claveSemanaActual()));
   const mezclados = [...candidatos];
@@ -392,7 +399,7 @@ export async function getSeleccionSemanal(
     const j = Math.floor(random() * (i + 1));
     [mezclados[i], mezclados[j]] = [mezclados[j], mezclados[i]];
   }
-  return mezclados.slice(0, 7);
+  return mezclados.slice(0, 8);
 }
 
 /** Autores y editoriales ya cargados en la comunidad, para autocompletar formularios. */

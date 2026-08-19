@@ -39,6 +39,18 @@ export class GoogleBooksError extends Error {
   }
 }
 
+/**
+ * Mensaje de error para mostrarle al usuario: si fue el límite de cuota de
+ * Google Books (muy fácil de pisar sin NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY
+ * configurada), lo explica; si no, devuelve el mensaje genérico.
+ */
+export function mensajeErrorBusqueda(err: unknown, generico: string): string {
+  if (err instanceof GoogleBooksError && err.esLimiteDeCuota) {
+    return "Se alcanzó el límite de búsquedas de Google Books por ahora. Probá de nuevo en un rato, o cargá los datos a mano.";
+  }
+  return generico;
+}
+
 /** ISBN-13 si está disponible; si no, ISBN-10 como respaldo. */
 function extraerIsbn(info: GoogleBooksVolumeInfo): string | undefined {
   const ids = info.industryIdentifiers ?? [];
@@ -173,8 +185,7 @@ export interface ResultadoPortada {
   portadaUrl: string;
 }
 
-/** Busca por título/autor y devuelve varias portadas candidatas para elegir. */
-export async function buscarPortadas(
+async function buscarPortadasGoogle(
   consulta: string,
   idiomasLectura?: string[]
 ): Promise<ResultadoPortada[]> {
@@ -195,6 +206,74 @@ export async function buscarPortadas(
     });
   }
   return resultados;
+}
+
+interface OpenLibrarySearchDoc {
+  title?: string;
+  author_name?: string[];
+  cover_i?: number;
+}
+
+interface OpenLibrarySearchResponse {
+  docs?: OpenLibrarySearchDoc[];
+}
+
+async function buscarPortadasOpenLibrary(consulta: string): Promise<ResultadoPortada[]> {
+  const res = await fetch(
+    `https://openlibrary.org/search.json?q=${encodeURIComponent(consulta)}&limit=12&fields=title,author_name,cover_i`
+  );
+  if (!res.ok) return [];
+  const data: OpenLibrarySearchResponse = await res.json();
+
+  const resultados: ResultadoPortada[] = [];
+  for (const doc of data.docs ?? []) {
+    if (!doc.title || !doc.cover_i) continue;
+    resultados.push({
+      titulo: doc.title,
+      autor: (doc.author_name ?? []).join(", "),
+      portadaUrl: `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`,
+    });
+  }
+  return resultados;
+}
+
+/**
+ * Busca por título/autor en Google Books y Open Library en paralelo, y
+ * combina los resultados: más opciones para elegir, y si Google Books está
+ * limitado por cuota (muy fácil de pisar sin API key propia) igual
+ * aparecen las de Open Library en vez de no mostrar nada.
+ */
+export async function buscarPortadas(
+  consulta: string,
+  idiomasLectura?: string[]
+): Promise<ResultadoPortada[]> {
+  const [google, openLibrary] = await Promise.allSettled([
+    buscarPortadasGoogle(consulta, idiomasLectura),
+    buscarPortadasOpenLibrary(consulta),
+  ]);
+
+  if (google.status === "rejected") {
+    logError("Google Books falló buscando portadas:", google.reason);
+  }
+  if (openLibrary.status === "rejected") {
+    logError("Open Library falló buscando portadas:", openLibrary.reason);
+  }
+  if (google.status === "rejected" && openLibrary.status === "rejected") {
+    throw google.reason;
+  }
+
+  const combinados = [
+    ...(google.status === "fulfilled" ? google.value : []),
+    ...(openLibrary.status === "fulfilled" ? openLibrary.value : []),
+  ];
+
+  const vistos = new Set<string>();
+  return combinados.filter((r) => {
+    const clave = `${r.titulo.toLowerCase()}|${r.autor.toLowerCase()}`;
+    if (vistos.has(clave)) return false;
+    vistos.add(clave);
+    return true;
+  });
 }
 
 export interface ResultadoBusquedaTitulo extends DatosComunidad {
