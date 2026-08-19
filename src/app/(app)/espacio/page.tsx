@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
+import { logError } from "@/lib/log";
 import {
   actualizarWhatsappMiembro,
   cancelarInvitacion,
@@ -57,7 +58,7 @@ export default function EspacioPage() {
       await renombrarBiblioteca(bibliotecaActual.id, nombreEspacio.trim());
       setEditingNombre(false);
     } catch (err) {
-      console.error("Error renombrando el espacio:", err);
+      logError("Error renombrando el espacio:", err);
       toast.error("No pudimos renombrar el espacio.");
     } finally {
       setGuardandoNombre(false);
@@ -109,13 +110,13 @@ export default function EspacioPage() {
         }
         toast.success(`Le mandamos un mail a ${email} para que se una.`);
       } catch (err) {
-        console.error("Error mandando el email de invitación:", err);
+        logError("Error mandando el email de invitación:", err);
         toast.warning(
           "Guardamos la invitación, pero no pudimos mandar el email. Se une igual cuando esa persona se loguee con ese correo."
         );
       }
     } catch (err) {
-      console.error("Error guardando la invitación:", err);
+      logError("Error guardando la invitación:", err);
       toast.error("No pudimos invitar a esa persona.");
     } finally {
       setInviting(false);
@@ -140,7 +141,7 @@ export default function EspacioPage() {
     try {
       await setModoSocios(bibliotecaActual.id, activo);
     } catch (err) {
-      console.error("Error actualizando el modo socios:", err);
+      logError("Error actualizando el modo socios:", err);
       toast.error("No pudimos actualizar el modo de préstamos.");
     }
   }

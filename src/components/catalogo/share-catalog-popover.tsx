@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { logError } from "@/lib/log";
 import {
   Popover,
   PopoverContent,
@@ -37,7 +38,7 @@ export function ShareCatalogPopover({
     try {
       await setCatalogoPublico(bibliotecaId, activo);
     } catch (err) {
-      console.error("Error actualizando catalogoPublico:", err);
+      logError("Error actualizando catalogoPublico:", err);
       toast.error("No pudimos actualizar el link público.");
     } finally {
       setActualizando(false);

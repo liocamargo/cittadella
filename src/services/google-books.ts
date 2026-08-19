@@ -1,4 +1,5 @@
 import type { DatosComunidad } from "@/lib/firestore/libros";
+import { logError } from "@/lib/log";
 
 interface GoogleBooksVolumeInfo {
   title?: string;
@@ -144,7 +145,7 @@ async function buscarPorIsbnOpenLibrary(isbn: string): Promise<DatosComunidad | 
       portadaUrl: libro.cover?.medium ?? libro.cover?.large,
     };
   } catch (err) {
-    console.error("Error consultando Open Library:", err);
+    logError("Error consultando Open Library:", err);
     return null;
   }
 }
@@ -161,7 +162,7 @@ export async function buscarPorIsbn(
     const google = await buscarPorIsbnGoogle(isbn, idiomasLectura);
     if (google) return google;
   } catch (err) {
-    console.error("Google Books falló, probamos Open Library:", err);
+    logError("Google Books falló, probamos Open Library:", err);
   }
   return buscarPorIsbnOpenLibrary(isbn);
 }

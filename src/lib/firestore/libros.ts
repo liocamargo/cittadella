@@ -18,6 +18,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
 import type { HistorialPrestamo, LibroEnBiblioteca, LibroGlobal, Resena } from "@/types";
+import { logError } from "@/lib/log";
 
 const GLOBALES = "Libros_Globales";
 const COPIAS = "Libros_En_Biblioteca";
@@ -246,7 +247,7 @@ export async function devolverLibro(
   if (historialActivoId) {
     await updateDoc(doc(db, HISTORIAL, historialActivoId), {
       fechaDevolucion: new Date().toISOString(),
-    }).catch((err) => console.error("Error cerrando el historial del préstamo:", err));
+    }).catch((err) => logError("Error cerrando el historial del préstamo:", err));
   }
   await updateDoc(doc(db, COPIAS, copiaId), {
     estado: "disponible",

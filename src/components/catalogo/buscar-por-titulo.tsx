@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { logError } from "@/lib/log";
 import {
   buscarPorTitulo,
   type ResultadoBusquedaTitulo,
@@ -32,7 +33,7 @@ export function BuscarPorTitulo({ idiomasLectura, onSeleccionar }: BuscarPorTitu
       }
       setResultados(encontrados);
     } catch (err) {
-      console.error("Error buscando por título:", err);
+      logError("Error buscando por título:", err);
       toast.error("No pudimos buscar por título. Probá de nuevo.");
     } finally {
       setBuscando(false);

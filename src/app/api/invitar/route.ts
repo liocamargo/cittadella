@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase/admin";
 import { getSiteUrl } from "@/lib/site-url";
+import { logError } from "@/lib/log";
 
 interface InvitarBody {
   email: string;
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
   try {
     adminAuth = getAdminAuth();
   } catch (err) {
-    console.error("Firebase Admin no está configurado:", err);
+    logError("Firebase Admin no está configurado:", err);
     return NextResponse.json(
       { error: "Firebase Admin no está configurado en el servidor." },
       { status: 500 }
@@ -106,12 +107,12 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      console.error("Error de Resend enviando invitación:", error);
+      logError("Error de Resend enviando invitación:", error);
       return NextResponse.json({ error: error.message }, { status: 502 });
     }
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("Error inesperado enviando invitación:", err);
+    logError("Error inesperado enviando invitación:", err);
     return NextResponse.json(
       { error: "No pudimos enviar el email." },
       { status: 502 }

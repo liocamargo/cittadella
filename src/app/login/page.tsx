@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocale } from "@/hooks/use-locale";
+import { logError } from "@/lib/log";
 
 function GoogleIcon() {
   return (
@@ -84,7 +85,7 @@ export default function LoginPage() {
       await signInWithGoogle();
       router.replace("/inicio");
     } catch (err) {
-      console.error("Error con Google Sign-In:", err);
+      logError("Error con Google Sign-In:", err);
       toast.error(t("login.errorGoogle"));
     } finally {
       setSubmitting(false);
@@ -101,7 +102,7 @@ export default function LoginPage() {
       await sendLoginLink(email.trim());
       setStep("sent");
     } catch (err) {
-      console.error("Error enviando el link de acceso:", err);
+      logError("Error enviando el link de acceso:", err);
       toast.error(t("login.errorEnviandoLink"));
     } finally {
       setSubmitting(false);
@@ -118,7 +119,7 @@ export default function LoginPage() {
       await completeEmailLinkSignIn(window.location.href, confirmEmail.trim());
       router.replace("/inicio");
     } catch (err) {
-      console.error("Error completando el login por email link:", err);
+      logError("Error completando el login por email link:", err);
       toast.error(t("login.errorLinkInvalido"));
       setStep("start");
     } finally {

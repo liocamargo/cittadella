@@ -12,6 +12,7 @@ import { listenInventario } from "@/lib/firestore/libros";
 import { getMetaLectura, setMetaLectura } from "@/lib/firestore/metas";
 import { SeleccionSemanal } from "@/components/inicio/seleccion-semanal";
 import type { LibroEnBiblioteca } from "@/types";
+import { logError } from "@/lib/log";
 
 export default function InicioPage() {
   const { user } = useAuth();
@@ -52,7 +53,7 @@ export default function InicioPage() {
       setMeta(n);
       setEditando(false);
     } catch (err) {
-      console.error("Error guardando el objetivo de lectura:", err);
+      logError("Error guardando el objetivo de lectura:", err);
       toast.error("No pudimos guardar tu objetivo.");
     } finally {
       setGuardando(false);

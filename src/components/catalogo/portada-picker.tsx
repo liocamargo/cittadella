@@ -6,6 +6,7 @@ import { Link2, Search, UploadCloud, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
+import { logError } from "@/lib/log";
 import {
   Dialog,
   DialogContent,
@@ -55,7 +56,7 @@ export function PortadaPicker({
         toast.error("No encontramos portadas para esa búsqueda.");
       }
     } catch (err) {
-      console.error("Error buscando portadas:", err);
+      logError("Error buscando portadas:", err);
       if (err instanceof GoogleBooksError && err.esLimiteDeCuota) {
         toast.error("Google Books alcanzó su límite de consultas por ahora.");
       } else {
@@ -78,7 +79,7 @@ export function PortadaPicker({
       handleSeleccionar(url);
       toast.success("Portada subida.");
     } catch (err) {
-      console.error("Error subiendo portada:", err);
+      logError("Error subiendo portada:", err);
       const mensaje = err instanceof Error ? err.message : "No pudimos subir la foto.";
       toast.error(mensaje);
     } finally {

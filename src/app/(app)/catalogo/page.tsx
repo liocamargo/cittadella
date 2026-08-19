@@ -11,6 +11,7 @@ import { cn, normalizarBusqueda } from "@/lib/utils";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
 import { listenInventario, toggleFavorito } from "@/lib/firestore/libros";
+import { logError } from "@/lib/log";
 import {
   agregarEstante,
   eliminarEstante,
@@ -115,7 +116,7 @@ export default function CatalogoPage() {
       setNewShelf("");
       setShelfCreateOpen(false);
     } catch (err) {
-      console.error("Error creando estante:", err);
+      logError("Error creando estante:", err);
       toast.error("No pudimos crear el estante.");
     }
   }
@@ -127,7 +128,7 @@ export default function CatalogoPage() {
       await eliminarEstante(bibliotecaActual.id, nombre);
       setShelfFilter("all");
     } catch (err) {
-      console.error("Error eliminando estante:", err);
+      logError("Error eliminando estante:", err);
       toast.error("No pudimos eliminar el estante.");
     }
   }
@@ -282,7 +283,7 @@ export default function CatalogoPage() {
               onClick={() => setSelectedId(copia.id)}
               onToggleFavorito={() =>
                 toggleFavorito(copia.id, !copia.favorito).catch((err) => {
-                  console.error("Error actualizando favorito:", err);
+                  logError("Error actualizando favorito:", err);
                   toast.error("No pudimos actualizar el favorito.");
                 })
               }
@@ -299,7 +300,7 @@ export default function CatalogoPage() {
               onClick={() => setSelectedId(copia.id)}
               onToggleFavorito={() =>
                 toggleFavorito(copia.id, !copia.favorito).catch((err) => {
-                  console.error("Error actualizando favorito:", err);
+                  logError("Error actualizando favorito:", err);
                   toast.error("No pudimos actualizar el favorito.");
                 })
               }

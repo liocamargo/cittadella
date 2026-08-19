@@ -12,6 +12,7 @@ import { LocaleMultiSelect } from "@/components/cuenta/locale-multi-select";
 import { GeneroMultiSelect } from "@/components/cuenta/genero-multi-select";
 import { GENERO_FRASES } from "@/lib/generos";
 import { guardarPerfil } from "@/lib/firestore/perfiles";
+import { logError, logSuccess } from "@/lib/log";
 
 const TOTAL_PASOS = 3;
 
@@ -33,9 +34,11 @@ export function OnboardingWizard() {
     setGuardando(true);
     try {
       await guardarPerfil(user.uid, { generosFavoritos: generos });
+      logSuccess("Perfil guardado (géneros favoritos).", { uid: user.uid, generos });
       await crearYSeleccionar(nombre.trim() || "Mi biblioteca");
+      logSuccess("Biblioteca creada.", { nombre });
     } catch (err) {
-      console.error("Error configurando la cuenta:", err);
+      logError("Error configurando la cuenta:", err);
       toast.error("No pudimos crear tu biblioteca. Probá de nuevo.");
       setGuardando(false);
     }

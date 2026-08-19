@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { Html5Qrcode } from "html5-qrcode";
+import { logError } from "@/lib/log";
 
 interface BarcodeScannerProps {
   onDetected: (codigo: string) => void;
@@ -75,7 +76,7 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
         );
         if (!cancelado) setEstado("escaneando");
       } catch (err) {
-        console.error("Error iniciando la cámara:", err);
+        logError("Error iniciando la cámara:", err);
         if (!cancelado) {
           setEstado("error");
           setErrorMsg(

@@ -10,6 +10,7 @@ import { LocaleMultiSelect } from "@/components/cuenta/locale-multi-select";
 import { GeneroMultiSelect } from "@/components/cuenta/genero-multi-select";
 import { EliminarCuentaDialog } from "@/components/cuenta/eliminar-cuenta-dialog";
 import { listenPerfil, guardarPerfil } from "@/lib/firestore/perfiles";
+import { logError } from "@/lib/log";
 
 export default function CuentaPage() {
   const { user } = useAuth();
@@ -27,7 +28,7 @@ export default function CuentaPage() {
     setGenerosFavoritos(nuevos);
     if (user) {
       guardarPerfil(user.uid, { generosFavoritos: nuevos }).catch((err) => {
-        console.error("Error guardando los géneros favoritos:", err);
+        logError("Error guardando los géneros favoritos:", err);
         toast.error(t("cuenta.errorGuardando"));
       });
     }

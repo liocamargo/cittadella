@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
+import { logError } from "@/lib/log";
 import {
   Dialog,
   DialogContent,
@@ -116,7 +117,7 @@ export function LecturaDetailDialog({
       toast.success("Datos actualizados.");
       setEditando(false);
     } catch (err) {
-      console.error("Error editando el libro:", err);
+      logError("Error editando el libro:", err);
       toast.error("No pudimos guardar los cambios.");
     } finally {
       setGuardandoEdicion(false);
@@ -140,7 +141,7 @@ export function LecturaDetailDialog({
       setComentario("");
       setReviewOpen(false);
     } catch (err) {
-      console.error("Error publicando la reseña:", err);
+      logError("Error publicando la reseña:", err);
       toast.error("No pudimos publicar la reseña.");
     }
   }
@@ -154,7 +155,7 @@ export function LecturaDetailDialog({
       await quitarLectura(user.uid, isbn);
       onClose();
     } catch (err) {
-      console.error("Error quitando de leídos:", err);
+      logError("Error quitando de leídos:", err);
       toast.error("No pudimos quitarlo de tus leídos.");
     }
   }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { obtenerSugerenciasComunidad } from "@/lib/firestore/libros";
+import { logError } from "@/lib/log";
 
 /** Autores/editoriales ya cargados en la comunidad, para sugerir en <datalist>. */
 export function useSugerenciasComunidad() {
@@ -16,7 +17,7 @@ export function useSugerenciasComunidad() {
         setAutores(r.autores);
         setEditoriales(r.editoriales);
       })
-      .catch((err) => console.error("Error cargando sugerencias:", err));
+      .catch((err) => logError("Error cargando sugerencias:", err));
     return () => {
       cancelado = true;
     };

@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocale } from "@/hooks/use-locale";
 import { useSugerenciasComunidad } from "@/hooks/use-sugerencias-comunidad";
+import { logError } from "@/lib/log";
 import {
   agregarLibroLeido,
   getLibroGlobal,
@@ -114,7 +115,7 @@ export default function AgregarLeidoPage() {
             setForm({ ...FORM_INICIAL });
           }
         } catch (err) {
-          console.error("Error consultando el ISBN:", err);
+          logError("Error consultando el ISBN:", err);
           toast.error("No pudimos consultar el ISBN. Cargá los datos manualmente.");
           setForm({ ...FORM_INICIAL });
         }
@@ -122,7 +123,7 @@ export default function AgregarLeidoPage() {
       setIsbn(codigo);
       setPaso("formulario");
     } catch (err) {
-      console.error("Error buscando ISBN:", err);
+      logError("Error buscando ISBN:", err);
       toast.error("No pudimos buscar el ISBN. Probá de nuevo.");
     } finally {
       setBuscando(false);
@@ -235,7 +236,7 @@ export default function AgregarLeidoPage() {
       toast.success("Agregado a tus leídos.");
       router.push("/leidos");
     } catch (err) {
-      console.error("Error guardando el libro leído:", err);
+      logError("Error guardando el libro leído:", err);
       const mensaje = err instanceof Error ? err.message : String(err);
       toast.error(`No pudimos guardarlo: ${mensaje}`);
     } finally {

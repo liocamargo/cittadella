@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { logError } from "@/lib/log";
 import {
   Home,
   Library,
@@ -86,7 +87,7 @@ export function SidebarNav() {
       setNewLibraryName("");
       toast.success(t("nav.bibliotecaCreada"));
     } catch (err) {
-      console.error("Error creando biblioteca:", err);
+      logError("Error creando biblioteca:", err);
       toast.error(t("nav.errorCreandoBiblioteca"));
     } finally {
       setCreating(false);

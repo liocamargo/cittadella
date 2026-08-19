@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
+import { logError } from "@/lib/log";
 import {
   agregarLibroABiblioteca,
   getLibroGlobal,
@@ -201,7 +202,7 @@ export default function ImportarPage() {
         cargarDatosComunidad(filas);
       },
       error: (err) => {
-        console.error("Error leyendo el CSV:", err);
+        logError("Error leyendo el CSV:", err);
         toast.error("No pudimos leer ese archivo.");
       },
     });
@@ -263,7 +264,7 @@ export default function ImportarPage() {
         );
         ok += 1;
       } catch (err) {
-        console.error(`Error importando "${fila.titulo}" (ISBN ${fila.isbn}):`, err);
+        logError(`Error importando "${fila.titulo}" (ISBN ${fila.isbn}):`, err);
         fallidos += 1;
       }
       setProgreso((p) => p + 1);

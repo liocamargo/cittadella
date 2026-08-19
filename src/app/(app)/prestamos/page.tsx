@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { logError } from "@/lib/log";
 import {
   Dialog,
   DialogContent,
@@ -71,7 +72,7 @@ export default function PrestamosPage() {
       await devolverLibro(copia.id, copia.historialActivoId);
       toast.success("Marcado como devuelto.");
     } catch (err) {
-      console.error("Error marcando devolución:", err);
+      logError("Error marcando devolución:", err);
       toast.error("No pudimos actualizar el préstamo.");
     }
   }
@@ -113,7 +114,7 @@ export default function PrestamosPage() {
       toast.success("Préstamo registrado.");
       setPrestarOpen(false);
     } catch (err) {
-      console.error("Error registrando el préstamo:", err);
+      logError("Error registrando el préstamo:", err);
       toast.error("No pudimos registrar el préstamo.");
     } finally {
       setGuardandoPrestamo(false);

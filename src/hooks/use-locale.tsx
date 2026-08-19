@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { listenPerfil, guardarPerfil } from "@/lib/firestore/perfiles";
 import { DICCIONARIOS } from "@/i18n/dictionaries";
+import { logError, logSuccess } from "@/lib/log";
 import {
   LOCALES,
   LOCALE_POR_DEFECTO,
@@ -97,7 +98,9 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         guardarPerfil(user.uid, {
           idiomaUI: detectado,
           idiomaLectura: [detectado],
-        }).catch((err) => console.error("Error creando el perfil:", err));
+        })
+          .then(() => logSuccess("Perfil creado con el idioma detectado.", { uid: user.uid, detectado }))
+          .catch((err) => logError("Error creando el perfil:", err));
       });
     });
   }, [user]);
@@ -131,7 +134,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         setLocaleState(nuevo);
         if (user) {
           guardarPerfil(user.uid, { idiomaUI: nuevo }).catch((err) =>
-            console.error("Error guardando el idioma:", err)
+            logError("Error guardando el idioma:", err)
           );
         } else {
           localStorage.setItem(STORAGE_KEY, nuevo);
@@ -142,7 +145,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         setLocaleLecturaState(nuevos);
         if (user) {
           guardarPerfil(user.uid, { idiomaLectura: nuevos }).catch((err) =>
-            console.error("Error guardando el idioma de lectura:", err)
+            logError("Error guardando el idioma de lectura:", err)
           );
         }
       },

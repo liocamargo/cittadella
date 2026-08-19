@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Check, Pencil, Star, Trash2 } from "lucide-react";
+import { logError } from "@/lib/log";
 import {
   Sheet,
   SheetContent,
@@ -172,7 +173,7 @@ export function LibroDetailSheet({
       toast.success("Datos actualizados.");
       setEditando(false);
     } catch (err) {
-      console.error("Error editando el libro:", err);
+      logError("Error editando el libro:", err);
       toast.error("No pudimos guardar los cambios.");
     } finally {
       setGuardandoEdicion(false);
@@ -204,7 +205,7 @@ export function LibroDetailSheet({
       setLoanSocioId("");
       setPrestando(false);
     } catch (err) {
-      console.error("Error registrando el préstamo:", err);
+      logError("Error registrando el préstamo:", err);
       toast.error("No pudimos registrar el préstamo.");
     }
   }
@@ -214,7 +215,7 @@ export function LibroDetailSheet({
     try {
       await devolverLibro(copia.id, copia.historialActivoId);
     } catch (err) {
-      console.error("Error registrando la devolución:", err);
+      logError("Error registrando la devolución:", err);
       toast.error("No pudimos registrar la devolución.");
     }
   }
@@ -228,7 +229,7 @@ export function LibroDetailSheet({
       await eliminarCopia(copia.id);
       onClose();
     } catch (err) {
-      console.error("Error eliminando el libro:", err);
+      logError("Error eliminando el libro:", err);
       toast.error("No pudimos eliminar el libro.");
     }
   }
@@ -250,7 +251,7 @@ export function LibroDetailSheet({
       setComentario("");
       setReviewOpen(false);
     } catch (err) {
-      console.error("Error publicando la reseña:", err);
+      logError("Error publicando la reseña:", err);
       toast.error("No pudimos publicar la reseña.");
     }
   }
@@ -260,7 +261,7 @@ export function LibroDetailSheet({
     try {
       await actualizarPortada(copia.isbn, url);
     } catch (err) {
-      console.error("Error actualizando la portada:", err);
+      logError("Error actualizando la portada:", err);
       toast.error("No pudimos actualizar la portada.");
     }
   }
@@ -309,7 +310,7 @@ export function LibroDetailSheet({
             <button
               onClick={() =>
                 toggleFavorito(copia.id, !copia.favorito).catch((err) => {
-                  console.error("Error actualizando favorito:", err);
+                  logError("Error actualizando favorito:", err);
                   toast.error("No pudimos actualizar el favorito.");
                 })
               }
@@ -531,7 +532,7 @@ export function LibroDetailSheet({
                 )}
                 onClick={() =>
                   toggleLeido(copia.id, !copia.leido).catch((err) => {
-                    console.error("Error actualizando leído:", err);
+                    logError("Error actualizando leído:", err);
                     toast.error("No pudimos actualizar el estado de leído.");
                   })
                 }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { logError, logSuccess } from "@/lib/log";
 import {
   Dialog,
   DialogContent,
@@ -94,14 +95,16 @@ export default function SociosPage() {
       };
       if (editandoId) {
         await actualizarSocio(editandoId, datos);
+        logSuccess("Socio actualizado.", datos);
         toast.success("Socio actualizado.");
       } else {
         await crearSocio(bibliotecaActual.id, datos);
+        logSuccess("Socio agregado.", datos);
         toast.success("Socio agregado.");
       }
       setFormOpen(false);
     } catch (err) {
-      console.error("Error guardando el socio:", err);
+      logError("Error guardando el socio:", err);
       toast.error("No pudimos guardar el socio.");
     } finally {
       setGuardando(false);
@@ -114,7 +117,7 @@ export default function SociosPage() {
       await eliminarSocio(socio.id);
       if (detalleId === socio.id) setDetalleId(null);
     } catch (err) {
-      console.error("Error eliminando el socio:", err);
+      logError("Error eliminando el socio:", err);
       toast.error("No pudimos eliminar el socio.");
     }
   }

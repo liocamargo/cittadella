@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { logError } from "@/lib/log";
 import {
   Select,
   SelectContent,
@@ -115,7 +116,7 @@ export default function AgregarLibroPage() {
         }
         isbnVerificadoRef.current = codigo;
       } catch (err) {
-        console.error("Error chequeando copias existentes:", err);
+        logError("Error chequeando copias existentes:", err);
       }
     }
 
@@ -164,7 +165,7 @@ export default function AgregarLibroPage() {
             setForm({ ...FORM_INICIAL });
           }
         } catch (err) {
-          console.error("Error consultando el ISBN:", err);
+          logError("Error consultando el ISBN:", err);
           toast.error("No pudimos consultar el ISBN. Cargá los datos manualmente.");
           setForm({ ...FORM_INICIAL });
         }
@@ -172,7 +173,7 @@ export default function AgregarLibroPage() {
       setIsbn(codigo);
       setPaso("formulario");
     } catch (err) {
-      console.error("Error buscando ISBN:", err);
+      logError("Error buscando ISBN:", err);
       toast.error("No pudimos buscar el ISBN. Probá de nuevo.");
     } finally {
       setBuscando(false);
@@ -259,7 +260,7 @@ export default function AgregarLibroPage() {
       setCreandoEstante(false);
       toast.success("Estante creado.");
     } catch (err) {
-      console.error("Error creando estante:", err);
+      logError("Error creando estante:", err);
       toast.error("No pudimos crear el estante.");
     }
   }
@@ -286,7 +287,7 @@ export default function AgregarLibroPage() {
           if (!seguir) return;
         }
       } catch (err) {
-        console.error("Error chequeando copias existentes:", err);
+        logError("Error chequeando copias existentes:", err);
       }
     }
 
@@ -334,7 +335,7 @@ export default function AgregarLibroPage() {
         router.push("/catalogo");
       }
     } catch (err) {
-      console.error("Error guardando el libro:", err);
+      logError("Error guardando el libro:", err);
       const mensaje = err instanceof Error ? err.message : String(err);
       toast.error(`No pudimos guardar el libro: ${mensaje}`);
     } finally {
