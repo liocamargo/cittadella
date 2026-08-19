@@ -55,7 +55,7 @@ export function OnboardingWizard() {
         ))}
       </div>
 
-      <div className="flex flex-1 items-center justify-center p-6">
+      <div className="flex flex-1 items-center justify-center overflow-y-auto p-6">
         <div className="w-full max-w-md">
           {paso === 1 && (
             <div className="flex flex-col gap-4">
@@ -118,11 +118,13 @@ export function OnboardingWizard() {
                   cambiar cuando quieras desde Mi cuenta.
                 </p>
               </div>
-              <GeneroMultiSelect
-                value={generos}
-                onChange={setGeneros}
-                labels={GENERO_FRASES}
-              />
+              <div className="max-h-[40vh] overflow-y-auto rounded-lg border p-3">
+                <GeneroMultiSelect
+                  value={generos}
+                  onChange={setGeneros}
+                  labels={GENERO_FRASES}
+                />
+              </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
