@@ -3,6 +3,7 @@ import {
   arrayRemove,
   arrayUnion,
   collection,
+  deleteDoc,
   deleteField,
   doc,
   getDocs,
@@ -184,4 +185,22 @@ export async function renombrarEstante(
   await updateDoc(doc(db, COL, bibliotecaId), {
     estantes: arrayUnion(nuevo),
   });
+}
+
+async function borrarColeccionPorCampo(coleccion: string, campo: string, valor: string) {
+  const snap = await getDocs(query(collection(db, coleccion), where(campo, "==", valor)));
+  await Promise.allSettled(snap.docs.map((d) => deleteDoc(d.ref)));
+}
+
+/**
+ * Borra una biblioteca entera: sus copias, sus socios, su historial de
+ * préstamos y, al final, el doc de la biblioteca (para que las reglas de
+ * seguridad, que chequean membresía contra ese doc, sigan validando los
+ * pasos anteriores). Irreversible.
+ */
+export async function eliminarBibliotecaCompleta(bibliotecaId: string): Promise<void> {
+  await borrarColeccionPorCampo("Libros_En_Biblioteca", "bibliotecaId", bibliotecaId);
+  await borrarColeccionPorCampo("Socios", "bibliotecaId", bibliotecaId);
+  await borrarColeccionPorCampo("HistorialPrestamos", "bibliotecaId", bibliotecaId);
+  await deleteDoc(doc(db, COL, bibliotecaId));
 }

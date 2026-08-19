@@ -1,6 +1,6 @@
 import { collection, deleteDoc, doc, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
-import { quitarMiembro } from "@/lib/firestore/bibliotecas";
+import { eliminarBibliotecaCompleta, quitarMiembro } from "@/lib/firestore/bibliotecas";
 import type { Biblioteca } from "@/types";
 
 async function borrarColeccionPorCampo(coleccion: string, campo: string, valor: string) {
@@ -23,10 +23,7 @@ export async function eliminarDatosDeCuenta(
   for (const b of bibliotecas) {
     const esUnicaMiembro = b.miembrosUids.length === 1 && b.miembrosUids[0] === uid;
     if (esUnicaMiembro) {
-      await borrarColeccionPorCampo("Libros_En_Biblioteca", "bibliotecaId", b.id);
-      await borrarColeccionPorCampo("Socios", "bibliotecaId", b.id);
-      await borrarColeccionPorCampo("HistorialPrestamos", "bibliotecaId", b.id);
-      await deleteDoc(doc(db, "Bibliotecas", b.id));
+      await eliminarBibliotecaCompleta(b.id);
     } else {
       await quitarMiembro(b.id, uid);
     }

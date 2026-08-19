@@ -20,6 +20,7 @@ import {
   renombrarMiembro,
   setModoSocios,
 } from "@/lib/firestore/bibliotecas";
+import { EliminarBibliotecaDialog } from "@/components/espacio/eliminar-biblioteca-dialog";
 
 export default function EspacioPage() {
   const { user } = useAuth();
@@ -344,6 +345,8 @@ export default function EspacioPage() {
       <p className="mt-6 text-xs text-muted-foreground">
         Conectado como <strong>{user?.email}</strong>
       </p>
+
+      <EliminarBibliotecaDialog biblioteca={bibliotecaActual} />
     </div>
   );
 }

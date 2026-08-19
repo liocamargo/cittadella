@@ -238,10 +238,14 @@ export function SidebarNav() {
               <Menu className="size-4" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            {mobileMenuItems.map(({ href, i18nKey, icon: Icon }) => (
-              <DropdownMenuItem key={href} asChild>
-                <Link href={href} className="flex items-center gap-2">
+          <DropdownMenuContent align="start" className="min-w-56 p-2">
+            {mobileMenuItems.map(({ href, i18nKey, icon: Icon }, i) => (
+              <DropdownMenuItem
+                key={href}
+                asChild
+                className={cn("px-3 py-2.5", i > 0 && "mt-1")}
+              >
+                <Link href={href} className="flex items-center gap-3">
                   <Icon className="size-4" />
                   {t(i18nKey)}
                 </Link>
