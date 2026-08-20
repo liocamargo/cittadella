@@ -296,21 +296,24 @@ export default function LandingPage() {
             </div>
             <Reveal className={styles.visual}>
               <div className={styles.catalogCard}>
-                <div className={styles.cover} style={{ background: "var(--spine-red)" }} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className={styles.cover} src={COVERS[0].portada} alt={COVERS[0].t} />
                 <div className={styles.meta}>
                   <h4>Rayuela</h4>
                   <span>Julio Cortázar · Disponible</span>
                 </div>
               </div>
               <div className={styles.catalogCard}>
-                <div className={styles.cover} style={{ background: "var(--spine-green)" }} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className={styles.cover} src={COVERS[1].portada} alt={COVERS[1].t} />
                 <div className={styles.meta}>
                   <h4>Ficciones</h4>
                   <span>Jorge Luis Borges · Prestado</span>
                 </div>
               </div>
               <div className={styles.catalogCard}>
-                <div className={styles.cover} style={{ background: "var(--gold-dim)" }} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className={styles.cover} src={COVERS[2].portada} alt={COVERS[2].t} />
                 <div className={styles.meta}>
                   <h4>Los detectives salvajes</h4>
                   <span>Roberto Bolaño · Disponible</span>
@@ -364,11 +367,10 @@ export default function LandingPage() {
               Selección de la semana
             </span>
             <div className={styles.weekPick}>
-              {["var(--spine-red)", "var(--gold-dim)", "var(--spine-green)", "var(--spine-blue)", "#3d3d3b", "var(--gold)", "#232322", "#6b6b66"].map(
-                (bg, i) => (
-                  <div key={i} className={styles.p} style={{ background: bg }} />
-                )
-              )}
+              {COVERS.slice(3).map((c) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={c.t} className={styles.p} src={c.portada} alt={c.t} />
+              ))}
             </div>
           </Reveal>
         </div>

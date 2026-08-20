@@ -245,7 +245,7 @@
   }
   .catalog-card:last-child{border-bottom:none;}
   .catalog-card .cover{
-    width:38px; height:54px; border-radius:2px; flex-shrink:0;
+    width:38px; height:54px; border-radius:2px; flex-shrink:0; object-fit:cover;
   }
   .catalog-card .meta h4{font-family:'Fraunces',serif; font-size:15px; font-weight:500; color:var(--paper);}
   .catalog-card .meta span{font-size:12.5px; color:var(--paper-dim);}
@@ -267,7 +267,7 @@
   .progress{height:6px; background:var(--line); border-radius:4px; overflow:hidden; margin-top:8px;}
   .progress i{display:block; height:100%; width:64%; background:var(--gold); border-radius:4px;}
   .week-pick{display:flex; gap:10px; margin-top:24px; flex-wrap:wrap;}
-  .week-pick .p{width:34px; height:50px; border-radius:2px;}
+  .week-pick .p{width:34px; height:50px; border-radius:2px; object-fit:cover;}
   @media (max-width:700px){ .dash-row{grid-template-columns:repeat(2,1fr); row-gap:20px;} }
 
   /* ---------- LIST FEATURES (import, cuenta, integraciones) ---------- */
@@ -393,15 +393,15 @@
       </div>
       <div class="visual reveal">
         <div class="catalog-card">
-          <div class="cover" style="background:var(--spine-red);"></div>
+          <img class="cover" src="https://covers.openlibrary.org/b/id/1047466-L.jpg" alt="Rayuela">
           <div class="meta"><h4>Rayuela</h4><span>Julio Cortázar · Disponible</span></div>
         </div>
         <div class="catalog-card">
-          <div class="cover" style="background:var(--spine-green);"></div>
+          <img class="cover" src="https://covers.openlibrary.org/b/id/10832290-L.jpg" alt="Ficciones">
           <div class="meta"><h4>Ficciones</h4><span>Jorge Luis Borges · Prestado</span></div>
         </div>
         <div class="catalog-card">
-          <div class="cover" style="background:var(--gold-dim);"></div>
+          <img class="cover" src="https://covers.openlibrary.org/b/id/3706128-L.jpg" alt="Los detectives salvajes">
           <div class="meta"><h4>Los detectives salvajes</h4><span>Roberto Bolaño · Disponible</span></div>
         </div>
         <span class="wa-btn">↳ Pedir por WhatsApp</span>
@@ -430,13 +430,13 @@
       </div>
       <span class="eyebrow" style="display:block; margin-bottom:14px;">Selección de la semana</span>
       <div class="week-pick">
-        <div class="p" style="background:var(--spine-red);"></div>
-        <div class="p" style="background:var(--gold-dim);"></div>
-        <div class="p" style="background:var(--spine-green);"></div>
-        <div class="p" style="background:var(--spine-blue);"></div>
-        <div class="p" style="background:#3d3d3b;"></div>
-        <div class="p" style="background:var(--gold);"></div>
-        <div class="p" style="background:#232322;"></div>
+        <img class="p" src="https://covers.openlibrary.org/b/id/13215914-L.jpg" alt="Cien años de soledad">
+        <img class="p" src="https://covers.openlibrary.org/b/id/4901502-L.jpg" alt="Pedro Páramo">
+        <img class="p" src="https://covers.openlibrary.org/b/id/5517733-L.jpg" alt="El túnel">
+        <img class="p" src="https://covers.openlibrary.org/b/id/1046845-L.jpg" alt="La invención de Morel">
+        <img class="p" src="https://covers.openlibrary.org/b/id/3711230-L.jpg" alt="Cuentos completos">
+        <img class="p" src="https://covers.openlibrary.org/b/id/5314209-L.jpg" alt="Aura">
+        <img class="p" src="https://covers.openlibrary.org/b/id/5721778-L.jpg" alt="Bestiario">
       </div>
     </div>
   </div>
