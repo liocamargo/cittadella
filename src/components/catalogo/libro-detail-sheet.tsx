@@ -624,12 +624,12 @@ export function LibroDetailSheet({
         open={editando}
         onOpenChange={(open) => !open && !guardandoEdicion && setEditando(false)}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{t("libroDetail.editarDatos")}</DialogTitle>
           </DialogHeader>
 
-          <div className="flex flex-col gap-3 text-sm">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto text-sm">
             <BuscarMasInformacion
               isbn={copia.isbn}
               idiomasLectura={localeLectura}
@@ -661,27 +661,27 @@ export function LibroDetailSheet({
                 onChange={(e) => setCampoEdit("ilustrador", e.target.value)}
               />
             </FieldEdit>
+            <FieldEdit label={t("libroDetail.campoEditorial")}>
+              <Input
+                value={formEdit.editorial}
+                onChange={(e) => setCampoEdit("editorial", e.target.value)}
+                list="sugerencias-editorial"
+              />
+            </FieldEdit>
             <div className="flex gap-3">
-              <FieldEdit label={t("libroDetail.campoEditorial")} className="flex-[2]">
-                <Input
-                  value={formEdit.editorial}
-                  onChange={(e) => setCampoEdit("editorial", e.target.value)}
-                  list="sugerencias-editorial"
-                />
-              </FieldEdit>
-              <FieldEdit label={t("libroDetail.campoAnio")} className="w-24">
+              <FieldEdit label={t("libroDetail.campoAnio")} className="flex-1">
                 <Input
                   value={formEdit.anio}
                   onChange={(e) => setCampoEdit("anio", e.target.value)}
                 />
               </FieldEdit>
-              <FieldEdit label={t("libroDetail.campoPaginas")} className="w-24">
+              <FieldEdit label={t("libroDetail.campoPaginas")} className="flex-1">
                 <Input
                   value={formEdit.paginas}
                   onChange={(e) => setCampoEdit("paginas", e.target.value)}
                 />
               </FieldEdit>
-              <FieldEdit label={t("libroDetail.campoVolumen")} className="w-24">
+              <FieldEdit label={t("libroDetail.campoVolumen")} className="flex-1">
                 <Input
                   placeholder={t("libroDetail.placeholderVolumen")}
                   value={formEdit.volumen}
@@ -754,15 +754,20 @@ export function LibroDetailSheet({
             </FieldEdit>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="grid grid-cols-2">
             <Button
               variant="outline"
+              className="w-full"
               onClick={() => setEditando(false)}
               disabled={guardandoEdicion}
             >
               {t("common.cancelar")}
             </Button>
-            <Button onClick={handleGuardarEdicion} disabled={guardandoEdicion}>
+            <Button
+              className="w-full"
+              onClick={handleGuardarEdicion}
+              disabled={guardandoEdicion}
+            >
               {t("libroDetail.guardarCambios")}
             </Button>
           </DialogFooter>
