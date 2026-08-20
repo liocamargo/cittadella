@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import {
   Dialog,
@@ -9,8 +10,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import { useLocale } from "@/hooks/use-locale";
 import { getSeleccionSemanal } from "@/lib/firestore/libros";
+import { listenPerfil } from "@/lib/firestore/perfiles";
 import type { LibroGlobal } from "@/types";
 
 function linkLecturaDe(libro: LibroGlobal | null) {
@@ -26,21 +29,30 @@ interface SeleccionSemanalProps {
 }
 
 export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
+  const { user } = useAuth();
   const { t } = useLocale();
   const [libros, setLibros] = useState<LibroGlobal[] | null>(null);
   const [seleccionado, setSeleccionado] = useState<LibroGlobal | null>(null);
+  const [generosFavoritos, setGenerosFavoritos] = useState<string[]>([]);
   const key = Array.from(new Set(isbnsPropios)).sort().join(",");
 
   useEffect(() => {
+    if (!user) return;
+    return listenPerfil(user.uid, (perfil) => {
+      if (perfil) setGenerosFavoritos(perfil.generosFavoritos);
+    });
+  }, [user]);
+
+  useEffect(() => {
     let cancelado = false;
-    getSeleccionSemanal(isbnsPropios).then((r) => {
+    getSeleccionSemanal(isbnsPropios, generosFavoritos).then((r) => {
       if (!cancelado) setLibros(r);
     });
     return () => {
       cancelado = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, generosFavoritos]);
 
   if (libros !== null && libros.length === 0) return null;
 
@@ -50,7 +62,14 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
     <div>
       <h2 className="mb-1 text-lg font-bold">{t("seleccionSemanal.titulo")}</h2>
       <p className="mb-4 text-sm text-muted-foreground">
-        {t("seleccionSemanal.descripcion")}
+        {generosFavoritos.length > 0
+          ? t("seleccionSemanal.descripcionConGustos")
+          : t("seleccionSemanal.descripcion")}{" "}
+        <Link href="/cuenta" className="underline">
+          {generosFavoritos.length > 0
+            ? t("seleccionSemanal.editarGustos")
+            : t("seleccionSemanal.elegirGustos")}
+        </Link>
       </p>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-4">
         {(libros ?? Array.from({ length: 8 })).map((libro, i) =>

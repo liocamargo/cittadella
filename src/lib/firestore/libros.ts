@@ -389,10 +389,13 @@ function crearGeneradorSeed(seed: number) {
 /**
  * Libros que ya tienen otras bibliotecas (propietarios > 0) y no están en
  * isbnsPropios. La selección es estable durante la semana ISO actual y
- * rota la semana siguiente.
+ * rota la semana siguiente. Si el usuario eligió géneros favoritos (Mi
+ * cuenta), se priorizan esos géneros; el resto de los lugares se completa
+ * con libros de cualquier género para seguir permitiendo el descubrimiento.
  */
 export async function getSeleccionSemanal(
-  isbnsPropios: string[]
+  isbnsPropios: string[],
+  generosFavoritos: string[] = []
 ): Promise<LibroGlobal[]> {
   const snap = await getDocs(query(collection(db, GLOBALES), limit(500)));
   const propios = new Set(isbnsPropios);
@@ -413,7 +416,13 @@ export async function getSeleccionSemanal(
     const j = Math.floor(random() * (i + 1));
     [mezclados[i], mezclados[j]] = [mezclados[j], mezclados[i]];
   }
-  return mezclados.slice(0, 8);
+
+  if (generosFavoritos.length === 0) return mezclados.slice(0, 8);
+
+  const favoritos = new Set(generosFavoritos);
+  const preferidos = mezclados.filter((l) => favoritos.has(l.genero ?? ""));
+  const otros = mezclados.filter((l) => !favoritos.has(l.genero ?? ""));
+  return [...preferidos, ...otros].slice(0, 8);
 }
 
 /** Autores y editoriales ya cargados en la comunidad, para autocompletar formularios. */

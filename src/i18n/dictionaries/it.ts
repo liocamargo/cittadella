@@ -533,6 +533,10 @@ const it: Dictionary = {
   seleccionSemanal: {
     titulo: "Selezione della settimana",
     descripcion: "Libri che altre biblioteche della comunità hanno e tu ancora no.",
+    descripcionConGustos:
+      "Libri dei tuoi generi preferiti che altre biblioteche della comunità hanno e tu ancora no.",
+    elegirGustos: "Scegli i tuoi generi preferiti",
+    editarGustos: "Modifica generi preferiti",
     leerOnline: "Leggi online",
     buscarlo: "Cercalo",
     resenas: "({cantidad} recensione(i))",

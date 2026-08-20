@@ -533,6 +533,10 @@ const en: Dictionary = {
   seleccionSemanal: {
     titulo: "This week's picks",
     descripcion: "Books that other libraries in the community have and you don't yet.",
+    descripcionConGustos:
+      "Books in your favorite genres that other libraries in the community have and you don't yet.",
+    elegirGustos: "Pick your favorite genres",
+    editarGustos: "Edit favorite genres",
     leerOnline: "Read online",
     buscarlo: "Look it up",
     resenas: "({cantidad} review(s))",

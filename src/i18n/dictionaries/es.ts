@@ -531,6 +531,10 @@ const es = {
   seleccionSemanal: {
     titulo: "Selección de la semana",
     descripcion: "Libros que otras bibliotecas de la comunidad tienen y vos todavía no.",
+    descripcionConGustos:
+      "Libros de tus géneros favoritos que otras bibliotecas de la comunidad tienen y vos todavía no.",
+    elegirGustos: "Elegí tus géneros favoritos",
+    editarGustos: "Editar géneros favoritos",
     leerOnline: "Leer online",
     buscarlo: "Buscarlo",
     resenas: "({cantidad} reseña(s))",
