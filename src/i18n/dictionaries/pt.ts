@@ -268,6 +268,7 @@ const pt: Dictionary = {
     enBiblioteca: "Na sua biblioteca · {estante}",
     sinEstante: "sem estante",
     noEnBiblioteca: "Não está na sua biblioteca",
+    progreso: "{progreso}% lido",
   },
   leidosAgregar: {
     ingresarIsbn: "Digite um ISBN.",
@@ -310,6 +311,8 @@ const pt: Dictionary = {
     tomoPlaceholder: "Tomo 1",
     campoGenero: "Gênero (opcional)",
     campoSinopsis: "Sinopse (opcional)",
+    tuProgreso: "Seu progresso de leitura",
+    campoProgreso: "Progresso de leitura (%)",
     tuResena: "Sua avaliação (opcional)",
     quePensaste: "O que você achou?",
     cancelar: "Cancelar",
@@ -348,6 +351,12 @@ const pt: Dictionary = {
     publicarResena: "Publicar avaliação",
     sinResenas: "Ainda não há avaliações para este livro.",
     quitarDeLeidos: "Remover dos lidos",
+  },
+  progresoLectura: {
+    titulo: "Progresso de leitura",
+    guardar: "Salvar",
+    actualizado: "Progresso atualizado.",
+    errorActualizando: "Não conseguimos atualizar o progresso.",
   },
   prestamos: {
     titulo: "Empréstimos",

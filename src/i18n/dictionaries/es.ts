@@ -266,6 +266,7 @@ const es = {
     enBiblioteca: "En tu biblioteca · {estante}",
     sinEstante: "sin estante",
     noEnBiblioteca: "No está en tu biblioteca",
+    progreso: "{progreso}% leído",
   },
   leidosAgregar: {
     ingresarIsbn: "Ingresá un ISBN.",
@@ -308,6 +309,8 @@ const es = {
     tomoPlaceholder: "Tomo 1",
     campoGenero: "Género (opcional)",
     campoSinopsis: "Sinopsis (opcional)",
+    tuProgreso: "Tu progreso de lectura",
+    campoProgreso: "Progreso de lectura (%)",
     tuResena: "Tu reseña (opcional)",
     quePensaste: "¿Qué te pareció?",
     cancelar: "Cancelar",
@@ -346,6 +349,12 @@ const es = {
     publicarResena: "Publicar reseña",
     sinResenas: "Todavía no hay reseñas para este libro.",
     quitarDeLeidos: "Quitar de leídos",
+  },
+  progresoLectura: {
+    titulo: "Progreso de lectura",
+    guardar: "Guardar",
+    actualizado: "Progreso actualizado.",
+    errorActualizando: "No pudimos actualizar el progreso.",
   },
   prestamos: {
     titulo: "Préstamos",

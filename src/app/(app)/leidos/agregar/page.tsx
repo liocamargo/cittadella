@@ -68,6 +68,7 @@ export default function AgregarLeidoPage() {
   const [portadaPickerOpen, setPortadaPickerOpen] = useState(false);
   const [estrellas, setEstrellas] = useState(5);
   const [comentario, setComentario] = useState("");
+  const [progreso, setProgreso] = useState("100");
 
   function setCampo<K extends keyof typeof FORM_INICIAL>(campo: K, valor: string) {
     setForm((f) => ({ ...f, [campo]: valor }));
@@ -213,22 +214,29 @@ export default function AgregarLeidoPage() {
     // propio para poder crear igual el libro comunitario y el registro.
     const isbnFinal = isbn || `manual-${crypto.randomUUID()}`;
 
+    const progresoFinal = Math.max(0, Math.min(100, Math.round(Number(progreso) || 0)));
+
     setGuardando(true);
     try {
-      await agregarLibroLeido(isbnFinal, user.uid, {
-        titulo: (form.titulo ?? "").trim(),
-        subtitulo: (form.subtitulo ?? "").trim() || undefined,
-        autor: (form.autor ?? "").trim(),
-        ilustrador: (form.ilustrador ?? "").trim() || undefined,
-        editorial: (form.editorial ?? "").trim() || undefined,
-        anio: (form.anio ?? "").trim() || undefined,
-        paginas: (form.paginas ?? "").trim() || undefined,
-        volumen: (form.volumen ?? "").trim() || undefined,
-        idioma: (form.idioma ?? "").trim() || undefined,
-        genero: (form.genero ?? "").trim() || undefined,
-        sinopsis: (form.sinopsis ?? "").trim() || undefined,
-        portadaUrl: (form.portadaUrl ?? "").trim() || undefined,
-      });
+      await agregarLibroLeido(
+        isbnFinal,
+        user.uid,
+        {
+          titulo: (form.titulo ?? "").trim(),
+          subtitulo: (form.subtitulo ?? "").trim() || undefined,
+          autor: (form.autor ?? "").trim(),
+          ilustrador: (form.ilustrador ?? "").trim() || undefined,
+          editorial: (form.editorial ?? "").trim() || undefined,
+          anio: (form.anio ?? "").trim() || undefined,
+          paginas: (form.paginas ?? "").trim() || undefined,
+          volumen: (form.volumen ?? "").trim() || undefined,
+          idioma: (form.idioma ?? "").trim() || undefined,
+          genero: (form.genero ?? "").trim() || undefined,
+          sinopsis: (form.sinopsis ?? "").trim() || undefined,
+          portadaUrl: (form.portadaUrl ?? "").trim() || undefined,
+        },
+        progresoFinal
+      );
 
       if (comentario.trim()) {
         await publicarResena(
@@ -417,6 +425,19 @@ export default function AgregarLeidoPage() {
           </Field>
           <Field label={t("leidosAgregar.campoSinopsis")}>
             <Textarea rows={3} value={form.sinopsis} onChange={(e) => setCampo("sinopsis", e.target.value)} />
+          </Field>
+
+          <div className="mt-2 border-t pt-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            {t("leidosAgregar.tuProgreso")}
+          </div>
+          <Field label={t("leidosAgregar.campoProgreso")} className="w-28">
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={progreso}
+              onChange={(e) => setProgreso(e.target.value)}
+            />
           </Field>
 
           <div className="mt-2 border-t pt-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">

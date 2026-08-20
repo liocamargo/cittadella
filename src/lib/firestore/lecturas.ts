@@ -4,6 +4,7 @@ import {
   doc,
   onSnapshot,
   query,
+  updateDoc,
   where,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -16,6 +17,8 @@ export interface Lectura {
   uid: string;
   isbn: string;
   fechaLeido: string;
+  /** Porcentaje de avance de lectura (0-100). */
+  progreso?: number;
 }
 
 function toLectura(id: string, data: Record<string, unknown>): Lectura {
@@ -24,6 +27,7 @@ function toLectura(id: string, data: Record<string, unknown>): Lectura {
     uid: (data.uid as string) ?? "",
     isbn: (data.isbn as string) ?? "",
     fechaLeido: (data.fechaLeido as string) ?? "",
+    progreso: typeof data.progreso === "number" ? data.progreso : undefined,
   };
 }
 
@@ -40,4 +44,12 @@ export function listenLecturas(
 
 export async function quitarLectura(uid: string, isbn: string): Promise<void> {
   await deleteDoc(doc(db, COL, `${uid}_${isbn}`));
+}
+
+export async function actualizarProgresoLectura(
+  uid: string,
+  isbn: string,
+  progreso: number
+): Promise<void> {
+  await updateDoc(doc(db, COL, `${uid}_${isbn}`), { progreso });
 }

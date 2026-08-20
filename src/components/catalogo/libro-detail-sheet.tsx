@@ -39,6 +39,7 @@ import {
   actualizarCopia,
   actualizarLibroGlobal,
   actualizarPortada,
+  actualizarProgreso,
   devolverLibro,
   eliminarCopia,
   listenResenas,
@@ -50,6 +51,7 @@ import {
 } from "@/lib/firestore/libros";
 import { listenSocios } from "@/lib/firestore/socios";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
+import { ProgresoLectura } from "@/components/catalogo/progreso-lectura";
 import { RatingCara, RatingCaraPicker } from "@/components/catalogo/rating-cara";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
 import { GeneroSelect } from "@/components/catalogo/genero-select";
@@ -478,6 +480,11 @@ export function LibroDetailSheet({
               </div>
             )}
           </div>
+
+          <ProgresoLectura
+            progreso={copia.progreso}
+            onGuardar={(progreso) => actualizarProgreso(copia.id, progreso)}
+          />
 
           <div className="border-t pt-4">
             <div className="mb-2.5 flex items-center justify-between">

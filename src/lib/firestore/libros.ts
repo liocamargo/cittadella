@@ -62,6 +62,7 @@ function toCopia(id: string, data: Record<string, unknown>): LibroEnBiblioteca {
     fechaLimite: data.fechaLimite as string | undefined,
     favorito: Boolean(data.favorito),
     leido: Boolean(data.leido),
+    progreso: typeof data.progreso === "number" ? data.progreso : undefined,
     fechaAgregado: (data.fechaAgregado as string) ?? "",
   };
 }
@@ -185,7 +186,8 @@ export async function agregarLibroABiblioteca(
 export async function agregarLibroLeido(
   isbn: string,
   uid: string,
-  comunidad: DatosComunidad
+  comunidad: DatosComunidad,
+  progreso: number = 100
 ): Promise<void> {
   const globalRef = doc(db, GLOBALES, isbn);
   const lecturaRef = doc(db, "Lecturas", `${uid}_${isbn}`);
@@ -204,6 +206,7 @@ export async function agregarLibroLeido(
       uid,
       isbn,
       fechaLeido: new Date().toISOString(),
+      progreso,
     });
   });
 }
@@ -268,7 +271,14 @@ export async function toggleFavorito(copiaId: string, favorito: boolean) {
 }
 
 export async function toggleLeido(copiaId: string, leido: boolean) {
-  await updateDoc(doc(db, COPIAS, copiaId), { leido });
+  await updateDoc(doc(db, COPIAS, copiaId), {
+    leido,
+    ...(leido ? { progreso: 100 } : {}),
+  });
+}
+
+export async function actualizarProgreso(copiaId: string, progreso: number) {
+  await updateDoc(doc(db, COPIAS, copiaId), { progreso });
 }
 
 export async function eliminarCopia(copiaId: string) {

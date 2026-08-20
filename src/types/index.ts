@@ -63,6 +63,8 @@ export interface LibroEnBiblioteca {
   fechaLimite?: string;
   favorito: boolean;
   leido: boolean;
+  /** Porcentaje de avance de lectura (0-100), independiente de `leido`. */
+  progreso?: number;
   fechaAgregado: string;
 }
 
