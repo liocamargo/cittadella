@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
+import { useLocale } from "@/hooks/use-locale";
 import { logError } from "@/lib/log";
 import {
   actualizarWhatsappMiembro,
@@ -24,6 +25,7 @@ import { EliminarBibliotecaDialog } from "@/components/espacio/eliminar-bibliote
 
 export default function EspacioPage() {
   const { user } = useAuth();
+  const { t } = useLocale();
   const { bibliotecaActual } = useBiblioteca();
   const [editingUid, setEditingUid] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -36,7 +38,7 @@ export default function EspacioPage() {
 
   if (!bibliotecaActual) {
     return (
-      <div className="text-sm text-muted-foreground">Cargando tu biblioteca…</div>
+      <div className="text-sm text-muted-foreground">{t("espacio.cargando")}</div>
     );
   }
 
@@ -60,7 +62,7 @@ export default function EspacioPage() {
       setEditingNombre(false);
     } catch (err) {
       logError("Error renombrando el espacio:", err);
-      toast.error("No pudimos renombrar el espacio.");
+      toast.error(t("espacio.errorRenombrandoEspacio"));
     } finally {
       setGuardandoNombre(false);
     }
@@ -76,7 +78,7 @@ export default function EspacioPage() {
 
   async function handleQuitar(uid: string) {
     if (!bibliotecaActual) return;
-    if (!window.confirm("¿Quitarle el acceso a esta persona?")) return;
+    if (!window.confirm(t("espacio.confirmarQuitarAcceso"))) return;
     await quitarMiembro(bibliotecaActual.id, uid);
   }
 
@@ -84,7 +86,7 @@ export default function EspacioPage() {
     if (!bibliotecaActual) return;
     const email = inviteEmail.trim().toLowerCase();
     if (!email || !email.includes("@")) {
-      toast.error("Ingresá un correo válido.");
+      toast.error(t("espacio.errorCorreoInvalido"));
       return;
     }
     setInviting(true);
@@ -109,16 +111,14 @@ export default function EspacioPage() {
           const body = await res.json().catch(() => null);
           throw new Error(body?.error ?? `HTTP ${res.status}`);
         }
-        toast.success(`Le mandamos un mail a ${email} para que se una.`);
+        toast.success(t("espacio.invitacionEnviada", { email }));
       } catch (err) {
         logError("Error mandando el email de invitación:", err);
-        toast.warning(
-          "Guardamos la invitación, pero no pudimos mandar el email. Se une igual cuando esa persona se loguee con ese correo."
-        );
+        toast.warning(t("espacio.avisoInvitacionSinEmail"));
       }
     } catch (err) {
       logError("Error guardando la invitación:", err);
-      toast.error("No pudimos invitar a esa persona.");
+      toast.error(t("espacio.errorInvitando"));
     } finally {
       setInviting(false);
     }
@@ -131,25 +131,20 @@ export default function EspacioPage() {
 
   async function handleToggleModoSocios(activo: boolean) {
     if (!bibliotecaActual) return;
-    if (
-      activo &&
-      !window.confirm(
-        "Al activar el modo socios, los préstamos nuevos se van a asignar a socios registrados en vez de anotar un nombre libre. ¿Continuar?"
-      )
-    ) {
+    if (activo && !window.confirm(t("espacio.confirmarModoSocios"))) {
       return;
     }
     try {
       await setModoSocios(bibliotecaActual.id, activo);
     } catch (err) {
       logError("Error actualizando el modo socios:", err);
-      toast.error("No pudimos actualizar el modo de préstamos.");
+      toast.error(t("espacio.errorModoSocios"));
     }
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Espacio compartido</h1>
+      <h1 className="text-2xl font-bold">{t("espacio.titulo")}</h1>
 
       {editingNombre ? (
         <div className="mb-1 mt-2 flex items-center gap-1.5">
@@ -166,7 +161,7 @@ export default function EspacioPage() {
             onClick={handleGuardarNombreEspacio}
             disabled={guardandoNombre}
           >
-            Guardar
+            {t("common.guardar")}
           </Button>
           <Button
             size="sm"
@@ -175,13 +170,13 @@ export default function EspacioPage() {
             onClick={() => setEditingNombre(false)}
             disabled={guardandoNombre}
           >
-            Cancelar
+            {t("common.cancelar")}
           </Button>
         </div>
       ) : (
         <div className="mb-1 mt-2 flex items-center gap-1.5">
           <p className="text-sm text-muted-foreground">
-            Nombre del espacio: <strong>{bibliotecaActual.nombre}</strong>
+            {t("espacio.nombreEspacioLabel")} <strong>{bibliotecaActual.nombre}</strong>
           </p>
           <button
             onClick={() => {
@@ -189,7 +184,7 @@ export default function EspacioPage() {
               setEditingNombre(true);
             }}
             className="text-muted-foreground"
-            aria-label="Editar nombre del espacio"
+            aria-label={t("espacio.editarNombreAriaLabel")}
           >
             <Pencil className="size-3.5" />
           </button>
@@ -197,20 +192,17 @@ export default function EspacioPage() {
       )}
 
       <p className="mb-1 mt-1 text-sm text-muted-foreground">
-        Todos los miembros pueden agregar, editar y prestar libros de esta
-        biblioteca.
+        {t("espacio.descripcionMiembros")}
       </p>
       <p className="mb-7 text-xs text-muted-foreground">
-        Si cargás tu WhatsApp, quien vea el catálogo público va a poder
-        pedirte libros directo desde ahí.
+        {t("espacio.descripcionWhatsapp")}
       </p>
 
       <div className="mb-7 flex items-center justify-between gap-4 rounded-lg border p-3.5">
         <div>
-          <Label className="text-sm font-semibold">Modo socios</Label>
+          <Label className="text-sm font-semibold">{t("espacio.modoSocios")}</Label>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Los préstamos se asignan a socios registrados (con historial) en
-            vez de anotar un nombre libre. Los dos modos no conviven.
+            {t("espacio.modoSociosDesc")}
           </p>
         </div>
         <Switch
@@ -230,20 +222,20 @@ export default function EspacioPage() {
                 <Input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Nombre"
+                  placeholder={t("espacio.placeholderNombre")}
                   className="h-8 text-sm"
                   autoFocus
                 />
                 <Input
                   value={editWhatsapp}
                   onChange={(e) => setEditWhatsapp(e.target.value)}
-                  placeholder="WhatsApp (con código de país, ej: 5491122334455)"
+                  placeholder={t("espacio.placeholderWhatsapp")}
                   inputMode="numeric"
                   className="h-8 text-sm"
                 />
                 <div className="flex gap-1.5">
                   <Button size="sm" className="h-8" onClick={() => handleGuardarNombre(m.uid)}>
-                    Guardar
+                    {t("common.guardar")}
                   </Button>
                   <Button
                     size="sm"
@@ -251,7 +243,7 @@ export default function EspacioPage() {
                     className="h-8"
                     onClick={() => setEditingUid(null)}
                   >
-                    Cancelar
+                    {t("common.cancelar")}
                   </Button>
                 </div>
               </div>
@@ -260,14 +252,16 @@ export default function EspacioPage() {
                 <div className="text-sm font-semibold">{m.nombre}</div>
                 <div className="text-xs text-muted-foreground">{m.email}</div>
                 {m.whatsapp && (
-                  <div className="text-xs text-muted-foreground">WhatsApp: {m.whatsapp}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {t("espacio.whatsappLabel")} {m.whatsapp}
+                  </div>
                 )}
               </div>
             )}
 
             <div className="flex shrink-0 items-center gap-2.5">
               <Badge variant={m.esOwner ? "default" : "secondary"}>
-                {m.esOwner ? "Dueño" : "Miembro"}
+                {m.esOwner ? t("espacio.dueno") : t("espacio.miembro")}
               </Badge>
               {editingUid !== m.uid && (
                 <Button
@@ -280,7 +274,7 @@ export default function EspacioPage() {
                     setEditWhatsapp(m.whatsapp);
                   }}
                 >
-                  Editar
+                  {t("espacio.editar")}
                 </Button>
               )}
               {!m.esOwner && (
@@ -290,7 +284,7 @@ export default function EspacioPage() {
                   className="h-8 text-destructive"
                   onClick={() => handleQuitar(m.uid)}
                 >
-                  Quitar acceso
+                  {t("espacio.quitarAcceso")}
                 </Button>
               )}
             </div>
@@ -301,7 +295,7 @@ export default function EspacioPage() {
       {bibliotecaActual.invitacionesPendientes.length > 0 && (
         <div className="mb-6">
           <div className="mb-2 text-xs font-semibold text-muted-foreground">
-            Invitaciones pendientes
+            {t("espacio.invitacionesPendientes")}
           </div>
           <div className="flex flex-col gap-1.5">
             {bibliotecaActual.invitacionesPendientes.map((email) => (
@@ -316,7 +310,7 @@ export default function EspacioPage() {
                   className="h-7 text-xs"
                   onClick={() => handleCancelarInvitacion(email)}
                 >
-                  Cancelar
+                  {t("common.cancelar")}
                 </Button>
               </div>
             ))}
@@ -324,26 +318,25 @@ export default function EspacioPage() {
         </div>
       )}
 
-      <div className="text-sm font-semibold">Invitar a un nuevo miembro</div>
+      <div className="text-sm font-semibold">{t("espacio.invitarNuevoMiembro")}</div>
       <p className="mb-2 mt-1 text-xs text-muted-foreground">
-        Le mandamos un mail con un link para entrar. Se une automáticamente
-        cuando inicie sesión con ese correo (Google o link de acceso).
+        {t("espacio.invitarDescripcion")}
       </p>
       <div className="flex gap-2">
         <Input
           type="email"
-          placeholder="correo@ejemplo.com"
+          placeholder={t("espacio.placeholderCorreo")}
           value={inviteEmail}
           onChange={(e) => setInviteEmail(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleInvitar()}
         />
         <Button onClick={handleInvitar} disabled={inviting}>
-          Invitar
+          {t("espacio.invitar")}
         </Button>
       </div>
 
       <p className="mt-6 text-xs text-muted-foreground">
-        Conectado como <strong>{user?.email}</strong>
+        {t("cuenta.conectadoComo")} <strong>{user?.email}</strong>
       </p>
 
       <EliminarBibliotecaDialog biblioteca={bibliotecaActual} />

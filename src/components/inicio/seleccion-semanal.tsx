@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/hooks/use-locale";
 import { getSeleccionSemanal } from "@/lib/firestore/libros";
 import type { LibroGlobal } from "@/types";
 
@@ -25,6 +26,7 @@ interface SeleccionSemanalProps {
 }
 
 export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
+  const { t } = useLocale();
   const [libros, setLibros] = useState<LibroGlobal[] | null>(null);
   const [seleccionado, setSeleccionado] = useState<LibroGlobal | null>(null);
   const key = Array.from(new Set(isbnsPropios)).sort().join(",");
@@ -46,9 +48,9 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
 
   return (
     <div>
-      <h2 className="mb-1 text-lg font-bold">Selección de la semana</h2>
+      <h2 className="mb-1 text-lg font-bold">{t("seleccionSemanal.titulo")}</h2>
       <p className="mb-4 text-sm text-muted-foreground">
-        Libros que otras bibliotecas de la comunidad tienen y vos todavía no.
+        {t("seleccionSemanal.descripcion")}
       </p>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-4">
         {(libros ?? Array.from({ length: 8 })).map((libro, i) =>
@@ -103,7 +105,9 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
               <Button asChild variant="outline" className="w-full">
                 <a href={linkLectura} target="_blank" rel="noopener noreferrer">
                   <BookOpen className="size-4" />
-                  {seleccionado?.previewLink ? "Leer online" : "Buscarlo"}
+                  {seleccionado?.previewLink
+                    ? t("seleccionSemanal.leerOnline")
+                    : t("seleccionSemanal.buscarlo")}
                 </a>
               </Button>
             )}
@@ -111,11 +115,13 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
               <div>
                 <strong>★ {seleccionado?.ratingPromedio ?? 0}</strong>
                 <span className="ml-1 text-muted-foreground">
-                  ({seleccionado?.totalResenas ?? 0} reseña(s))
+                  {t("seleccionSemanal.resenas", { cantidad: seleccionado?.totalResenas ?? 0 })}
                 </span>
               </div>
               <div className="text-muted-foreground">
-                {seleccionado?.propietarios ?? 0} biblioteca(s) lo tienen
+                {t("seleccionSemanal.bibliotecasLoTienen", {
+                  cantidad: seleccionado?.propietarios ?? 0,
+                })}
               </div>
             </div>
           </div>

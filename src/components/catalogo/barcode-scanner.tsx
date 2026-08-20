@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { Html5Qrcode } from "html5-qrcode";
 import { logError } from "@/lib/log";
+import { useLocale } from "@/hooks/use-locale";
 
 interface BarcodeScannerProps {
   onDetected: (codigo: string) => void;
@@ -11,6 +12,7 @@ interface BarcodeScannerProps {
 type Estado = "iniciando" | "escaneando" | "error";
 
 export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
+  const { t } = useLocale();
   const elementId = useId().replace(/:/g, "");
   const [estado, setEstado] = useState<Estado>("iniciando");
   const [errorMsg, setErrorMsg] = useState("");
@@ -79,9 +81,7 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
         logError("Error iniciando la cámara:", err);
         if (!cancelado) {
           setEstado("error");
-          setErrorMsg(
-            "No pudimos acceder a la cámara. Revisá los permisos del navegador o cargá el ISBN manualmente."
-          );
+          setErrorMsg(t("barcodeScanner.errorCamara"));
         }
       }
     }
@@ -101,7 +101,7 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
       <div id={elementId} className="[&_video]:!w-full [&_video]:!object-cover" />
       {estado === "iniciando" && (
         <div className="p-6 text-center text-xs text-muted-foreground">
-          Activando cámara…
+          {t("barcodeScanner.activandoCamara")}
         </div>
       )}
       {estado === "error" && (

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
+import { useLocale } from "@/hooks/use-locale";
 import { eliminarDatosDeCuenta } from "@/lib/firestore/eliminar-cuenta";
 
 const FRASE_CONFIRMACION = "ELIMINAR";
@@ -24,6 +25,7 @@ const FRASE_CONFIRMACION = "ELIMINAR";
 export function EliminarCuentaDialog() {
   const { user, deleteAccount, signOutUser } = useAuth();
   const { bibliotecas } = useBiblioteca();
+  const { t } = useLocale();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirmacion, setConfirmacion] = useState("");
@@ -43,19 +45,17 @@ export function EliminarCuentaDialog() {
     try {
       await eliminarDatosDeCuenta(user.uid, bibliotecas);
       await deleteAccount();
-      toast.success("Tu cuenta fue eliminada.");
+      toast.success(t("eliminarCuenta.cuentaEliminada"));
       router.push("/");
     } catch (err) {
       if (err instanceof Error && err.message === "NEEDS_RELOGIN") {
-        toast.error(
-          "Por seguridad, necesitamos que vuelvas a iniciar sesión antes de eliminar tu cuenta. Ya borramos el resto de tus datos: iniciá sesión de nuevo y volvé a intentarlo para terminar."
-        );
+        toast.error(t("eliminarCuenta.necesitaRelogin"));
         await signOutUser();
         router.push("/login");
         return;
       }
       logError("Error eliminando la cuenta:", err);
-      toast.error("No pudimos eliminar tu cuenta. Probá de nuevo.");
+      toast.error(t("eliminarCuenta.errorEliminando"));
     } finally {
       setEliminando(false);
     }
@@ -64,33 +64,30 @@ export function EliminarCuentaDialog() {
   return (
     <>
       <div className="mt-10 rounded-lg border border-destructive/30 p-4">
-        <p className="text-sm font-semibold text-destructive">Zona de peligro</p>
+        <p className="text-sm font-semibold text-destructive">{t("eliminarCuenta.zonaDePeligro")}</p>
         <p className="mt-1 mb-3 text-xs text-muted-foreground">
-          Eliminar tu cuenta borra tu perfil, tus lecturas, y cualquier
-          biblioteca de la que seas la única persona miembro (con todos sus
-          libros). Si compartís una biblioteca con alguien más, solo vas a
-          dejar de tener acceso a ella. Esta acción no se puede deshacer.
+          {t("eliminarCuenta.descripcionZonaDePeligro")}
         </p>
         <Button variant="destructive" size="sm" onClick={() => setOpen(true)}>
           <Trash2 className="size-4" />
-          Eliminar mi cuenta
+          {t("eliminarCuenta.eliminarMiCuenta")}
         </Button>
       </div>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>¿Eliminar tu cuenta para siempre?</DialogTitle>
+            <DialogTitle>{t("eliminarCuenta.tituloDialog")}</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-3 text-sm">
             <p className="text-muted-foreground">
-              Esto es permanente. Para confirmar, escribí{" "}
-              <strong>{FRASE_CONFIRMACION}</strong> abajo.
+              {t("eliminarCuenta.confirmarPrefijo")}{" "}
+              <strong>{FRASE_CONFIRMACION}</strong> {t("eliminarCuenta.confirmarSufijo")}
             </p>
             <div>
               <Label htmlFor="confirmar-eliminar" className="sr-only">
-                Escribí {FRASE_CONFIRMACION} para confirmar
+                {t("eliminarCuenta.escribirParaConfirmar", { frase: FRASE_CONFIRMACION })}
               </Label>
               <Input
                 id="confirmar-eliminar"
@@ -109,14 +106,14 @@ export function EliminarCuentaDialog() {
               onClick={() => handleOpenChange(false)}
               disabled={eliminando}
             >
-              Cancelar
+              {t("common.cancelar")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleEliminar}
               disabled={!confirmado || eliminando}
             >
-              {eliminando ? "Eliminando…" : "Eliminar mi cuenta"}
+              {eliminando ? t("eliminarCuenta.eliminando") : t("eliminarCuenta.eliminarMiCuenta")}
             </Button>
           </DialogFooter>
         </DialogContent>

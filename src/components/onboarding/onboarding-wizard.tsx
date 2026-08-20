@@ -16,16 +16,21 @@ import { logError, logSuccess } from "@/lib/log";
 
 const TOTAL_PASOS = 3;
 
-function nombreSugerido(displayName: string | null | undefined): string {
-  return displayName ? `Biblioteca de ${displayName.split(" ")[0]}` : "Mi biblioteca";
+function nombreSugerido(
+  displayName: string | null | undefined,
+  t: (key: string, vars?: Record<string, string | number>) => string
+): string {
+  return displayName
+    ? t("onboarding.bibliotecaDe", { nombre: displayName.split(" ")[0] })
+    : t("onboarding.bibliotecaPorDefecto");
 }
 
 export function OnboardingWizard() {
   const { user } = useAuth();
   const { crearYSeleccionar } = useBiblioteca();
-  const { localeLectura, setLocaleLectura } = useLocale();
+  const { localeLectura, setLocaleLectura, t } = useLocale();
   const [paso, setPaso] = useState(1);
-  const [nombre, setNombre] = useState(() => nombreSugerido(user?.displayName));
+  const [nombre, setNombre] = useState(() => nombreSugerido(user?.displayName, t));
   const [generos, setGeneros] = useState<string[]>([]);
   const [guardando, setGuardando] = useState(false);
 
@@ -35,11 +40,11 @@ export function OnboardingWizard() {
     try {
       await guardarPerfil(user.uid, { generosFavoritos: generos });
       logSuccess("Perfil guardado (géneros favoritos).", { uid: user.uid, generos });
-      await crearYSeleccionar(nombre.trim() || "Mi biblioteca");
+      await crearYSeleccionar(nombre.trim() || t("onboarding.bibliotecaPorDefecto"));
       logSuccess("Biblioteca creada.", { nombre });
     } catch (err) {
       logError("Error configurando la cuenta:", err);
-      toast.error("No pudimos crear tu biblioteca. Probá de nuevo.");
+      toast.error(t("onboarding.errorCreando"));
       setGuardando(false);
     }
   }
@@ -64,12 +69,11 @@ export function OnboardingWizard() {
             <div className="flex flex-col gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Paso 1 de {TOTAL_PASOS}
+                  {t("onboarding.pasoDe", { paso: 1, total: TOTAL_PASOS })}
                 </p>
-                <h1 className="mt-1 text-2xl font-bold">¿Cómo se llama tu biblioteca?</h1>
+                <h1 className="mt-1 text-2xl font-bold">{t("onboarding.tituloPaso1")}</h1>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  Es el espacio donde vas a cargar tus libros. Podés cambiarlo
-                  después desde Espacio compartido.
+                  {t("onboarding.descripcionPaso1")}
                 </p>
               </div>
               <Input
@@ -80,7 +84,7 @@ export function OnboardingWizard() {
                 className="h-11 text-base"
               />
               <Button size="lg" onClick={() => setPaso(2)} disabled={!nombre.trim()}>
-                Continuar
+                {t("onboarding.continuar")}
               </Button>
             </div>
           )}
@@ -89,21 +93,20 @@ export function OnboardingWizard() {
             <div className="flex flex-col gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Paso 2 de {TOTAL_PASOS}
+                  {t("onboarding.pasoDe", { paso: 2, total: TOTAL_PASOS })}
                 </p>
-                <h1 className="mt-1 text-2xl font-bold">¿En qué idiomas leés?</h1>
+                <h1 className="mt-1 text-2xl font-bold">{t("onboarding.tituloPaso2")}</h1>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  Podés elegir más de uno. Los usamos para priorizar los
-                  resultados al buscar un libro.
+                  {t("onboarding.descripcionPaso2")}
                 </p>
               </div>
               <LocaleMultiSelect value={localeLectura} onChange={setLocaleLectura} />
               <div className="flex gap-2">
                 <Button variant="outline" size="lg" onClick={() => setPaso(1)}>
-                  Atrás
+                  {t("onboarding.atras")}
                 </Button>
                 <Button size="lg" className="flex-1" onClick={() => setPaso(3)}>
-                  Continuar
+                  {t("onboarding.continuar")}
                 </Button>
               </div>
             </div>
@@ -113,12 +116,11 @@ export function OnboardingWizard() {
             <div className="flex flex-col gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Paso 3 de {TOTAL_PASOS}
+                  {t("onboarding.pasoDe", { paso: 3, total: TOTAL_PASOS })}
                 </p>
-                <h1 className="mt-1 text-2xl font-bold">¿Qué clase de lector sos?</h1>
+                <h1 className="mt-1 text-2xl font-bold">{t("onboarding.tituloPaso3")}</h1>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  Elegí con lo que te identifiques. Opcional, y lo podés
-                  cambiar cuando quieras desde Mi cuenta.
+                  {t("onboarding.descripcionPaso3")}
                 </p>
               </div>
               <div className="max-h-[40vh] overflow-y-auto rounded-lg border p-3">
@@ -135,7 +137,7 @@ export function OnboardingWizard() {
                   onClick={() => setPaso(2)}
                   disabled={guardando}
                 >
-                  Atrás
+                  {t("onboarding.atras")}
                 </Button>
                 <Button
                   size="lg"
@@ -143,7 +145,7 @@ export function OnboardingWizard() {
                   onClick={handleFinalizar}
                   disabled={guardando}
                 >
-                  {guardando ? "Creando tu biblioteca…" : "Empezar"}
+                  {guardando ? t("onboarding.creando") : t("onboarding.empezar")}
                 </Button>
               </div>
             </div>

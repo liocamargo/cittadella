@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ChevronLeft, ChevronRight, Library, Loader2, Mail, MessageCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Library, Mail, MessageCircle } from "lucide-react";
+import { BookSpinner } from "@/components/ui/book-spinner";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,7 @@ export default function CatalogoPublicoPage() {
   if (catalogo === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        <BookSpinner />
       </div>
     );
   }

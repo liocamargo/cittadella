@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLocale } from "@/hooks/use-locale";
 import { logError } from "@/lib/log";
 import {
   Dialog,
@@ -28,6 +29,7 @@ import { listenSocios } from "@/lib/firestore/socios";
 import type { LibroEnBiblioteca, Socio } from "@/types";
 
 export default function PrestamosPage() {
+  const { t } = useLocale();
   const { bibliotecaActual } = useBiblioteca();
   const [copias, setCopias] = useState<LibroEnBiblioteca[]>([]);
   const [socios, setSocios] = useState<Socio[]>([]);
@@ -70,10 +72,10 @@ export default function PrestamosPage() {
   async function handleDevolver(copia: LibroEnBiblioteca) {
     try {
       await devolverLibro(copia.id, copia.historialActivoId);
-      toast.success("Marcado como devuelto.");
+      toast.success(t("prestamos.devueltoOk"));
     } catch (err) {
       logError("Error marcando devolución:", err);
-      toast.error("No pudimos actualizar el préstamo.");
+      toast.error(t("prestamos.errorActualizarPrestamo"));
     }
   }
 
@@ -88,7 +90,7 @@ export default function PrestamosPage() {
   async function handlePrestar() {
     const copia = copias.find((c) => c.id === copiaAPrestar);
     if (!copia) {
-      toast.error("Elegí qué libro prestás.");
+      toast.error(t("prestamos.errorElegirLibro"));
       return;
     }
     const modoSocios = Boolean(bibliotecaActual?.modoSocios);
@@ -96,11 +98,11 @@ export default function PrestamosPage() {
       ? socios.find((s) => s.id === socioIdPrestamo)?.nombre ?? ""
       : nombrePrestamo.trim();
     if (modoSocios && !socioIdPrestamo) {
-      toast.error("Elegí a qué socio se lo prestás.");
+      toast.error(t("prestamos.errorElegirSocio"));
       return;
     }
     if (!modoSocios && !nombreDestino) {
-      toast.error("Ingresá a quién se lo prestás.");
+      toast.error(t("prestamos.errorIngresarNombre"));
       return;
     }
     setGuardandoPrestamo(true);
@@ -111,11 +113,11 @@ export default function PrestamosPage() {
         fechaPrestamo,
         modoSocios ? socioIdPrestamo : undefined
       );
-      toast.success("Préstamo registrado.");
+      toast.success(t("prestamos.prestamoRegistrado"));
       setPrestarOpen(false);
     } catch (err) {
       logError("Error registrando el préstamo:", err);
-      toast.error("No pudimos registrar el préstamo.");
+      toast.error(t("prestamos.errorRegistrarPrestamo"));
     } finally {
       setGuardandoPrestamo(false);
     }
@@ -124,18 +126,18 @@ export default function PrestamosPage() {
   return (
     <div>
       <div className="mb-1 flex flex-wrap items-start justify-between gap-4">
-        <h1 className="text-2xl font-bold">Préstamos</h1>
+        <h1 className="text-2xl font-bold">{t("prestamos.titulo")}</h1>
         <Button
           className="hidden md:inline-flex"
           onClick={abrirPrestar}
           disabled={disponibles.length === 0}
         >
           <Handshake />
-          Prestar libro
+          {t("prestamos.prestarLibro")}
         </Button>
       </div>
       <p className="mb-6 mt-1 text-sm text-muted-foreground">
-        {prestados.length} libro(s) actualmente prestado(s)
+        {t("prestamos.subtitulo", { cantidad: prestados.length })}
       </p>
 
       {/* Mobile: FAB flotante para prestar, igual que en Catálogo */}
@@ -143,14 +145,14 @@ export default function PrestamosPage() {
         onClick={abrirPrestar}
         disabled={disponibles.length === 0}
         className="fixed right-4 bottom-20 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg disabled:opacity-40 md:hidden"
-        aria-label="Prestar libro"
+        aria-label={t("prestamos.prestarLibro")}
       >
         <Handshake className="size-6" />
       </button>
 
       {prestados.length === 0 && (
         <div className="py-16 text-center text-sm text-muted-foreground">
-          No hay libros prestados ahora mismo.
+          {t("prestamos.sinPrestamos")}
         </div>
       )}
 
@@ -181,14 +183,14 @@ export default function PrestamosPage() {
                 {global?.autor}
               </div>
               <Badge variant="outline" className="w-fit text-[11px]">
-                Prestado a {copia.prestadoA}
+                {t("prestamos.prestadoA", { nombre: copia.prestadoA ?? "" })}
               </Badge>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => handleDevolver(copia)}
               >
-                Marcar como devuelto
+                {t("prestamos.marcarDevuelto")}
               </Button>
             </div>
           );
@@ -198,28 +200,28 @@ export default function PrestamosPage() {
       <Dialog open={prestarOpen} onOpenChange={setPrestarOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Prestar libro</DialogTitle>
+            <DialogTitle>{t("prestamos.prestarLibro")}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-3">
             <div>
               <Label className="mb-1.5 block text-xs text-muted-foreground">
-                Libro
+                {t("prestamos.libro")}
               </Label>
               {disponibles.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No tenés libros disponibles para prestar.
+                  {t("prestamos.sinDisponibles")}
                 </p>
               ) : (
                 <Select value={copiaAPrestar} onValueChange={setCopiaAPrestar}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Elegí un libro" />
+                    <SelectValue placeholder={t("prestamos.elegirLibro")} />
                   </SelectTrigger>
                   <SelectContent>
                     {disponibles.map((c) => {
                       const g = globales[c.isbn];
                       return (
                         <SelectItem key={c.id} value={c.id}>
-                          {g?.titulo ?? "Sin título"}
+                          {g?.titulo ?? t("prestamos.sinTitulo")}
                           {g?.autor ? ` — ${g.autor}` : ""}
                         </SelectItem>
                       );
@@ -230,17 +232,17 @@ export default function PrestamosPage() {
             </div>
             <div>
               <Label className="mb-1.5 block text-xs text-muted-foreground">
-                ¿A quién se lo prestás?
+                {t("prestamos.aQuienSePresta")}
               </Label>
               {bibliotecaActual?.modoSocios ? (
                 <Select value={socioIdPrestamo} onValueChange={setSocioIdPrestamo}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Elegí un socio" />
+                    <SelectValue placeholder={t("prestamos.elegirSocio")} />
                   </SelectTrigger>
                   <SelectContent>
                     {socios.length === 0 ? (
                       <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                        No hay socios cargados todavía.
+                        {t("prestamos.sinSocios")}
                       </div>
                     ) : (
                       socios.map((s) => (
@@ -255,13 +257,13 @@ export default function PrestamosPage() {
                 <Input
                   value={nombrePrestamo}
                   onChange={(e) => setNombrePrestamo(e.target.value)}
-                  placeholder="Nombre"
+                  placeholder={t("prestamos.nombrePlaceholder")}
                 />
               )}
             </div>
             <div>
               <Label className="mb-1.5 block text-xs text-muted-foreground">
-                Fecha de salida
+                {t("prestamos.fechaSalida")}
               </Label>
               <Input
                 type="date"
@@ -271,14 +273,14 @@ export default function PrestamosPage() {
             </div>
             <div className="flex gap-2 pt-2">
               <Button variant="outline" onClick={() => setPrestarOpen(false)}>
-                Cancelar
+                {t("common.cancelar")}
               </Button>
               <Button
                 className="flex-1"
                 onClick={handlePrestar}
                 disabled={guardandoPrestamo || disponibles.length === 0}
               >
-                Confirmar préstamo
+                {t("prestamos.confirmarPrestamo")}
               </Button>
             </div>
           </div>

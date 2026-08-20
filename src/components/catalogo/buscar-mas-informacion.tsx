@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logError } from "@/lib/log";
+import { useLocale } from "@/hooks/use-locale";
 import {
   buscarPorIsbn,
   mensajeErrorBusqueda,
@@ -30,6 +31,7 @@ export function BuscarMasInformacion({
   idiomasLectura,
   onEncontrado,
 }: BuscarMasInformacionProps) {
+  const { t } = useLocale();
   const [buscando, setBuscando] = useState(false);
   const [porTitulo, setPorTitulo] = useState(false);
   const tieneIsbn = Boolean(isbn && !isbn.startsWith("manual-"));
@@ -41,14 +43,14 @@ export function BuscarMasInformacion({
       const encontrado = await buscarPorIsbn(isbn, idiomasLectura);
       if (encontrado) {
         onEncontrado(encontrado);
-        toast.success("Completamos lo que encontramos en Google Books.");
+        toast.success(t("buscarInformacion.completado"));
       } else {
-        toast.error("No encontramos más información para ese ISBN.");
+        toast.error(t("buscarInformacion.errorSinIsbn"));
         setPorTitulo(true);
       }
     } catch (err) {
       logError("Error buscando más información:", err);
-      toast.error(mensajeErrorBusqueda(err, "No pudimos buscar más información."));
+      toast.error(mensajeErrorBusqueda(err, t("buscarInformacion.errorBuscando")));
     } finally {
       setBuscando(false);
     }
@@ -57,16 +59,16 @@ export function BuscarMasInformacion({
   function handleSeleccionarPorTitulo(resultado: ResultadoBusquedaTitulo) {
     onEncontrado(resultado);
     setPorTitulo(false);
-    toast.success("Completamos lo que encontramos en Google Books.");
+    toast.success(t("buscarInformacion.completado"));
   }
 
   return (
     <div className="rounded-lg border border-dashed p-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold">Buscar más información</p>
+          <p className="text-xs font-semibold">{t("buscarInformacion.titulo")}</p>
           <p className="text-xs text-muted-foreground">
-            Completa los campos con lo que encuentre en Google Books.
+            {t("buscarInformacion.descripcion")}
           </p>
         </div>
         {tieneIsbn && !porTitulo && (
@@ -82,7 +84,7 @@ export function BuscarMasInformacion({
             ) : (
               <Sparkles className="size-4" />
             )}
-            Buscar por ISBN
+            {t("buscarInformacion.buscarPorIsbn")}
           </Button>
         )}
       </div>
@@ -93,7 +95,7 @@ export function BuscarMasInformacion({
           onClick={() => setPorTitulo(true)}
           className="mt-2 text-xs text-muted-foreground underline"
         >
-          Buscar por título en cambio
+          {t("buscarInformacion.buscarPorTituloEnCambio")}
         </button>
       )}
 

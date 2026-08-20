@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { cn, normalizarBusqueda } from "@/lib/utils";
+import { useLocale } from "@/hooks/use-locale";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
 import { listenInventario, toggleFavorito } from "@/lib/firestore/libros";
@@ -24,11 +25,7 @@ import type { LibroEnBiblioteca } from "@/types";
 
 type Filtro = "all" | "disponible" | "favorito";
 
-const FILTROS: { key: Filtro; label: string }[] = [
-  { key: "all", label: "Todos" },
-  { key: "disponible", label: "Disponibles" },
-  { key: "favorito", label: "★ Favoritos" },
-];
+const FILTROS: Filtro[] = ["all", "disponible", "favorito"];
 
 /** Primera letra para agrupar/indexar; todo lo que no sea A-Z cae en "#". */
 function letraDe(titulo: string): string {
@@ -45,6 +42,7 @@ function irALetra(letra: string) {
 }
 
 export default function CatalogoPage() {
+  const { t } = useLocale();
   const { bibliotecaActual } = useBiblioteca();
   const [copias, setCopias] = useState<LibroEnBiblioteca[]>([]);
   const [search, setSearch] = useState("");
@@ -147,6 +145,12 @@ export default function CatalogoPage() {
 
   const selected = copias.find((c) => c.id === selectedId) ?? null;
 
+  const filtroLabel: Record<Filtro, string> = {
+    all: t("catalogo.filtroTodos"),
+    disponible: t("catalogo.filtroDisponibles"),
+    favorito: t("catalogo.filtroFavoritos"),
+  };
+
   async function handleCreateShelf() {
     if (!bibliotecaActual || !newShelf.trim()) return;
     try {
@@ -155,29 +159,29 @@ export default function CatalogoPage() {
       setShelfCreateOpen(false);
     } catch (err) {
       logError("Error creando estante:", err);
-      toast.error("No pudimos crear el estante.");
+      toast.error(t("catalogo.errorCrearEstante"));
     }
   }
 
   async function handleDeleteShelf(nombre: string) {
     if (!bibliotecaActual) return;
-    if (!window.confirm(`¿Eliminar el estante "${nombre}"?`)) return;
+    if (!window.confirm(t("catalogo.confirmarEliminarEstante", { nombre }))) return;
     try {
       await eliminarEstante(bibliotecaActual.id, nombre);
       setShelfFilter("all");
     } catch (err) {
       logError("Error eliminando estante:", err);
-      toast.error("No pudimos eliminar el estante.");
+      toast.error(t("catalogo.errorEliminarEstante"));
     }
   }
 
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <h1 className="text-2xl font-bold">Catálogo</h1>
+        <h1 className="text-2xl font-bold">{t("catalogo.titulo")}</h1>
         <div className="flex flex-wrap items-center gap-2.5">
           <SearchInput
-            placeholder="Buscar por título, autor o género"
+            placeholder={t("catalogo.buscarPlaceholder")}
             value={search}
             onValueChange={setSearch}
             className="w-[220px]"
@@ -196,7 +200,7 @@ export default function CatalogoPage() {
                 "flex size-7 items-center justify-center rounded text-muted-foreground",
                 vista === "grilla" && "bg-accent text-foreground"
               )}
-              aria-label="Vista en grilla"
+              aria-label={t("catalogo.vistaGrilla")}
             >
               <LayoutGrid className="size-4" />
             </button>
@@ -206,7 +210,7 @@ export default function CatalogoPage() {
                 "flex size-7 items-center justify-center rounded text-muted-foreground",
                 vista === "lista" && "bg-accent text-foreground"
               )}
-              aria-label="Vista en lista"
+              aria-label={t("catalogo.vistaLista")}
             >
               <List className="size-4" />
             </button>
@@ -214,7 +218,7 @@ export default function CatalogoPage() {
           <Button asChild className="hidden md:inline-flex">
             <Link href="/catalogo/agregar">
               <Plus />
-              Agregar libro
+              {t("catalogo.agregarLibro")}
             </Link>
           </Button>
         </div>
@@ -224,7 +228,7 @@ export default function CatalogoPage() {
       <Link
         href="/catalogo/agregar"
         className="fixed right-4 bottom-20 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:hidden"
-        aria-label="Agregar libro"
+        aria-label={t("catalogo.agregarLibro")}
       >
         <BookPlus className="size-6" />
       </Link>
@@ -232,18 +236,18 @@ export default function CatalogoPage() {
       <div className="mb-6 flex flex-wrap items-center gap-2">
         {FILTROS.map((f) => (
           <button
-            key={f.key}
-            onClick={() => setFiltro(f.key)}
+            key={f}
+            onClick={() => setFiltro(f)}
             className={cn(
               "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
-              filtro === f.key && "border-foreground bg-foreground text-background"
+              filtro === f && "border-foreground bg-foreground text-background"
             )}
           >
-            {f.label} ({conteos[f.key]})
+            {filtroLabel[f]} ({conteos[f]})
           </button>
         ))}
         <div className="mx-1 h-5 w-px bg-border" />
-        <span className="text-xs text-muted-foreground">Estante:</span>
+        <span className="text-xs text-muted-foreground">{t("catalogo.estanteLabel")}</span>
         <button
           onClick={() => setShelfFilter("all")}
           className={cn(
@@ -251,7 +255,7 @@ export default function CatalogoPage() {
             shelfFilter === "all" && "border-foreground bg-foreground text-background"
           )}
         >
-          Todos ({copias.length})
+          {t("catalogo.estanteTodos")} ({copias.length})
         </button>
         {estantes.map((e) => (
           <button
@@ -270,7 +274,7 @@ export default function CatalogoPage() {
             onClick={() => handleDeleteShelf(shelfFilter)}
             className="rounded-full border px-3 py-1.5 text-xs text-muted-foreground"
           >
-            Eliminar estante
+            {t("catalogo.eliminarEstante")}
           </button>
         )}
         {shelfCreateOpen ? (
@@ -280,11 +284,11 @@ export default function CatalogoPage() {
               value={newShelf}
               onChange={(e) => setNewShelf(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreateShelf()}
-              placeholder="Nombre del estante"
+              placeholder={t("catalogo.nombreEstantePlaceholder")}
               className="h-8 w-40 text-xs"
             />
             <Button size="sm" className="h-8" onClick={handleCreateShelf}>
-              Crear
+              {t("catalogo.crear")}
             </Button>
           </div>
         ) : (
@@ -292,7 +296,7 @@ export default function CatalogoPage() {
             onClick={() => setShelfCreateOpen(true)}
             className="rounded-full border border-dashed px-3 py-1.5 text-xs text-muted-foreground"
           >
-            + Crear estante
+            {t("catalogo.crearEstante")}
           </button>
         )}
       </div>
@@ -300,8 +304,8 @@ export default function CatalogoPage() {
       {filtrados.length === 0 && (
         <div className="py-16 text-center text-sm text-muted-foreground">
           {copias.length === 0
-            ? "Todavía no agregaste ningún libro."
-            : "Sin resultados para esta búsqueda."}
+            ? t("catalogo.vacioSinLibros")
+            : t("catalogo.vacioSinResultados")}
         </div>
       )}
 
@@ -330,7 +334,7 @@ export default function CatalogoPage() {
                     onToggleFavorito={() =>
                       toggleFavorito(copia.id, !copia.favorito).catch((err) => {
                         logError("Error actualizando favorito:", err);
-                        toast.error("No pudimos actualizar el favorito.");
+                        toast.error(t("catalogo.errorActualizarFavorito"));
                       })
                     }
                   />
@@ -347,7 +351,7 @@ export default function CatalogoPage() {
                     onToggleFavorito={() =>
                       toggleFavorito(copia.id, !copia.favorito).catch((err) => {
                         logError("Error actualizando favorito:", err);
-                        toast.error("No pudimos actualizar el favorito.");
+                        toast.error(t("catalogo.errorActualizarFavorito"));
                       })
                     }
                   />

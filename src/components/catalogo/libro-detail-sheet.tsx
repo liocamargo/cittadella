@@ -86,7 +86,7 @@ export function LibroDetailSheet({
 }: LibroDetailSheetProps) {
   const { user } = useAuth();
   const { bibliotecaActual } = useBiblioteca();
-  const { localeLectura } = useLocale();
+  const { localeLectura, t } = useLocale();
   const { autores: sugerenciasAutor, editoriales: sugerenciasEditorial } =
     useSugerenciasComunidad();
   const [prestando, setPrestando] = useState(false);
@@ -154,7 +154,7 @@ export function LibroDetailSheet({
   async function handleGuardarEdicion() {
     if (!copia) return;
     if (!formEdit.titulo.trim()) {
-      toast.error("El título es obligatorio.");
+      toast.error(t("libroDetail.errorTituloObligatorio"));
       return;
     }
     setGuardandoEdicion(true);
@@ -177,11 +177,11 @@ export function LibroDetailSheet({
         tipoTapa: formEdit.tipoTapa.trim() || undefined,
         notas: formEdit.notas.trim() || undefined,
       });
-      toast.success("Datos actualizados.");
+      toast.success(t("libroDetail.datosActualizados"));
       setEditando(false);
     } catch (err) {
       logError("Error editando el libro:", err);
-      toast.error("No pudimos guardar los cambios.");
+      toast.error(t("libroDetail.errorGuardandoCambios"));
     } finally {
       setGuardandoEdicion(false);
     }
@@ -194,11 +194,11 @@ export function LibroDetailSheet({
       ? socios.find((s) => s.id === loanSocioId)?.nombre ?? ""
       : loanName.trim();
     if (modoSocios && !loanSocioId) {
-      toast.error("Elegí a qué socio se lo prestás.");
+      toast.error(t("libroDetail.errorElegirSocio"));
       return;
     }
     if (!modoSocios && !nombreDestino) {
-      toast.error("Ingresá a quién se lo prestás.");
+      toast.error(t("libroDetail.errorIngresarNombre"));
       return;
     }
     try {
@@ -213,7 +213,7 @@ export function LibroDetailSheet({
       setPrestando(false);
     } catch (err) {
       logError("Error registrando el préstamo:", err);
-      toast.error("No pudimos registrar el préstamo.");
+      toast.error(t("libroDetail.errorRegistrandoPrestamo"));
     }
   }
 
@@ -223,13 +223,14 @@ export function LibroDetailSheet({
       await devolverLibro(copia.id, copia.historialActivoId);
     } catch (err) {
       logError("Error registrando la devolución:", err);
-      toast.error("No pudimos registrar la devolución.");
+      toast.error(t("libroDetail.errorRegistrandoDevolucion"));
     }
   }
 
   async function handleEliminar() {
     if (!copia) return;
-    if (!window.confirm(`¿Eliminar "${global?.titulo ?? "este libro"}" de tu biblioteca?`)) {
+    const titulo = global?.titulo ?? t("libroDetail.esteLibro");
+    if (!window.confirm(t("libroDetail.confirmarEliminar", { titulo }))) {
       return;
     }
     try {
@@ -237,21 +238,21 @@ export function LibroDetailSheet({
       onClose();
     } catch (err) {
       logError("Error eliminando el libro:", err);
-      toast.error("No pudimos eliminar el libro.");
+      toast.error(t("libroDetail.errorEliminandoLibro"));
     }
   }
 
   async function handlePublicarResena() {
     if (!copia || !user) return;
     if (!comentario.trim()) {
-      toast.error("Escribí un comentario.");
+      toast.error(t("libroDetail.errorEscribirComentario"));
       return;
     }
     try {
       await publicarResena(
         copia.isbn,
         user.uid,
-        user.displayName ?? user.email ?? "Anónimo",
+        user.displayName ?? user.email ?? t("libroDetail.anonimo"),
         estrellas,
         comentario.trim()
       );
@@ -259,7 +260,7 @@ export function LibroDetailSheet({
       setReviewOpen(false);
     } catch (err) {
       logError("Error publicando la reseña:", err);
-      toast.error("No pudimos publicar la reseña.");
+      toast.error(t("libroDetail.errorPublicandoResena"));
     }
   }
 
@@ -294,7 +295,7 @@ export function LibroDetailSheet({
       await actualizarPortada(copia.isbn, url);
     } catch (err) {
       logError("Error actualizando la portada:", err);
-      toast.error("No pudimos actualizar la portada.");
+      toast.error(t("libroDetail.errorActualizandoPortada"));
     }
   }
 
@@ -333,7 +334,9 @@ export function LibroDetailSheet({
               size="sm"
               onClick={() => setPortadaPickerOpen(true)}
             >
-              {global?.portadaUrl ? "Cambiar portada" : "Agregar portada"}
+              {global?.portadaUrl
+              ? t("libroDetail.cambiarPortada")
+              : t("libroDetail.agregarPortada")}
             </Button>
           </div>
 
@@ -348,7 +351,7 @@ export function LibroDetailSheet({
               onClick={() =>
                 toggleFavorito(copia.id, !copia.favorito).catch((err) => {
                   logError("Error actualizando favorito:", err);
-                  toast.error("No pudimos actualizar el favorito.");
+                  toast.error(t("libroDetail.errorActualizandoFavorito"));
                 })
               }
               className={cn(
@@ -368,52 +371,52 @@ export function LibroDetailSheet({
             className="w-fit"
           >
             {copia.estado === "disponible"
-              ? "Disponible"
-              : `Prestado a ${copia.prestadoA}`}
+              ? t("libroDetail.disponible")
+              : t("libroDetail.prestadoA", { nombre: copia.prestadoA ?? "" })}
           </Badge>
 
           <div className="flex flex-col gap-1.5 text-sm">
             <div className="flex items-center justify-between">
               <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                Datos del libro
+                {t("libroDetail.datosDelLibro")}
               </div>
               <button
                 onClick={handleEmpezarEdicion}
                 className="flex items-center gap-1 text-xs font-semibold text-primary underline"
               >
                 <Pencil className="size-3" />
-                Editar
+                {t("libroDetail.editar")}
               </button>
             </div>
             <div>
-              <strong>ISBN:</strong> {copia.isbn || "—"}
+              <strong>{t("libroDetail.isbn")}</strong> {copia.isbn || "—"}
             </div>
             {global?.ilustrador && (
               <div>
-                <strong>Ilustrador:</strong> {global.ilustrador}
+                <strong>{t("libroDetail.ilustrador")}</strong> {global.ilustrador}
               </div>
             )}
             <div>
-              <strong>Editorial:</strong> {global?.editorial || "—"}
+              <strong>{t("libroDetail.editorial")}</strong> {global?.editorial || "—"}
             </div>
             <div>
-              <strong>Año:</strong> {global?.anio || "—"}
+              <strong>{t("libroDetail.anio")}</strong> {global?.anio || "—"}
             </div>
             {global?.paginas && (
               <div>
-                <strong>Páginas:</strong> {global.paginas}
+                <strong>{t("libroDetail.paginas")}</strong> {global.paginas}
               </div>
             )}
             {global?.volumen && (
               <div>
-                <strong>Volumen:</strong> {global.volumen}
+                <strong>{t("libroDetail.volumen")}</strong> {global.volumen}
               </div>
             )}
             <div>
-              <strong>Idioma:</strong> {global?.idioma || "—"}
+              <strong>{t("libroDetail.idioma")}</strong> {global?.idioma || "—"}
             </div>
             <div>
-              <strong>Género:</strong> {global?.genero || "—"}
+              <strong>{t("libroDetail.genero")}</strong> {global?.genero || "—"}
             </div>
           </div>
 
@@ -430,7 +433,9 @@ export function LibroDetailSheet({
             <Button asChild variant="outline" className="w-full">
               <a href={linkLectura} target="_blank" rel="noopener noreferrer">
                 <BookOpen className="size-4" />
-                {global?.previewLink ? "Leer online" : "Buscarlo"}
+                {global?.previewLink
+                  ? t("libroDetail.leerOnline")
+                  : t("libroDetail.buscarlo")}
               </a>
             </Button>
           )}
@@ -441,45 +446,47 @@ export function LibroDetailSheet({
                 ★ {global?.ratingPromedio ?? 0}
               </div>
               <div className="text-[11px] text-muted-foreground">
-                {global?.totalResenas ?? 0} reseña(s)
+                {t("libroDetail.totalResenas", { cantidad: global?.totalResenas ?? 0 })}
               </div>
             </div>
             <div>
               <div className="text-base font-bold">{global?.propietarios ?? 0}</div>
-              <div className="text-[11px] text-muted-foreground">propietario(s)</div>
+              <div className="text-[11px] text-muted-foreground">
+                {t("libroDetail.propietarios")}
+              </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5 border-t pt-4 text-sm">
             <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-              Tu copia
+              {t("libroDetail.tuCopia")}
             </div>
             <div>
-              <strong>Estante:</strong> {copia.estante || "—"}
+              <strong>{t("libroDetail.estante")}</strong> {copia.estante || "—"}
             </div>
             {copia.tipoTapa && (
               <div>
-                <strong>Tapa:</strong> {copia.tipoTapa}
+                <strong>{t("libroDetail.tapa")}</strong> {copia.tipoTapa}
               </div>
             )}
             <div>
-              <strong>Agregado:</strong> {copia.fechaAgregado?.slice(0, 10)}
+              <strong>{t("libroDetail.agregado")}</strong> {copia.fechaAgregado?.slice(0, 10)}
             </div>
             {copia.notas && (
               <div>
-                <strong>Notas privadas:</strong> {copia.notas}
+                <strong>{t("libroDetail.notasPrivadas")}</strong> {copia.notas}
               </div>
             )}
           </div>
 
           <div className="border-t pt-4">
             <div className="mb-2.5 flex items-center justify-between">
-              <div className="text-sm font-semibold">Reseñas de la comunidad</div>
+              <div className="text-sm font-semibold">{t("libroDetail.resenasComunidad")}</div>
               <button
                 onClick={() => setReviewOpen((o) => !o)}
                 className="text-xs font-semibold text-primary underline"
               >
-                {reviewOpen ? "Cancelar" : "Escribir reseña"}
+                {reviewOpen ? t("common.cancelar") : t("libroDetail.escribirResena")}
               </button>
             </div>
 
@@ -487,20 +494,20 @@ export function LibroDetailSheet({
               <div className="mb-3 flex flex-col gap-2 rounded-lg border p-3">
                 <RatingCaraPicker value={estrellas} onChange={setEstrellas} />
                 <Textarea
-                  placeholder="Escribí tu reseña..."
+                  placeholder={t("libroDetail.placeholderResena")}
                   value={comentario}
                   onChange={(e) => setComentario(e.target.value)}
                   rows={3}
                 />
                 <Button size="sm" className="self-end" onClick={handlePublicarResena}>
-                  Publicar reseña
+                  {t("libroDetail.publicarResena")}
                 </Button>
               </div>
             )}
 
             {resenas.length === 0 && (
               <p className="text-xs text-muted-foreground">
-                Todavía no hay reseñas para este libro.
+                {t("libroDetail.sinResenas")}
               </p>
             )}
             <div className="flex flex-col gap-2">
@@ -522,16 +529,16 @@ export function LibroDetailSheet({
         <SheetFooter className="border-t">
           {prestando ? (
             <div className="flex flex-col gap-3">
-              <Label>¿A quién se lo prestás?</Label>
+              <Label>{t("libroDetail.aQuienSeLoPrestas")}</Label>
               {bibliotecaActual?.modoSocios ? (
                 <Select value={loanSocioId} onValueChange={setLoanSocioId}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Elegí un socio" />
+                    <SelectValue placeholder={t("libroDetail.placeholderElegirSocio")} />
                   </SelectTrigger>
                   <SelectContent>
                     {socios.length === 0 ? (
                       <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                        No hay socios cargados todavía.
+                        {t("libroDetail.sinSocios")}
                       </div>
                     ) : (
                       socios.map((s) => (
@@ -546,10 +553,10 @@ export function LibroDetailSheet({
                 <Input
                   value={loanName}
                   onChange={(e) => setLoanName(e.target.value)}
-                  placeholder="Nombre"
+                  placeholder={t("libroDetail.placeholderNombre")}
                 />
               )}
-              <Label>Fecha de salida</Label>
+              <Label>{t("libroDetail.fechaDeSalida")}</Label>
               <Input
                 type="date"
                 value={loanDate}
@@ -557,10 +564,10 @@ export function LibroDetailSheet({
               />
               <div className="flex gap-2">
                 <Button className="flex-1" onClick={handlePrestar}>
-                  Confirmar préstamo
+                  {t("libroDetail.confirmarPrestamo")}
                 </Button>
                 <Button variant="outline" onClick={() => setPrestando(false)}>
-                  Cancelar
+                  {t("common.cancelar")}
                 </Button>
               </div>
             </div>
@@ -568,11 +575,11 @@ export function LibroDetailSheet({
             <div className="flex gap-2">
               {copia.estado === "disponible" ? (
                 <Button className="flex-1" onClick={() => setPrestando(true)}>
-                  Prestar
+                  {t("libroDetail.prestar")}
                 </Button>
               ) : (
                 <Button className="flex-1" onClick={handleDevolver}>
-                  Devolver
+                  {t("libroDetail.devolver")}
                 </Button>
               )}
               <Button
@@ -584,12 +591,12 @@ export function LibroDetailSheet({
                 onClick={() =>
                   toggleLeido(copia.id, !copia.leido).catch((err) => {
                     logError("Error actualizando leído:", err);
-                    toast.error("No pudimos actualizar el estado de leído.");
+                    toast.error(t("libroDetail.errorActualizandoLeido"));
                   })
                 }
               >
                 {copia.leido && <Check className="size-4" />}
-                {copia.leido ? "Leído" : "Marcar leído"}
+                {copia.leido ? t("libroDetail.leido") : t("libroDetail.marcarLeido")}
               </Button>
               <Button variant="outline" size="icon" onClick={handleEliminar}>
                 <Trash2 className="size-4 text-destructive" />
@@ -612,7 +619,7 @@ export function LibroDetailSheet({
       >
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Editar datos</DialogTitle>
+            <DialogTitle>{t("libroDetail.editarDatos")}</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-3 text-sm">
@@ -622,74 +629,74 @@ export function LibroDetailSheet({
               onEncontrado={handleDatosEncontrados}
             />
 
-            <FieldEdit label="Título">
+            <FieldEdit label={t("libroDetail.campoTitulo")}>
               <Input
                 value={formEdit.titulo}
                 onChange={(e) => setCampoEdit("titulo", e.target.value)}
               />
             </FieldEdit>
-            <FieldEdit label="Subtítulo">
+            <FieldEdit label={t("libroDetail.campoSubtitulo")}>
               <Input
                 value={formEdit.subtitulo}
                 onChange={(e) => setCampoEdit("subtitulo", e.target.value)}
               />
             </FieldEdit>
-            <FieldEdit label="Autor(es)">
+            <FieldEdit label={t("libroDetail.campoAutor")}>
               <Input
                 value={formEdit.autor}
                 onChange={(e) => setCampoEdit("autor", e.target.value)}
                 list="sugerencias-autor"
               />
             </FieldEdit>
-            <FieldEdit label="Ilustrador(es)">
+            <FieldEdit label={t("libroDetail.campoIlustrador")}>
               <Input
                 value={formEdit.ilustrador}
                 onChange={(e) => setCampoEdit("ilustrador", e.target.value)}
               />
             </FieldEdit>
             <div className="flex gap-3">
-              <FieldEdit label="Editorial" className="flex-[2]">
+              <FieldEdit label={t("libroDetail.campoEditorial")} className="flex-[2]">
                 <Input
                   value={formEdit.editorial}
                   onChange={(e) => setCampoEdit("editorial", e.target.value)}
                   list="sugerencias-editorial"
                 />
               </FieldEdit>
-              <FieldEdit label="Año" className="w-24">
+              <FieldEdit label={t("libroDetail.campoAnio")} className="w-24">
                 <Input
                   value={formEdit.anio}
                   onChange={(e) => setCampoEdit("anio", e.target.value)}
                 />
               </FieldEdit>
-              <FieldEdit label="Páginas" className="w-24">
+              <FieldEdit label={t("libroDetail.campoPaginas")} className="w-24">
                 <Input
                   value={formEdit.paginas}
                   onChange={(e) => setCampoEdit("paginas", e.target.value)}
                 />
               </FieldEdit>
-              <FieldEdit label="Volumen" className="w-24">
+              <FieldEdit label={t("libroDetail.campoVolumen")} className="w-24">
                 <Input
-                  placeholder="Tomo 1"
+                  placeholder={t("libroDetail.placeholderVolumen")}
                   value={formEdit.volumen}
                   onChange={(e) => setCampoEdit("volumen", e.target.value)}
                 />
               </FieldEdit>
             </div>
             <div className="flex gap-3">
-              <FieldEdit label="Género" className="flex-1">
+              <FieldEdit label={t("libroDetail.campoGenero")} className="flex-1">
                 <GeneroSelect
                   value={formEdit.genero}
                   onValueChange={(v) => setCampoEdit("genero", v)}
                 />
               </FieldEdit>
-              <FieldEdit label="Idioma" className="w-40">
+              <FieldEdit label={t("libroDetail.campoIdioma")} className="w-40">
                 <IdiomaSelect
                   value={formEdit.idioma}
                   onValueChange={(v) => setCampoEdit("idioma", v)}
                 />
               </FieldEdit>
             </div>
-            <FieldEdit label="Sinopsis">
+            <FieldEdit label={t("libroDetail.campoSinopsis")}>
               <Textarea
                 rows={3}
                 value={formEdit.sinopsis}
@@ -698,17 +705,17 @@ export function LibroDetailSheet({
             </FieldEdit>
 
             <div className="mt-1 border-t pt-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-              Tu copia
+              {t("libroDetail.tuCopia")}
             </div>
             <div className="flex gap-3">
-              <FieldEdit label="Estante" className="flex-1">
+              <FieldEdit label={t("libroDetail.campoEstante")} className="flex-1">
                 {bibliotecaActual && bibliotecaActual.estantes.length > 0 ? (
                   <Select
                     value={formEdit.estante}
                     onValueChange={(v) => setCampoEdit("estante", v)}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Elegí un estante" />
+                      <SelectValue placeholder={t("libroDetail.placeholderEstante")} />
                     </SelectTrigger>
                     <SelectContent>
                       {bibliotecaActual.estantes.map((e) => (
@@ -725,14 +732,14 @@ export function LibroDetailSheet({
                   />
                 )}
               </FieldEdit>
-              <FieldEdit label="Tipo de tapa" className="flex-1">
+              <FieldEdit label={t("libroDetail.campoTipoTapa")} className="flex-1">
                 <Input
                   value={formEdit.tipoTapa}
                   onChange={(e) => setCampoEdit("tipoTapa", e.target.value)}
                 />
               </FieldEdit>
             </div>
-            <FieldEdit label="Notas privadas">
+            <FieldEdit label={t("libroDetail.campoNotasPrivadas")}>
               <Input
                 value={formEdit.notas}
                 onChange={(e) => setCampoEdit("notas", e.target.value)}
@@ -746,10 +753,10 @@ export function LibroDetailSheet({
               onClick={() => setEditando(false)}
               disabled={guardandoEdicion}
             >
-              Cancelar
+              {t("common.cancelar")}
             </Button>
             <Button onClick={handleGuardarEdicion} disabled={guardandoEdicion}>
-              Guardar cambios
+              {t("libroDetail.guardarCambios")}
             </Button>
           </DialogFooter>
         </DialogContent>

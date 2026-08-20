@@ -54,7 +54,7 @@ const FORM_INICIAL = {
 export default function AgregarLeidoPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { localeLectura } = useLocale();
+  const { localeLectura, t } = useLocale();
   const { autores: sugerenciasAutor, editoriales: sugerenciasEditorial } =
     useSugerenciasComunidad();
   const [paso, setPaso] = useState<Paso>("buscar");
@@ -75,7 +75,7 @@ export default function AgregarLeidoPage() {
 
   async function buscar(codigo: string) {
     if (!codigo) {
-      toast.error("Ingresá un ISBN.");
+      toast.error(t("leidosAgregar.ingresarIsbn"));
       return;
     }
     setBuscando(true);
@@ -115,15 +115,13 @@ export default function AgregarLeidoPage() {
               portadaUrl: encontrado.portadaUrl ?? "",
             });
           } else {
-            toast.error(
-              "No encontramos ese ISBN (Google Books ni Open Library). Completá los datos a mano."
-            );
+            toast.error(t("leidosAgregar.isbnNoEncontrado"));
             setForm({ ...FORM_INICIAL });
           }
         } catch (err) {
           logError("Error consultando el ISBN:", err);
           toast.error(
-            mensajeErrorBusqueda(err, "No pudimos consultar el ISBN. Cargá los datos manualmente.")
+            mensajeErrorBusqueda(err, t("leidosAgregar.errorConsultaIsbn"))
           );
           setForm({ ...FORM_INICIAL });
         }
@@ -132,7 +130,7 @@ export default function AgregarLeidoPage() {
       setPaso("formulario");
     } catch (err) {
       logError("Error buscando ISBN:", err);
-      toast.error("No pudimos buscar el ISBN. Probá de nuevo.");
+      toast.error(t("leidosAgregar.errorBuscarIsbn"));
     } finally {
       setBuscando(false);
     }
@@ -207,7 +205,7 @@ export default function AgregarLeidoPage() {
   async function handleGuardar() {
     if (!user) return;
     if (!(form.titulo ?? "").trim()) {
-      toast.error("El título es obligatorio.");
+      toast.error(t("leidosAgregar.tituloObligatorio"));
       return;
     }
 
@@ -236,18 +234,18 @@ export default function AgregarLeidoPage() {
         await publicarResena(
           isbnFinal,
           user.uid,
-          user.displayName ?? user.email ?? "Anónimo",
+          user.displayName ?? user.email ?? t("leidosAgregar.anonimo"),
           estrellas,
           comentario.trim()
         );
       }
 
-      toast.success("Agregado a tus leídos.");
+      toast.success(t("leidosAgregar.agregadoExito"));
       router.push("/leidos");
     } catch (err) {
       logError("Error guardando el libro leído:", err);
       const mensaje = err instanceof Error ? err.message : String(err);
-      toast.error(`No pudimos guardarlo: ${mensaje}`);
+      toast.error(t("leidosAgregar.errorGuardar", { mensaje }));
     } finally {
       setGuardando(false);
     }
@@ -259,15 +257,14 @@ export default function AgregarLeidoPage() {
         <button
           onClick={() => router.push("/leidos")}
           className="flex size-8 items-center justify-center rounded-md border text-muted-foreground hover:bg-accent hover:text-foreground"
-          aria-label="Volver a leídos"
+          aria-label={t("leidosAgregar.volverALeidos")}
         >
           <ArrowLeft className="size-4" />
         </button>
-        <h1 className="text-2xl font-bold">Agregar a leídos</h1>
+        <h1 className="text-2xl font-bold">{t("leidosAgregar.titulo")}</h1>
       </div>
       <p className="mb-7 mt-1 text-sm text-muted-foreground">
-        Para libros que leíste pero no tenés en tu biblioteca. No se agrega a
-        ningún inventario físico.
+        {t("leidosAgregar.subtitulo")}
       </p>
 
       {paso === "buscar" && (
@@ -277,22 +274,23 @@ export default function AgregarLeidoPage() {
           ) : (
             <Button variant="outline" onClick={() => setEscaneando(true)}>
               <ScanBarcode />
-              Escanear con la cámara
+              {t("leidosAgregar.escanear")}
             </Button>
           )}
           {escaneando && (
             <Button variant="ghost" size="sm" onClick={() => setEscaneando(false)}>
-              Cancelar escaneo
+              {t("leidosAgregar.cancelarEscaneo")}
             </Button>
           )}
 
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />o ingresá el ISBN
+            <div className="h-px flex-1 bg-border" />
+            {t("leidosAgregar.oIngresarIsbn")}
             <div className="h-px flex-1 bg-border" />
           </div>
           <div className="flex gap-2">
             <Input
-              placeholder="978-..."
+              placeholder={t("leidosAgregar.placeholderIsbn")}
               inputMode="numeric"
               maxLength={13}
               value={isbnInput}
@@ -300,18 +298,18 @@ export default function AgregarLeidoPage() {
               onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
             />
             <Button onClick={handleBuscar} disabled={buscando}>
-              {buscando ? <Loader2 className="size-4 animate-spin" /> : "Buscar"}
+              {buscando ? <Loader2 className="size-4 animate-spin" /> : t("leidosAgregar.buscar")}
             </Button>
           </div>
           {buscando && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
-              Buscando el libro…
+              {t("leidosAgregar.buscandoLibro")}
             </div>
           )}
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <div className="h-px flex-1 bg-border" />
-            o buscá por título
+            {t("leidosAgregar.oBuscarPorTitulo")}
             <div className="h-px flex-1 bg-border" />
           </div>
           <BuscarPorTitulo
@@ -319,11 +317,13 @@ export default function AgregarLeidoPage() {
             onSeleccionar={handleSeleccionarPorTitulo}
           />
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />o<div className="h-px flex-1 bg-border" />
+            <div className="h-px flex-1 bg-border" />
+            {t("leidosAgregar.o")}
+            <div className="h-px flex-1 bg-border" />
           </div>
           <Button variant="outline" onClick={handleManual}>
             <PenLine />
-            Cargar manualmente
+            {t("leidosAgregar.cargarManualmente")}
           </Button>
         </div>
       )}
@@ -332,14 +332,16 @@ export default function AgregarLeidoPage() {
         <div className="flex flex-col gap-4">
           {comunidad && (
             <div className="rounded-lg border bg-muted/40 p-3 text-xs">
-              <span className="font-semibold">Ya está en la comunidad: </span>
-              {comunidad.propietarios} biblioteca(s) lo tienen · ★{" "}
-              {comunidad.ratingPromedio} promedio
+              <span className="font-semibold">{t("leidosAgregar.yaEstaComunidad")} </span>
+              {t("leidosAgregar.comunidadInfo", {
+                propietarios: comunidad.propietarios,
+                rating: comunidad.ratingPromedio,
+              })}
             </div>
           )}
 
           <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-            Datos del libro (comunidad)
+            {t("leidosAgregar.datosComunidad")}
           </div>
 
           <div className="flex items-center gap-3">
@@ -347,12 +349,12 @@ export default function AgregarLeidoPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={form.portadaUrl}
-                alt="Portada"
+                alt={t("leidosAgregar.portadaAlt")}
                 className="h-[130px] w-[88px] rounded-md border object-cover"
               />
             ) : (
               <div className="flex h-[130px] w-[88px] items-center justify-center rounded-md border bg-muted text-xs text-muted-foreground">
-                Sin portada
+                {t("leidosAgregar.sinPortada")}
               </div>
             )}
             <Button
@@ -361,11 +363,11 @@ export default function AgregarLeidoPage() {
               size="sm"
               onClick={() => setPortadaPickerOpen(true)}
             >
-              {form.portadaUrl ? "Cambiar portada" : "Buscar portada"}
+              {form.portadaUrl ? t("leidosAgregar.cambiarPortada") : t("leidosAgregar.buscarPortada")}
             </Button>
           </div>
 
-          <Field label="ISBN (opcional)">
+          <Field label={t("leidosAgregar.campoIsbn")}>
             <Input
               inputMode="numeric"
               maxLength={13}
@@ -373,56 +375,56 @@ export default function AgregarLeidoPage() {
               onChange={(e) => setIsbn(sanitizarIsbn(e.target.value))}
             />
           </Field>
-          <Field label="Título">
+          <Field label={t("leidosAgregar.campoTitulo")}>
             <Input value={form.titulo} onChange={(e) => setCampo("titulo", e.target.value)} />
           </Field>
-          <Field label="Autor(es)">
+          <Field label={t("leidosAgregar.campoAutor")}>
             <Input
-              placeholder="separados por coma"
+              placeholder={t("leidosAgregar.separadosPorComa")}
               value={form.autor}
               onChange={(e) => setCampo("autor", e.target.value)}
               list="sugerencias-autor"
             />
           </Field>
-          <Field label="Ilustrador(es) (opcional)">
+          <Field label={t("leidosAgregar.campoIlustrador")}>
             <Input
-              placeholder="separados por coma"
+              placeholder={t("leidosAgregar.separadosPorComa")}
               value={form.ilustrador}
               onChange={(e) => setCampo("ilustrador", e.target.value)}
             />
           </Field>
           <div className="flex gap-3">
-            <Field label="Editorial" className="flex-[2]">
+            <Field label={t("leidosAgregar.campoEditorial")} className="flex-[2]">
               <Input
                 value={form.editorial}
                 onChange={(e) => setCampo("editorial", e.target.value)}
                 list="sugerencias-editorial"
               />
             </Field>
-            <Field label="Año" className="w-[90px]">
+            <Field label={t("leidosAgregar.campoAnio")} className="w-[90px]">
               <Input value={form.anio} onChange={(e) => setCampo("anio", e.target.value)} />
             </Field>
-            <Field label="Volumen / Tomo" className="w-[110px]">
+            <Field label={t("leidosAgregar.campoVolumen")} className="w-[110px]">
               <Input
-                placeholder="Tomo 1"
+                placeholder={t("leidosAgregar.tomoPlaceholder")}
                 value={form.volumen}
                 onChange={(e) => setCampo("volumen", e.target.value)}
               />
             </Field>
           </div>
-          <Field label="Género (opcional)">
+          <Field label={t("leidosAgregar.campoGenero")}>
             <GeneroSelect value={form.genero} onValueChange={(v) => setCampo("genero", v)} />
           </Field>
-          <Field label="Sinopsis (opcional)">
+          <Field label={t("leidosAgregar.campoSinopsis")}>
             <Textarea rows={3} value={form.sinopsis} onChange={(e) => setCampo("sinopsis", e.target.value)} />
           </Field>
 
           <div className="mt-2 border-t pt-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-            Tu reseña (opcional)
+            {t("leidosAgregar.tuResena")}
           </div>
           <RatingCaraPicker value={estrellas} onChange={setEstrellas} />
           <Textarea
-            placeholder="¿Qué te pareció?"
+            placeholder={t("leidosAgregar.quePensaste")}
             rows={3}
             value={comentario}
             onChange={(e) => setComentario(e.target.value)}
@@ -434,10 +436,10 @@ export default function AgregarLeidoPage() {
       {paso === "formulario" && (
         <div className="sticky bottom-0 -mx-5 -mb-24 flex gap-2.5 border-t bg-background px-5 pt-3 pb-24 md:-mx-12 md:-mb-12 md:px-12 md:pb-3">
           <Button variant="outline" onClick={() => setPaso("buscar")}>
-            Cancelar
+            {t("leidosAgregar.cancelar")}
           </Button>
           <Button className="flex-1" onClick={handleGuardar} disabled={guardando}>
-            Agregar a leídos
+            {t("leidosAgregar.agregarALeidos")}
           </Button>
         </div>
       )}

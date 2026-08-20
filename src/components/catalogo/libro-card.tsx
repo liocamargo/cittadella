@@ -3,6 +3,7 @@
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useLocale } from "@/hooks/use-locale";
 import type { LibroEnBiblioteca, LibroGlobal } from "@/types";
 
 interface LibroCardProps {
@@ -18,7 +19,8 @@ export function LibroCard({
   onClick,
   onToggleFavorito,
 }: LibroCardProps) {
-  const titulo = global?.titulo || "Cargando…";
+  const { t } = useLocale();
+  const titulo = global?.titulo || t("common.cargando");
   const inicial = titulo.trim().charAt(0).toUpperCase() || "?";
 
   return (
@@ -58,13 +60,15 @@ export function LibroCard({
         {global?.autor}
       </div>
       <div className="font-mono text-[11px] text-muted-foreground">
-        {copia.estante || "Sin estante"}
+        {copia.estante || t("libroCard.sinEstante")}
       </div>
       <Badge
         variant={copia.estado === "disponible" ? "secondary" : "outline"}
         className="w-fit text-[11px]"
       >
-        {copia.estado === "disponible" ? "Disponible" : `Prestado a ${copia.prestadoA}`}
+        {copia.estado === "disponible"
+          ? t("libroDetail.disponible")
+          : t("libroDetail.prestadoA", { nombre: copia.prestadoA ?? "" })}
       </Badge>
     </div>
   );

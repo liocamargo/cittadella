@@ -7,15 +7,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLocale } from "@/hooks/use-locale";
 
-const IDIOMAS = [
-  { value: "es", label: "🇪🇸 Español" },
-  { value: "en", label: "🇺🇸 Inglés" },
-  { value: "pt", label: "🇧🇷 Portugués" },
-  { value: "fr", label: "🇫🇷 Francés" },
-  { value: "it", label: "🇮🇹 Italiano" },
-  { value: "de", label: "🇩🇪 Alemán" },
-  { value: "otro", label: "🌐 Otro" },
+const IDIOMAS_INFO = [
+  { value: "es", bandera: "🇪🇸", key: "idiomaSelect.espanol" },
+  { value: "en", bandera: "🇺🇸", key: "idiomaSelect.ingles" },
+  { value: "pt", bandera: "🇧🇷", key: "idiomaSelect.portugues" },
+  { value: "fr", bandera: "🇫🇷", key: "idiomaSelect.frances" },
+  { value: "it", bandera: "🇮🇹", key: "idiomaSelect.italiano" },
+  { value: "de", bandera: "🇩🇪", key: "idiomaSelect.aleman" },
+  { value: "otro", bandera: "🌐", key: "idiomaSelect.otro" },
 ];
 
 interface IdiomaSelectProps {
@@ -24,19 +25,20 @@ interface IdiomaSelectProps {
 }
 
 export function IdiomaSelect({ value, onValueChange }: IdiomaSelectProps) {
+  const { t } = useLocale();
   const valorActual = value || "es";
-  const esConocido = IDIOMAS.some((i) => i.value === valorActual);
+  const esConocido = IDIOMAS_INFO.some((i) => i.value === valorActual);
 
   return (
     <Select value={valorActual} onValueChange={onValueChange}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Idioma" />
+        <SelectValue placeholder={t("idiomaSelect.placeholder")} />
       </SelectTrigger>
       <SelectContent>
         {!esConocido && <SelectItem value={valorActual}>{valorActual}</SelectItem>}
-        {IDIOMAS.map((i) => (
+        {IDIOMAS_INFO.map((i) => (
           <SelectItem key={i.value} value={i.value}>
-            {i.label}
+            {i.bandera} {t(i.key)}
           </SelectItem>
         ))}
       </SelectContent>

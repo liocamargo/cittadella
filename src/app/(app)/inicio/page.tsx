@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
+import { useLocale } from "@/hooks/use-locale";
 import { listenInventario } from "@/lib/firestore/libros";
 import { getMetaLectura, setMetaLectura } from "@/lib/firestore/metas";
 import { SeleccionSemanal } from "@/components/inicio/seleccion-semanal";
@@ -16,6 +17,7 @@ import { logError } from "@/lib/log";
 
 export default function InicioPage() {
   const { user } = useAuth();
+  const { t } = useLocale();
   const { bibliotecaActual } = useBiblioteca();
   const [copias, setCopias] = useState<LibroEnBiblioteca[]>([]);
   const [meta, setMeta] = useState(0);
@@ -54,7 +56,7 @@ export default function InicioPage() {
       setEditando(false);
     } catch (err) {
       logError("Error guardando el objetivo de lectura:", err);
-      toast.error("No pudimos guardar tu objetivo.");
+      toast.error(t("inicio.errorGuardandoObjetivo"));
     } finally {
       setGuardando(false);
     }
@@ -62,13 +64,13 @@ export default function InicioPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Inicio</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t("nav.inicio")}</h1>
 
       <div className="mb-10 grid grid-cols-2 gap-4 md:grid-cols-4">
         <div className="flex flex-col gap-2 rounded-xl border p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Libros
+              {t("inicio.libros")}
             </span>
             <Library className="size-4 text-muted-foreground" />
           </div>
@@ -78,7 +80,7 @@ export default function InicioPage() {
         <div className="flex flex-col gap-2 rounded-xl border p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Prestados
+              {t("inicio.prestados")}
             </span>
             <ArrowLeftRight className="size-4 text-muted-foreground" />
           </div>
@@ -88,7 +90,7 @@ export default function InicioPage() {
         <div className="flex flex-col gap-2 rounded-xl border p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Leídos
+              {t("nav.leidos")}
             </span>
             <BookCheck className="size-4 text-muted-foreground" />
           </div>
@@ -98,7 +100,7 @@ export default function InicioPage() {
         <div className="flex flex-col gap-2 rounded-xl border p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Tu objetivo
+              {t("inicio.tuObjetivo")}
             </span>
             <Target className="size-4 text-muted-foreground" />
           </div>
@@ -134,7 +136,7 @@ export default function InicioPage() {
                 <Progress value={progreso} className="mt-1.5 h-1.5" />
               ) : (
                 <span className="text-xs text-muted-foreground underline">
-                  Poné tu objetivo
+                  {t("inicio.ponerObjetivo")}
                 </span>
               )}
             </button>

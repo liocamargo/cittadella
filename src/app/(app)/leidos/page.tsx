@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocale } from "@/hooks/use-locale";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
 import { listenInventario } from "@/lib/firestore/libros";
@@ -16,6 +17,7 @@ import type { LibroEnBiblioteca } from "@/types";
 
 export default function LeidosPage() {
   const { user } = useAuth();
+  const { t } = useLocale();
   const { bibliotecaActual } = useBiblioteca();
   const [copias, setCopias] = useState<LibroEnBiblioteca[]>([]);
   const [lecturas, setLecturas] = useState<Lectura[]>([]);
@@ -55,23 +57,24 @@ export default function LeidosPage() {
     <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Leídos</h1>
+          <h1 className="text-2xl font-bold">{t("leidos.titulo")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {copiasLeidas.length + lecturasSueltas.length} libro(s) leído(s) en
-            total.
+            {t("leidos.totalLeidos", {
+              cantidad: copiasLeidas.length + lecturasSueltas.length,
+            })}
           </p>
         </div>
         <Button asChild>
           <Link href="/leidos/agregar">
             <Plus />
-            Agregar a leídos
+            {t("leidos.agregar")}
           </Link>
         </Button>
       </div>
 
       {copiasLeidas.length + lecturasSueltas.length === 0 && (
         <div className="py-16 text-center text-sm text-muted-foreground">
-          Todavía no marcaste ningún libro como leído.
+          {t("leidos.vacio")}
         </div>
       )}
 
@@ -104,7 +107,9 @@ export default function LeidosPage() {
                 {g?.autor}
               </div>
               <Badge variant="secondary" className="w-fit text-[11px]">
-                En tu biblioteca · {copia.estante || "sin estante"}
+                {t("leidos.enBiblioteca", {
+                  estante: copia.estante || t("leidos.sinEstante"),
+                })}
               </Badge>
             </button>
           );
@@ -138,7 +143,7 @@ export default function LeidosPage() {
                 {g?.autor}
               </div>
               <Badge variant="outline" className="w-fit text-[11px]">
-                No está en tu biblioteca
+                {t("leidos.noEnBiblioteca")}
               </Badge>
             </button>
           );

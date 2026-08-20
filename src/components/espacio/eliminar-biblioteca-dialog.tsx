@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
+import { useLocale } from "@/hooks/use-locale";
 import { eliminarBibliotecaCompleta } from "@/lib/firestore/bibliotecas";
 import { logError, logSuccess } from "@/lib/log";
 import type { Biblioteca } from "@/types";
@@ -23,6 +24,7 @@ const FRASE_CONFIRMACION = "ELIMINAR";
 
 export function EliminarBibliotecaDialog({ biblioteca }: { biblioteca: Biblioteca }) {
   const { bibliotecas } = useBiblioteca();
+  const { t } = useLocale();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirmacion, setConfirmacion] = useState("");
@@ -44,11 +46,11 @@ export function EliminarBibliotecaDialog({ biblioteca }: { biblioteca: Bibliotec
     try {
       await eliminarBibliotecaCompleta(biblioteca.id);
       logSuccess("Biblioteca eliminada.", { id: biblioteca.id, nombre: biblioteca.nombre });
-      toast.success("Biblioteca eliminada.");
+      toast.success(t("eliminarBiblioteca.exito"));
       router.push("/inicio");
     } catch (err) {
       logError("Error eliminando la biblioteca:", err);
-      toast.error("No pudimos eliminar la biblioteca.");
+      toast.error(t("eliminarBiblioteca.error"));
       setEliminando(false);
     }
   }
@@ -56,20 +58,23 @@ export function EliminarBibliotecaDialog({ biblioteca }: { biblioteca: Bibliotec
   return (
     <>
       <div className="mt-10 rounded-lg border border-destructive/30 p-4">
-        <p className="text-sm font-semibold text-destructive">Zona de peligro</p>
+        <p className="text-sm font-semibold text-destructive">
+          {t("eliminarBiblioteca.zonaPeligro")}
+        </p>
         <p className="mt-1 mb-3 text-xs text-muted-foreground">
           {esLaUnica ? (
-            <>
-              Esta es tu única biblioteca, así que no se puede eliminar.
-              Creá otra desde el menú de cuenta si querés borrar esta.
-            </>
+            t("eliminarBiblioteca.unicaBiblioteca")
           ) : (
             <>
-              Elimina esta biblioteca para siempre: todos sus libros, socios
-              e historial de préstamos.
+              {t("eliminarBiblioteca.descripcionBase")}
               {otrosMiembros > 0 &&
-                ` También le va a sacar el acceso a ${otrosMiembros === 1 ? "la otra persona" : `las otras ${otrosMiembros} personas`} que la comparten con vos.`}{" "}
-              Esta acción no se puede deshacer.
+                t("eliminarBiblioteca.descripcionOtrosAcceso", {
+                  personas:
+                    otrosMiembros === 1
+                      ? t("eliminarBiblioteca.otraPersona")
+                      : t("eliminarBiblioteca.otrasPersonas", { cantidad: otrosMiembros }),
+                })}{" "}
+              {t("eliminarBiblioteca.descripcionFinal")}
             </>
           )}
         </p>
@@ -80,24 +85,27 @@ export function EliminarBibliotecaDialog({ biblioteca }: { biblioteca: Bibliotec
           disabled={esLaUnica}
         >
           <Trash2 className="size-4" />
-          Eliminar esta biblioteca
+          {t("eliminarBiblioteca.eliminarBoton")}
         </Button>
       </div>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>¿Eliminar &quot;{biblioteca.nombre}&quot; para siempre?</DialogTitle>
+            <DialogTitle>
+              {t("eliminarBiblioteca.confirmarTitulo", { nombre: biblioteca.nombre })}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-3 text-sm">
             <p className="text-muted-foreground">
-              Esto es permanente. Para confirmar, escribí{" "}
-              <strong>{FRASE_CONFIRMACION}</strong> abajo.
+              {t("eliminarBiblioteca.confirmarInstruccionPre")}{" "}
+              <strong>{FRASE_CONFIRMACION}</strong>{" "}
+              {t("eliminarBiblioteca.confirmarInstruccionPost")}
             </p>
             <div>
               <Label htmlFor="confirmar-eliminar-biblioteca" className="sr-only">
-                Escribí {FRASE_CONFIRMACION} para confirmar
+                {t("eliminarBiblioteca.labelConfirmar", { frase: FRASE_CONFIRMACION })}
               </Label>
               <Input
                 id="confirmar-eliminar-biblioteca"
@@ -116,14 +124,14 @@ export function EliminarBibliotecaDialog({ biblioteca }: { biblioteca: Bibliotec
               onClick={() => handleOpenChange(false)}
               disabled={eliminando}
             >
-              Cancelar
+              {t("common.cancelar")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleEliminar}
               disabled={!confirmado || eliminando}
             >
-              {eliminando ? "Eliminando…" : "Eliminar esta biblioteca"}
+              {eliminando ? t("eliminarBiblioteca.eliminando") : t("eliminarBiblioteca.eliminarBoton")}
             </Button>
           </DialogFooter>
         </DialogContent>

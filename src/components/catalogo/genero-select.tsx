@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { GENEROS } from "@/lib/generos";
+import { useLocale } from "@/hooks/use-locale";
 
 interface GeneroSelectProps {
   value: string;
@@ -18,14 +19,15 @@ interface GeneroSelectProps {
 export function GeneroSelect({
   value,
   onValueChange,
-  placeholder = "Elegí un género",
+  placeholder,
 }: GeneroSelectProps) {
+  const { t } = useLocale();
   const esConocido = !value || (GENEROS as readonly string[]).includes(value);
 
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={placeholder ?? t("generoSelect.placeholder")} />
       </SelectTrigger>
       <SelectContent>
         {!esConocido && <SelectItem value={value}>{value}</SelectItem>}

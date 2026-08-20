@@ -6,6 +6,7 @@ import { Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { logError } from "@/lib/log";
+import { useLocale } from "@/hooks/use-locale";
 import {
   buscarPorTitulo,
   mensajeErrorBusqueda,
@@ -18,6 +19,7 @@ interface BuscarPorTituloProps {
 }
 
 export function BuscarPorTitulo({ idiomasLectura, onSeleccionar }: BuscarPorTituloProps) {
+  const { t } = useLocale();
   const [consulta, setConsulta] = useState("");
   const [buscando, setBuscando] = useState(false);
   const [resultados, setResultados] = useState<ResultadoBusquedaTitulo[] | null>(null);
@@ -30,12 +32,12 @@ export function BuscarPorTitulo({ idiomasLectura, onSeleccionar }: BuscarPorTitu
     try {
       const encontrados = await buscarPorTitulo(texto, idiomasLectura);
       if (encontrados.length === 0) {
-        toast.error("No encontramos ningún libro con ese título.");
+        toast.error(t("buscarPorTitulo.errorSinResultados"));
       }
       setResultados(encontrados);
     } catch (err) {
       logError("Error buscando por título:", err);
-      toast.error(mensajeErrorBusqueda(err, "No pudimos buscar por título. Probá de nuevo."));
+      toast.error(mensajeErrorBusqueda(err, t("buscarPorTitulo.errorBuscando")));
     } finally {
       setBuscando(false);
     }
@@ -45,7 +47,7 @@ export function BuscarPorTitulo({ idiomasLectura, onSeleccionar }: BuscarPorTitu
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
         <Input
-          placeholder="Título del libro (y autor, si querés)"
+          placeholder={t("buscarPorTitulo.placeholderConsulta")}
           value={consulta}
           onChange={(e) => setConsulta(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
@@ -81,7 +83,7 @@ export function BuscarPorTitulo({ idiomasLectura, onSeleccionar }: BuscarPorTitu
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium">{r.titulo}</div>
                 <div className="truncate text-xs text-muted-foreground">
-                  {r.autor || "Autor desconocido"}
+                  {r.autor || t("buscarPorTitulo.autorDesconocido")}
                   {r.anio ? ` · ${r.anio}` : ""}
                 </div>
               </div>

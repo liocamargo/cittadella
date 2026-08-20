@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
+import { useLocale } from "@/hooks/use-locale";
 import { logError } from "@/lib/log";
 import {
   agregarLibroABiblioteca,
@@ -105,6 +106,7 @@ function descargarArchivo(nombre: string, contenido: string) {
 
 export default function ImportarPage() {
   const { bibliotecaActual } = useBiblioteca();
+  const { t } = useLocale();
   const [copias, setCopias] = useState<LibroEnBiblioteca[]>([]);
   const [preview, setPreview] = useState<FilaImportada[] | null>(null);
   const [datosComunidad, setDatosComunidad] = useState<Record<string, LibroGlobal>>({});
@@ -164,7 +166,7 @@ export default function ImportarPage() {
 
   function procesarArchivo(file: File) {
     if (!file.name.toLowerCase().endsWith(".csv")) {
-      toast.error("Ese archivo no es un .csv.");
+      toast.error(t("importar.errorNoCsv"));
       return;
     }
     Papa.parse<Record<string, string>>(file, {
@@ -174,28 +176,22 @@ export default function ImportarPage() {
         const columnas = results.meta.fields ?? [];
         const reconoce = columnas.some((c) => COLUMNAS_RECONOCIDAS.includes(c.trim()));
         if (!reconoce) {
-          toast.error(
-            "No reconocemos las columnas de ese archivo. Esperamos algo como Title/Author/ISBN/Genres/BookShelf (HandyLib) o title/author/isbn/genre/shelf (plantilla propia)."
-          );
+          toast.error(t("importar.errorColumnasNoReconocidas"));
           return;
         }
         const conTitulo = results.data.map(mapearFila).filter((f) => f.titulo);
         if (conTitulo.length === 0) {
-          toast.error("No encontramos filas con título en ese archivo.");
+          toast.error(t("importar.errorSinTitulo"));
           return;
         }
         const filas = conTitulo.filter((f) => f.isbn);
         const sinIsbn = conTitulo.length - filas.length;
         if (filas.length === 0) {
-          toast.error(
-            "Ninguna fila tiene ISBN. Todo libro necesita su ISBN para poder importarse."
-          );
+          toast.error(t("importar.errorSinIsbn"));
           return;
         }
         if (sinIsbn > 0) {
-          toast.warning(
-            `${sinIsbn} fila(s) sin ISBN se van a omitir (todo libro necesita su ISBN).`
-          );
+          toast.warning(t("importar.avisoFilasSinIsbn", { cantidad: sinIsbn }));
         }
         setPreview(filas);
         setDatosComunidad({});
@@ -203,7 +199,7 @@ export default function ImportarPage() {
       },
       error: (err) => {
         logError("Error leyendo el CSV:", err);
-        toast.error("No pudimos leer ese archivo.");
+        toast.error(t("importar.errorLeyendoArchivo"));
       },
     });
   }
@@ -272,35 +268,34 @@ export default function ImportarPage() {
     setImportando(false);
     setPreview(null);
     const detalles = [
-      omitidos > 0 && `${omitidos} ya estaban en tu biblioteca`,
-      fallidos > 0 && `${fallidos} fallaron (mirá la consola del navegador)`,
+      omitidos > 0 && t("importar.detalleOmitidos", { cantidad: omitidos }),
+      fallidos > 0 && t("importar.detalleFallidos", { cantidad: fallidos }),
     ].filter(Boolean);
     const detalle = detalles.length > 0 ? ` (${detalles.join(", ")})` : "";
-    toast.success(`Se agregaron ${ok} de ${preview.length} libro(s)${detalle}.`);
+    toast.success(t("importar.resultadoImportacion", { ok, total: preview.length, detalle }));
   }
 
   return (
     <div className="flex flex-col gap-9">
       <div>
-        <h1 className="text-2xl font-bold">Importar / Exportar</h1>
+        <h1 className="text-2xl font-bold">{t("importar.titulo")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Llevate tus datos a Excel o cargalos de golpe desde una planilla.
+          {t("importar.subtitulo")}
         </p>
       </div>
 
       <div>
-        <div className="mb-2 text-sm font-semibold">Exportar biblioteca</div>
+        <div className="mb-2 text-sm font-semibold">{t("importar.exportarTitulo")}</div>
         <p className="mb-3 text-sm text-muted-foreground">
-          Descarga un CSV con {copias.length} libro(s): título, autor, estado
-          y a quién está prestado.
+          {t("importar.exportarDescripcion", { cantidad: copias.length })}
         </p>
         <Button variant="outline" onClick={handleExportar}>
-          Descargar CSV
+          {t("importar.descargarCsv")}
         </Button>
       </div>
 
       <div>
-        <div className="mb-2 text-sm font-semibold">Importar desde Excel/CSV</div>
+        <div className="mb-2 text-sm font-semibold">{t("importar.importarTitulo")}</div>
         <label
           onDragOver={(e) => {
             e.preventDefault();
@@ -315,10 +310,10 @@ export default function ImportarPage() {
         >
           <UploadCloud className="size-5 text-muted-foreground" />
           <div className="text-sm text-muted-foreground">
-            Arrastrá tu archivo .csv acá o hacé clic para elegirlo
+            {t("importar.arrastrarArchivo")}
           </div>
           <div className="font-mono text-[11px] text-muted-foreground/70">
-            soporta plantilla propia o exportaciones de HandyLib
+            {t("importar.soportaFormatos")}
           </div>
           <input
             type="file"
@@ -332,13 +327,13 @@ export default function ImportarPage() {
           className="mt-2.5"
           onClick={handleDescargarPlantilla}
         >
-          Descargar plantilla de Excel
+          {t("importar.descargarPlantilla")}
         </Button>
 
         {preview && (
           <div className="mt-4">
             <div className="mb-2 text-sm text-muted-foreground">
-              {preview.length} fila(s) detectadas
+              {t("importar.filasDetectadas", { cantidad: preview.length })}
             </div>
             <div className="mb-3 max-h-64 overflow-y-auto rounded-lg border">
               {preview.slice(0, 30).map((f, i) => {
@@ -356,12 +351,12 @@ export default function ImportarPage() {
                     </span>
                     {yaEnBiblioteca ? (
                       <span className="shrink-0 text-[11px] text-muted-foreground">
-                        ya en tu biblioteca
+                        {t("importar.yaEnBiblioteca")}
                       </span>
                     ) : (
                       enComunidad && (
                         <span className="shrink-0 text-[11px] text-muted-foreground">
-                          ya en la comunidad
+                          {t("importar.yaEnComunidad")}
                         </span>
                       )
                     )}
@@ -370,22 +365,22 @@ export default function ImportarPage() {
               })}
               {preview.length > 30 && (
                 <div className="p-2.5 text-xs text-muted-foreground">
-                  y {preview.length - 30} más…
+                  {t("importar.yMasFilas", { cantidad: preview.length - 30 })}
                 </div>
               )}
             </div>
             <div className="flex items-center gap-3">
               <Button onClick={handleConfirmarImport} disabled={importando}>
                 {importando
-                  ? `Importando ${progreso}/${preview.length}…`
-                  : "Agregar al catálogo"}
+                  ? t("importar.importando", { progreso, total: preview.length })
+                  : t("importar.agregarCatalogo")}
               </Button>
               <Button
                 variant="ghost"
                 disabled={importando}
                 onClick={() => setPreview(null)}
               >
-                Cancelar
+                {t("common.cancelar")}
               </Button>
             </div>
           </div>

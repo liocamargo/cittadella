@@ -137,3 +137,16 @@
     @apply font-heading;
   }
 }
+
+@keyframes book-spinner-flip {
+  0%,
+  100% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(-150deg);
+  }
+}
+.animate-book-spinner-flip {
+  animation: book-spinner-flip 1.2s ease-in-out infinite;
+}

@@ -39,7 +39,7 @@ export function PortadaPicker({
   const [resultados, setResultados] = useState<ResultadoPortada[] | null>(null);
   const [rotas, setRotas] = useState<Set<number>>(new Set());
   const [linkExterno, setLinkExterno] = useState("");
-  const { localeLectura } = useLocale();
+  const { localeLectura, t } = useLocale();
 
   // Al abrir, busca sola con lo que ya sabemos del libro (título/autor) para
   // no obligar a tipear y apretar "Buscar" de entrada.
@@ -65,11 +65,11 @@ export function PortadaPicker({
       setResultados(r);
       setRotas(new Set());
       if (r.length === 0) {
-        toast.error("No encontramos portadas para esa búsqueda.");
+        toast.error(t("portadaPicker.errorSinResultados"));
       }
     } catch (err) {
       logError("Error buscando portadas:", err);
-      toast.error(mensajeErrorBusqueda(err, "No pudimos buscar portadas."));
+      toast.error(mensajeErrorBusqueda(err, t("portadaPicker.errorBuscando")));
     } finally {
       setBuscando(false);
     }
@@ -83,7 +83,7 @@ export function PortadaPicker({
   function handleUsarLink() {
     const url = linkExterno.trim();
     if (!url || !/^https?:\/\//.test(url)) {
-      toast.error("Pegá un link válido (que empiece con http:// o https://).");
+      toast.error(t("portadaPicker.errorLinkInvalido"));
       return;
     }
     handleSeleccionar(url);
@@ -93,16 +93,16 @@ export function PortadaPicker({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Portada del libro</DialogTitle>
+          <DialogTitle>{t("portadaPicker.titulo")}</DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="buscar">
           <TabsList className="w-full">
             <TabsTrigger value="buscar" className="flex-1">
-              Buscar portada
+              {t("portadaPicker.tabBuscar")}
             </TabsTrigger>
             <TabsTrigger value="link" className="flex-1">
-              Link externo
+              {t("portadaPicker.tabLink")}
             </TabsTrigger>
           </TabsList>
 
@@ -112,12 +112,12 @@ export function PortadaPicker({
                 value={consulta}
                 onValueChange={setConsulta}
                 onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
-                placeholder="Título o autor"
+                placeholder={t("portadaPicker.placeholderConsulta")}
                 className="flex-1"
               />
               <Button onClick={() => handleBuscar()} disabled={buscando}>
                 {buscando ? <Loader2 className="animate-spin" /> : <Search />}
-                Buscar
+                {t("portadaPicker.buscar")}
               </Button>
             </div>
             {buscando && !resultados && (
@@ -153,26 +153,26 @@ export function PortadaPicker({
 
           <TabsContent value="link" className="flex flex-col gap-3">
             <p className="text-xs text-muted-foreground">
-              Pegá la URL de una imagen (termina en .jpg, .png, etc.).
+              {t("portadaPicker.descripcionLink")}
             </p>
             <div className="flex gap-2">
               <Input
                 value={linkExterno}
                 onChange={(e) => setLinkExterno(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleUsarLink()}
-                placeholder="https://..."
+                placeholder={t("portadaPicker.placeholderLink")}
                 className="flex-1"
               />
               <Button onClick={handleUsarLink}>
                 <Link2 />
-                Usar
+                {t("portadaPicker.usar")}
               </Button>
             </div>
             {linkExterno.trim() && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={linkExterno.trim()}
-                alt="Vista previa"
+                alt={t("portadaPicker.vistaPrevia")}
                 className="h-[130px] w-[88px] rounded-md border object-cover"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";

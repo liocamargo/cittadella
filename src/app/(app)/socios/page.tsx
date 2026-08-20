@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useLocale } from "@/hooks/use-locale";
 import { logError, logSuccess } from "@/lib/log";
 import {
   Dialog,
@@ -29,6 +30,7 @@ import type { HistorialPrestamo, Socio } from "@/types";
 const FORM_INICIAL = { nombre: "", telefono: "", email: "", notas: "" };
 
 export default function SociosPage() {
+  const { t } = useLocale();
   const { bibliotecaActual } = useBiblioteca();
   const [socios, setSocios] = useState<Socio[]>([]);
   const [formOpen, setFormOpen] = useState(false);
@@ -82,7 +84,7 @@ export default function SociosPage() {
   async function handleGuardar() {
     if (!bibliotecaActual) return;
     if (!form.nombre.trim()) {
-      toast.error("El nombre es obligatorio.");
+      toast.error(t("socios.errorNombreObligatorio"));
       return;
     }
     setGuardando(true);
@@ -96,29 +98,29 @@ export default function SociosPage() {
       if (editandoId) {
         await actualizarSocio(editandoId, datos);
         logSuccess("Socio actualizado.", datos);
-        toast.success("Socio actualizado.");
+        toast.success(t("socios.socioActualizado"));
       } else {
         await crearSocio(bibliotecaActual.id, datos);
         logSuccess("Socio agregado.", datos);
-        toast.success("Socio agregado.");
+        toast.success(t("socios.socioAgregado"));
       }
       setFormOpen(false);
     } catch (err) {
       logError("Error guardando el socio:", err);
-      toast.error("No pudimos guardar el socio.");
+      toast.error(t("socios.errorGuardarSocio"));
     } finally {
       setGuardando(false);
     }
   }
 
   async function handleEliminar(socio: Socio) {
-    if (!window.confirm(`¿Eliminar a "${socio.nombre}" de los socios?`)) return;
+    if (!window.confirm(t("socios.confirmarEliminar", { nombre: socio.nombre }))) return;
     try {
       await eliminarSocio(socio.id);
       if (detalleId === socio.id) setDetalleId(null);
     } catch (err) {
       logError("Error eliminando el socio:", err);
-      toast.error("No pudimos eliminar el socio.");
+      toast.error(t("socios.errorEliminarSocio"));
     }
   }
 
@@ -126,28 +128,26 @@ export default function SociosPage() {
     <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Socios</h1>
+          <h1 className="text-2xl font-bold">{t("socios.titulo")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Base de socios para el modo de préstamos por socio.
+            {t("socios.subtitulo")}
           </p>
         </div>
         <Button onClick={abrirNuevo}>
           <Plus />
-          Agregar socio
+          {t("socios.agregarSocio")}
         </Button>
       </div>
 
       {!bibliotecaActual?.modoSocios && (
         <div className="mb-6 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
-          El modo socios está apagado. Podés cargar socios igual, pero los
-          préstamos van a seguir anotando un nombre libre hasta que lo
-          actives en Espacio compartido.
+          {t("socios.modoSociosApagado")}
         </div>
       )}
 
       {socios.length === 0 && (
         <div className="py-16 text-center text-sm text-muted-foreground">
-          Todavía no cargaste ningún socio.
+          {t("socios.sinSocios")}
         </div>
       )}
 
@@ -166,7 +166,7 @@ export default function SociosPage() {
                 <div className="text-sm font-semibold">{s.nombre}</div>
                 <div className="text-xs text-muted-foreground">
                   {[s.telefono, s.email].filter(Boolean).join(" · ") ||
-                    "Sin datos de contacto"}
+                    t("socios.sinDatosContacto")}
                 </div>
               </div>
             </div>
@@ -178,7 +178,7 @@ export default function SociosPage() {
                 size="icon"
                 variant="outline"
                 onClick={() => abrirEditar(s)}
-                aria-label="Editar socio"
+                aria-label={t("socios.editarSocio")}
               >
                 <Pencil className="size-4" />
               </Button>
@@ -186,7 +186,7 @@ export default function SociosPage() {
                 size="icon"
                 variant="outline"
                 onClick={() => handleEliminar(s)}
-                aria-label="Eliminar socio"
+                aria-label={t("socios.eliminarSocio")}
               >
                 <Trash2 className="size-4 text-destructive" />
               </Button>
@@ -198,12 +198,14 @@ export default function SociosPage() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editandoId ? "Editar socio" : "Agregar socio"}</DialogTitle>
+            <DialogTitle>
+              {editandoId ? t("socios.editarSocio") : t("socios.agregarSocio")}
+            </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-3">
             <div>
               <Label className="mb-1.5 block text-xs text-muted-foreground">
-                Nombre
+                {t("socios.nombre")}
               </Label>
               <Input
                 value={form.nombre}
@@ -213,7 +215,7 @@ export default function SociosPage() {
             </div>
             <div>
               <Label className="mb-1.5 block text-xs text-muted-foreground">
-                Teléfono
+                {t("socios.telefono")}
               </Label>
               <Input
                 value={form.telefono}
@@ -222,7 +224,7 @@ export default function SociosPage() {
             </div>
             <div>
               <Label className="mb-1.5 block text-xs text-muted-foreground">
-                Email
+                {t("socios.email")}
               </Label>
               <Input
                 type="email"
@@ -232,7 +234,7 @@ export default function SociosPage() {
             </div>
             <div>
               <Label className="mb-1.5 block text-xs text-muted-foreground">
-                Notas
+                {t("socios.notas")}
               </Label>
               <Textarea
                 rows={2}
@@ -247,10 +249,10 @@ export default function SociosPage() {
               onClick={() => setFormOpen(false)}
               disabled={guardando}
             >
-              Cancelar
+              {t("common.cancelar")}
             </Button>
             <Button onClick={handleGuardar} disabled={guardando}>
-              Guardar
+              {t("common.guardar")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -265,18 +267,18 @@ export default function SociosPage() {
             <div className="text-muted-foreground">
               {[socioDetalle?.telefono, socioDetalle?.email]
                 .filter(Boolean)
-                .join(" · ") || "Sin datos de contacto"}
+                .join(" · ") || t("socios.sinDatosContacto")}
             </div>
             {socioDetalle?.notas && (
               <p className="text-muted-foreground">{socioDetalle.notas}</p>
             )}
 
             <div className="mt-2 border-t pt-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-              Historial de préstamos
+              {t("socios.historialPrestamos")}
             </div>
             {historial.length === 0 && (
               <p className="text-xs text-muted-foreground">
-                Todavía no le prestaste ningún libro.
+                {t("socios.sinHistorial")}
               </p>
             )}
             <div className="flex flex-col gap-2">
@@ -284,12 +286,19 @@ export default function SociosPage() {
                 const g = globalesHistorial[h.isbn];
                 return (
                   <div key={h.id} className="rounded-lg border bg-muted/40 p-2.5 text-xs">
-                    <div className="font-semibold">{g?.titulo ?? "Libro"}</div>
+                    <div className="font-semibold">
+                      {g?.titulo ?? t("socios.libroGenerico")}
+                    </div>
                     <div className="text-muted-foreground">
-                      Prestado: {h.fechaPrestamo?.slice(0, 10)}
+                      {t("socios.prestadoFecha", {
+                        fecha: h.fechaPrestamo?.slice(0, 10) ?? "",
+                      })}
                       {h.fechaDevolucion
-                        ? ` · Devuelto: ${h.fechaDevolucion.slice(0, 10)}`
-                        : " · Todavía no devuelto"}
+                        ? " " +
+                          t("socios.devueltoFecha", {
+                            fecha: h.fechaDevolucion.slice(0, 10),
+                          })
+                        : " " + t("socios.noDevueltoAun")}
                     </div>
                   </div>
                 );

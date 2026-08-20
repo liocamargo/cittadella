@@ -66,7 +66,7 @@ const FORM_INICIAL = {
 export default function AgregarLibroPage() {
   const router = useRouter();
   const { bibliotecaActual } = useBiblioteca();
-  const { localeLectura } = useLocale();
+  const { localeLectura, t } = useLocale();
   const { autores: sugerenciasAutor, editoriales: sugerenciasEditorial } =
     useSugerenciasComunidad();
   const [paso, setPaso] = useState<Paso>("buscar");
@@ -101,7 +101,7 @@ export default function AgregarLibroPage() {
 
   async function buscar(codigo: string) {
     if (!codigo) {
-      toast.error("Ingresá un ISBN.");
+      toast.error(t("catalogoAgregar.ingresaIsbn"));
       return;
     }
 
@@ -112,7 +112,7 @@ export default function AgregarLibroPage() {
         const copiasExistentes = await contarCopiasDelIsbn(bibliotecaActual.id, codigo);
         if (copiasExistentes > 0) {
           const seguir = window.confirm(
-            `Ya tenés ${copiasExistentes} copia(s) de este libro en tu biblioteca. ¿Querés agregar una copia más?`
+            t("catalogoAgregar.confirmarCopiaExistente", { n: copiasExistentes })
           );
           if (!seguir) {
             setEscaneando(true);
@@ -165,15 +165,13 @@ export default function AgregarLibroPage() {
               portadaUrl: encontrado.portadaUrl ?? "",
             });
           } else {
-            toast.error(
-              "No encontramos ese ISBN (Google Books ni Open Library). Completá los datos a mano."
-            );
+            toast.error(t("catalogoAgregar.errorIsbnNoEncontrado"));
             setForm({ ...FORM_INICIAL });
           }
         } catch (err) {
           logError("Error consultando el ISBN:", err);
           toast.error(
-            mensajeErrorBusqueda(err, "No pudimos consultar el ISBN. Cargá los datos manualmente.")
+            mensajeErrorBusqueda(err, t("catalogoAgregar.errorConsultaIsbn"))
           );
           setForm({ ...FORM_INICIAL });
         }
@@ -182,7 +180,7 @@ export default function AgregarLibroPage() {
       setPaso("formulario");
     } catch (err) {
       logError("Error buscando ISBN:", err);
-      toast.error("No pudimos buscar el ISBN. Probá de nuevo.");
+      toast.error(t("catalogoAgregar.errorBuscarIsbn"));
     } finally {
       setBuscando(false);
     }
@@ -266,20 +264,20 @@ export default function AgregarLibroPage() {
       setCampo("estante", nombre);
       setNuevoEstanteNombre("");
       setCreandoEstante(false);
-      toast.success("Estante creado.");
+      toast.success(t("catalogoAgregar.estanteCreado"));
     } catch (err) {
       logError("Error creando estante:", err);
-      toast.error("No pudimos crear el estante.");
+      toast.error(t("catalogoAgregar.errorCrearEstante"));
     }
   }
 
   async function handleGuardar() {
     if (!bibliotecaActual) {
-      toast.error("Todavía no tenés una biblioteca activa.");
+      toast.error(t("catalogoAgregar.errorSinBiblioteca"));
       return;
     }
     if (!(form.titulo ?? "").trim()) {
-      toast.error("El título es obligatorio.");
+      toast.error(t("catalogoAgregar.errorTituloObligatorio"));
       return;
     }
 
@@ -290,7 +288,7 @@ export default function AgregarLibroPage() {
         const copiasExistentes = await contarCopiasDelIsbn(bibliotecaActual.id, isbn);
         if (copiasExistentes > 0) {
           const seguir = window.confirm(
-            `Ya tenés ${copiasExistentes} copia(s) de este libro en tu biblioteca. ¿Querés agregar una copia más?`
+            t("catalogoAgregar.confirmarCopiaExistente", { n: copiasExistentes })
           );
           if (!seguir) return;
         }
@@ -332,7 +330,7 @@ export default function AgregarLibroPage() {
       if (cargaMultiple) {
         const nuevoTotal = agregadosSesion + 1;
         setAgregadosSesion(nuevoTotal);
-        toast.success(`Agregado (${nuevoTotal}). Escaneá el siguiente.`);
+        toast.success(t("catalogoAgregar.agregadoSiguiente", { n: nuevoTotal }));
         setIsbn("");
         setIsbnInput("");
         setComunidad(null);
@@ -340,13 +338,13 @@ export default function AgregarLibroPage() {
         setPaso("buscar");
         setEscaneando(true);
       } else {
-        toast.success("Libro agregado a tu biblioteca.");
+        toast.success(t("catalogoAgregar.libroAgregado"));
         router.push("/catalogo");
       }
     } catch (err) {
       logError("Error guardando el libro:", err);
       const mensaje = err instanceof Error ? err.message : String(err);
-      toast.error(`No pudimos guardar el libro: ${mensaje}`);
+      toast.error(t("catalogoAgregar.errorGuardarLibro", { mensaje }));
     } finally {
       setGuardando(false);
     }
@@ -358,14 +356,14 @@ export default function AgregarLibroPage() {
         <button
           onClick={() => router.push("/catalogo")}
           className="flex size-8 items-center justify-center rounded-md border text-muted-foreground hover:bg-accent hover:text-foreground"
-          aria-label="Volver al catálogo"
+          aria-label={t("catalogoAgregar.volverCatalogo")}
         >
           <ArrowLeft className="size-4" />
         </button>
-        <h1 className="text-2xl font-bold">Agregar libro</h1>
+        <h1 className="text-2xl font-bold">{t("catalogoAgregar.titulo")}</h1>
       </div>
       <p className="mb-4 mt-1 text-sm text-muted-foreground">
-        Escaneá el código o buscá el ISBN. Si no lo tenés, podés cargar el libro a mano sin ISBN.
+        {t("catalogoAgregar.subtitulo")}
       </p>
 
       <label className="mb-7 flex items-center gap-2 text-sm">
@@ -373,10 +371,10 @@ export default function AgregarLibroPage() {
           checked={cargaMultiple}
           onCheckedChange={(v) => setCargaMultiple(v === true)}
         />
-        Cargar varios seguidos (después de guardar, vuelve a la cámara)
+        {t("catalogoAgregar.cargaMultipleLabel")}
         {cargaMultiple && agregadosSesion > 0 && (
           <span className="text-xs text-muted-foreground">
-            · {agregadosSesion} agregado(s) en esta sesión
+            {t("catalogoAgregar.agregadosEnSesion", { n: agregadosSesion })}
           </span>
         )}
       </label>
@@ -387,23 +385,24 @@ export default function AgregarLibroPage() {
             <>
               <BarcodeScanner onDetected={handleDetected} />
               <Button variant="ghost" size="sm" onClick={() => setEscaneando(false)}>
-                Cancelar escaneo
+                {t("catalogoAgregar.cancelarEscaneo")}
               </Button>
             </>
           ) : (
             <Button variant="outline" onClick={() => setEscaneando(true)}>
               <ScanBarcode />
-              Escanear con la cámara
+              {t("catalogoAgregar.escanearCamara")}
             </Button>
           )}
 
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />o ingresá el ISBN
+            <div className="h-px flex-1 bg-border" />
+            {t("catalogoAgregar.oIngresaIsbn")}
             <div className="h-px flex-1 bg-border" />
           </div>
           <div className="flex gap-2">
             <Input
-              placeholder="978-..."
+              placeholder={t("catalogoAgregar.isbnPlaceholder")}
               inputMode="numeric"
               maxLength={13}
               value={isbnInput}
@@ -411,18 +410,18 @@ export default function AgregarLibroPage() {
               onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
             />
             <Button onClick={handleBuscar} disabled={buscando}>
-              {buscando ? <Loader2 className="size-4 animate-spin" /> : "Buscar"}
+              {buscando ? <Loader2 className="size-4 animate-spin" /> : t("catalogoAgregar.buscar")}
             </Button>
           </div>
           {buscando && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
-              Buscando el libro…
+              {t("catalogoAgregar.buscandoLibro")}
             </div>
           )}
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <div className="h-px flex-1 bg-border" />
-            o buscá por título
+            {t("catalogoAgregar.oBuscaPorTitulo")}
             <div className="h-px flex-1 bg-border" />
           </div>
           <BuscarPorTitulo
@@ -430,11 +429,13 @@ export default function AgregarLibroPage() {
             onSeleccionar={handleSeleccionarPorTitulo}
           />
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />o<div className="h-px flex-1 bg-border" />
+            <div className="h-px flex-1 bg-border" />
+            {t("catalogoAgregar.oSeparador")}
+            <div className="h-px flex-1 bg-border" />
           </div>
           <Button variant="outline" onClick={handleManual}>
             <PenLine />
-            Cargar manualmente
+            {t("catalogoAgregar.cargarManualmente")}
           </Button>
         </div>
       )}
@@ -443,9 +444,11 @@ export default function AgregarLibroPage() {
         <div className="flex flex-col gap-4 pb-4">
           {comunidad && (
             <div className="rounded-lg border bg-muted/40 p-3 text-xs">
-              <span className="font-semibold">Ya está en la comunidad: </span>
-              {comunidad.propietarios} biblioteca(s) lo tienen · ★{" "}
-              {comunidad.ratingPromedio} promedio
+              <span className="font-semibold">{t("catalogoAgregar.yaEstaComunidad")} </span>
+              {t("catalogoAgregar.comunidadInfo", {
+                propietarios: comunidad.propietarios,
+                rating: comunidad.ratingPromedio,
+              })}
             </div>
           )}
 
@@ -454,12 +457,12 @@ export default function AgregarLibroPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={form.portadaUrl}
-                alt="Portada"
+                alt={t("catalogoAgregar.portadaAlt")}
                 className="h-[130px] w-[88px] rounded-md border object-cover"
               />
             ) : (
               <div className="flex h-[130px] w-[88px] items-center justify-center rounded-md border bg-muted text-xs text-muted-foreground">
-                Sin portada
+                {t("catalogoAgregar.sinPortada")}
               </div>
             )}
             <Button
@@ -468,11 +471,13 @@ export default function AgregarLibroPage() {
               size="sm"
               onClick={() => setPortadaPickerOpen(true)}
             >
-              {form.portadaUrl ? "Cambiar portada" : "Buscar portada"}
+              {form.portadaUrl
+                ? t("catalogoAgregar.cambiarPortada")
+                : t("catalogoAgregar.buscarPortada")}
             </Button>
           </div>
 
-          <Field label="ISBN (opcional)">
+          <Field label={t("catalogoAgregar.campoIsbn")}>
             <Input
               inputMode="numeric"
               maxLength={13}
@@ -480,25 +485,25 @@ export default function AgregarLibroPage() {
               onChange={(e) => setIsbn(sanitizarIsbn(e.target.value))}
             />
           </Field>
-          <Field label="Título">
+          <Field label={t("catalogoAgregar.campoTitulo")}>
             <Input value={form.titulo} onChange={(e) => setCampo("titulo", e.target.value)} />
           </Field>
-          <Field label="Autor(es)">
+          <Field label={t("catalogoAgregar.campoAutor")}>
             <Input
-              placeholder="separados por coma"
+              placeholder={t("catalogoAgregar.separadosPorComa")}
               value={form.autor}
               onChange={(e) => setCampo("autor", e.target.value)}
               list="sugerencias-autor"
             />
           </Field>
-          <Field label="Ilustrador(es) (opcional)">
+          <Field label={t("catalogoAgregar.campoIlustrador")}>
             <Input
-              placeholder="separados por coma"
+              placeholder={t("catalogoAgregar.separadosPorComa")}
               value={form.ilustrador}
               onChange={(e) => setCampo("ilustrador", e.target.value)}
             />
           </Field>
-          <Field label="Estante">
+          <Field label={t("catalogoAgregar.campoEstante")}>
             {creandoEstante ? (
               <div className="flex gap-1.5">
                 <Input
@@ -506,17 +511,17 @@ export default function AgregarLibroPage() {
                   value={nuevoEstanteNombre}
                   onChange={(e) => setNuevoEstanteNombre(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleCrearEstante()}
-                  placeholder="Nombre del estante"
+                  placeholder={t("catalogoAgregar.nombreEstantePlaceholder")}
                 />
                 <Button type="button" onClick={handleCrearEstante}>
-                  Crear
+                  {t("catalogoAgregar.crear")}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCreandoEstante(false)}
                 >
-                  Cancelar
+                  {t("catalogoAgregar.cancelar")}
                 </Button>
               </div>
             ) : (
@@ -524,7 +529,7 @@ export default function AgregarLibroPage() {
                 {estantes.length > 0 ? (
                   <Select value={form.estante} onValueChange={(v) => setCampo("estante", v)}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Elegí un estante" />
+                      <SelectValue placeholder={t("catalogoAgregar.elegiEstante")} />
                     </SelectTrigger>
                     <SelectContent>
                       {estantes.map((e) => (
@@ -536,7 +541,7 @@ export default function AgregarLibroPage() {
                   </Select>
                 ) : (
                   <div className="flex-1 pt-2 text-xs text-muted-foreground">
-                    Todavía no tenés estantes.
+                    {t("catalogoAgregar.sinEstantes")}
                   </div>
                 )}
                 <Button
@@ -544,7 +549,7 @@ export default function AgregarLibroPage() {
                   variant="outline"
                   size="icon"
                   onClick={() => setCreandoEstante(true)}
-                  aria-label="Crear estante"
+                  aria-label={t("catalogoAgregar.crearEstanteAriaLabel")}
                 >
                   <Plus className="size-4" />
                 </Button>
@@ -553,58 +558,58 @@ export default function AgregarLibroPage() {
           </Field>
 
           <div className="mt-2 border-t pt-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-            Más datos del libro (comunidad, opcional)
+            {t("catalogoAgregar.masDatos")}
           </div>
-          <Field label="Subtítulo">
+          <Field label={t("catalogoAgregar.campoSubtitulo")}>
             <Input value={form.subtitulo} onChange={(e) => setCampo("subtitulo", e.target.value)} />
           </Field>
           <div className="flex gap-3">
-            <Field label="Editorial" className="flex-[2]">
+            <Field label={t("catalogoAgregar.campoEditorial")} className="flex-[2]">
               <Input
                 value={form.editorial}
                 onChange={(e) => setCampo("editorial", e.target.value)}
                 list="sugerencias-editorial"
               />
             </Field>
-            <Field label="Año" className="w-[90px]">
+            <Field label={t("catalogoAgregar.campoAnio")} className="w-[90px]">
               <Input value={form.anio} onChange={(e) => setCampo("anio", e.target.value)} />
             </Field>
-            <Field label="Páginas" className="w-[90px]">
+            <Field label={t("catalogoAgregar.campoPaginas")} className="w-[90px]">
               <Input value={form.paginas} onChange={(e) => setCampo("paginas", e.target.value)} />
             </Field>
-            <Field label="Volumen / Tomo" className="w-[110px]">
+            <Field label={t("catalogoAgregar.campoVolumen")} className="w-[110px]">
               <Input
-                placeholder="Tomo 1"
+                placeholder={t("catalogoAgregar.tomoPlaceholder")}
                 value={form.volumen}
                 onChange={(e) => setCampo("volumen", e.target.value)}
               />
             </Field>
           </div>
           <div className="flex gap-3">
-            <Field label="Género" className="flex-1">
+            <Field label={t("catalogoAgregar.campoGenero")} className="flex-1">
               <GeneroSelect value={form.genero} onValueChange={(v) => setCampo("genero", v)} />
             </Field>
-            <Field label="Idioma" className="w-36">
+            <Field label={t("catalogoAgregar.campoIdioma")} className="w-36">
               <IdiomaSelect value={form.idioma} onValueChange={(v) => setCampo("idioma", v)} />
             </Field>
           </div>
-          <Field label="Sinopsis">
+          <Field label={t("catalogoAgregar.campoSinopsis")}>
             <Textarea rows={3} value={form.sinopsis} onChange={(e) => setCampo("sinopsis", e.target.value)} />
           </Field>
 
           <div className="mt-2 border-t pt-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-            Tu copia física
+            {t("catalogoAgregar.tuCopiaFisica")}
           </div>
-          <Field label="Tipo de tapa">
+          <Field label={t("catalogoAgregar.campoTipoTapa")}>
             <Input
-              placeholder="Tapa blanda"
+              placeholder={t("catalogoAgregar.tapaBlandaPlaceholder")}
               value={form.tipoTapa}
               onChange={(e) => setCampo("tipoTapa", e.target.value)}
             />
           </Field>
-          <Field label="Notas privadas">
+          <Field label={t("catalogoAgregar.campoNotas")}>
             <Input
-              placeholder="ej: firmado por el autor"
+              placeholder={t("catalogoAgregar.notasPlaceholder")}
               value={form.notas}
               onChange={(e) => setCampo("notas", e.target.value)}
             />
@@ -616,10 +621,10 @@ export default function AgregarLibroPage() {
       {paso === "formulario" && (
         <div className="sticky bottom-0 -mx-5 -mb-24 flex gap-2.5 border-t bg-background px-5 pt-3 pb-24 md:-mx-12 md:-mb-12 md:px-12 md:pb-3">
           <Button variant="outline" onClick={() => setPaso("buscar")}>
-            Cancelar
+            {t("catalogoAgregar.cancelar")}
           </Button>
           <Button className="flex-1" onClick={handleGuardar} disabled={guardando}>
-            Agregar
+            {t("catalogoAgregar.agregar")}
           </Button>
         </div>
       )}
