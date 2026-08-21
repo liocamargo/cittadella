@@ -184,6 +184,7 @@ const it: Dictionary = {
     leido: "Letto",
     marcarLeido: "Segna come letto",
     editarDatos: "Modifica dati",
+    campoIsbn: "ISBN",
     campoTitulo: "Titolo",
     campoSubtitulo: "Sottotitolo",
     campoAutor: "Autore(i)",

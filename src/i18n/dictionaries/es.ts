@@ -182,6 +182,7 @@ const es = {
     leido: "Leído",
     marcarLeido: "Marcar leído",
     editarDatos: "Editar datos",
+    campoIsbn: "ISBN",
     campoTitulo: "Título",
     campoSubtitulo: "Subtítulo",
     campoAutor: "Autor(es)",

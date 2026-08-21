@@ -243,6 +243,34 @@ export async function agregarDeseo(
   });
 }
 
+/**
+ * Cambia el ISBN de una copia ya existente (p.ej. para corregir un error de
+ * tipeo o de escaneo). Si el ISBN nuevo ya tiene un libro comunitario, se
+ * suma como otro propietario; si no, se crea uno con los datos actuales.
+ */
+export async function cambiarIsbnCopia(
+  copiaId: string,
+  isbnNuevo: string,
+  comunidad: DatosComunidad
+): Promise<void> {
+  const nuevoRef = doc(db, GLOBALES, isbnNuevo);
+
+  await runTransaction(db, async (tx) => {
+    const nuevoSnap = await tx.get(nuevoRef);
+    if (nuevoSnap.exists()) {
+      tx.update(nuevoRef, { propietarios: increment(1) });
+    } else {
+      tx.set(nuevoRef, {
+        ...comunidad,
+        propietarios: 1,
+        ratingPromedio: 0,
+        totalResenas: 0,
+      });
+    }
+    tx.update(doc(db, COPIAS, copiaId), { isbn: isbnNuevo });
+  });
+}
+
 export async function actualizarCopia(
   copiaId: string,
   data: Partial<Pick<LibroEnBiblioteca, "estante" | "tipoTapa" | "notas">>

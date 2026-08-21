@@ -36,6 +36,8 @@ import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
 import { GeneroSelect } from "@/components/catalogo/genero-select";
 import { BuscarPorTitulo } from "@/components/catalogo/buscar-por-titulo";
+import { BuscarMasInformacion } from "@/components/catalogo/buscar-mas-informacion";
+import type { DatosComunidad } from "@/lib/firestore/libros";
 import type { LibroGlobal } from "@/types";
 
 type Paso = "buscar" | "formulario";
@@ -256,6 +258,23 @@ export default function AgregarLibroPage() {
     setPaso("formulario");
   }
 
+  function handleDatosEncontrados(datos: DatosComunidad) {
+    setForm((f) => ({
+      ...f,
+      titulo: datos.titulo || f.titulo,
+      subtitulo: datos.subtitulo ?? f.subtitulo,
+      autor: datos.autor || f.autor,
+      editorial: datos.editorial ?? f.editorial,
+      anio: datos.anio ?? f.anio,
+      paginas: datos.paginas ?? f.paginas,
+      volumen: datos.volumen ?? f.volumen,
+      idioma: datos.idioma ?? f.idioma,
+      genero: datos.genero ?? f.genero,
+      sinopsis: datos.sinopsis ?? f.sinopsis,
+      portadaUrl: datos.portadaUrl ?? f.portadaUrl,
+    }));
+  }
+
   async function handleCrearEstante() {
     if (!bibliotecaActual || !nuevoEstanteNombre.trim()) return;
     const nombre = nuevoEstanteNombre.trim();
@@ -351,7 +370,7 @@ export default function AgregarLibroPage() {
   }
 
   return (
-    <div>
+    <div className="flex h-full flex-col">
       <div className="mb-1 flex items-center gap-2">
         <button
           onClick={() => router.push("/catalogo")}
@@ -379,6 +398,7 @@ export default function AgregarLibroPage() {
         )}
       </label>
 
+      <div className="flex-1 overflow-y-auto">
       {paso === "buscar" && (
         <div className="flex flex-col gap-4">
           {escaneando ? (
@@ -451,6 +471,12 @@ export default function AgregarLibroPage() {
               })}
             </div>
           )}
+
+          <BuscarMasInformacion
+            isbn={isbn}
+            idiomasLectura={localeLectura}
+            onEncontrado={handleDatosEncontrados}
+          />
 
           <div className="flex items-center gap-3">
             {form.portadaUrl ? (
@@ -563,21 +589,21 @@ export default function AgregarLibroPage() {
           <Field label={t("catalogoAgregar.campoSubtitulo")}>
             <Input value={form.subtitulo} onChange={(e) => setCampo("subtitulo", e.target.value)} />
           </Field>
+          <Field label={t("catalogoAgregar.campoEditorial")}>
+            <Input
+              value={form.editorial}
+              onChange={(e) => setCampo("editorial", e.target.value)}
+              list="sugerencias-editorial"
+            />
+          </Field>
           <div className="flex gap-3">
-            <Field label={t("catalogoAgregar.campoEditorial")} className="flex-[2]">
-              <Input
-                value={form.editorial}
-                onChange={(e) => setCampo("editorial", e.target.value)}
-                list="sugerencias-editorial"
-              />
-            </Field>
-            <Field label={t("catalogoAgregar.campoAnio")} className="w-[90px]">
+            <Field label={t("catalogoAgregar.campoAnio")} className="flex-1">
               <Input value={form.anio} onChange={(e) => setCampo("anio", e.target.value)} />
             </Field>
-            <Field label={t("catalogoAgregar.campoPaginas")} className="w-[90px]">
+            <Field label={t("catalogoAgregar.campoPaginas")} className="flex-1">
               <Input value={form.paginas} onChange={(e) => setCampo("paginas", e.target.value)} />
             </Field>
-            <Field label={t("catalogoAgregar.campoVolumen")} className="w-[110px]">
+            <Field label={t("catalogoAgregar.campoVolumen")} className="flex-1">
               <Input
                 placeholder={t("catalogoAgregar.tomoPlaceholder")}
                 value={form.volumen}
@@ -617,9 +643,10 @@ export default function AgregarLibroPage() {
 
         </div>
       )}
+      </div>
 
       {paso === "formulario" && (
-        <div className="sticky bottom-0 -mx-5 -mb-24 flex gap-2.5 border-t bg-background px-5 pt-3 pb-24 md:-mx-12 md:-mb-12 md:px-12 md:pb-3">
+        <div className="-mx-5 mt-4 flex gap-2.5 border-t bg-background px-5 pt-3 pb-3 md:-mx-12 md:px-12">
           <Button variant="outline" onClick={() => setPaso("buscar")}>
             {t("catalogoAgregar.cancelar")}
           </Button>

@@ -39,6 +39,7 @@ import {
   actualizarCopia,
   actualizarLibroGlobal,
   actualizarPortada,
+  cambiarIsbnCopia,
   devolverLibro,
   eliminarCopia,
   listenResenas,
@@ -51,12 +52,18 @@ import {
 import { listenSocios } from "@/lib/firestore/socios";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { RatingCara, RatingCaraPicker } from "@/components/catalogo/rating-cara";
-import { IdiomaSelect } from "@/components/catalogo/idioma-select";
+import { IdiomaSelect, getIdiomaInfo } from "@/components/catalogo/idioma-select";
 import { GeneroSelect } from "@/components/catalogo/genero-select";
 import { BuscarMasInformacion } from "@/components/catalogo/buscar-mas-informacion";
 import type { LibroEnBiblioteca, LibroGlobal, Resena, Socio } from "@/types";
 
+/** Deja solo los caracteres válidos de un ISBN y lo corta a 13 (ISBN-13). */
+function sanitizarIsbn(valor: string): string {
+  return valor.replace(/[^0-9Xx]/g, "").slice(0, 13);
+}
+
 const CAMPOS_EDITABLES = {
+  isbn: "",
   titulo: "",
   subtitulo: "",
   autor: "",
@@ -133,6 +140,7 @@ export function LibroDetailSheet({
   function handleEmpezarEdicion() {
     if (!copia) return;
     setFormEdit({
+      isbn: copia.isbn ?? "",
       titulo: global?.titulo ?? "",
       subtitulo: global?.subtitulo ?? "",
       autor: global?.autor ?? "",
@@ -159,7 +167,8 @@ export function LibroDetailSheet({
     }
     setGuardandoEdicion(true);
     try {
-      await actualizarLibroGlobal(copia.isbn, {
+      const nuevoIsbn = sanitizarIsbn(formEdit.isbn) || copia.isbn;
+      const datosComunidad = {
         titulo: formEdit.titulo.trim(),
         subtitulo: formEdit.subtitulo.trim() || undefined,
         autor: formEdit.autor.trim(),
@@ -171,7 +180,11 @@ export function LibroDetailSheet({
         idioma: formEdit.idioma.trim() || undefined,
         genero: formEdit.genero.trim() || undefined,
         sinopsis: formEdit.sinopsis.trim() || undefined,
-      });
+      };
+      if (nuevoIsbn !== copia.isbn) {
+        await cambiarIsbnCopia(copia.id, nuevoIsbn, datosComunidad);
+      }
+      await actualizarLibroGlobal(nuevoIsbn, datosComunidad);
       await actualizarCopia(copia.id, {
         estante: formEdit.estante.trim(),
         tipoTapa: formEdit.tipoTapa.trim() || undefined,
@@ -225,6 +238,14 @@ export function LibroDetailSheet({
       logError("Error registrando la devolución:", err);
       toast.error(t("libroDetail.errorRegistrandoDevolucion"));
     }
+  }
+
+  function handleToggleLeido() {
+    if (!copia) return;
+    toggleLeido(copia.id, !copia.leido).catch((err) => {
+      logError("Error actualizando leído:", err);
+      toast.error(t("libroDetail.errorActualizandoLeido"));
+    });
   }
 
   async function handleEliminar() {
@@ -300,6 +321,7 @@ export function LibroDetailSheet({
   }
 
   const inicial = (global?.titulo ?? "?").trim().charAt(0).toUpperCase();
+  const idiomaInfo = getIdiomaInfo(global?.idioma);
   const linkLectura =
     global?.previewLink ??
     (global?.titulo
@@ -413,7 +435,8 @@ export function LibroDetailSheet({
               </div>
             )}
             <div>
-              <strong>{t("libroDetail.idioma")}</strong> {global?.idioma || "—"}
+              <strong>{t("libroDetail.idioma")}</strong>{" "}
+              {idiomaInfo ? `${idiomaInfo.bandera} ${t(idiomaInfo.key)}` : global?.idioma || "—"}
             </div>
             <div>
               <strong>{t("libroDetail.genero")}</strong> {global?.genero || "—"}
@@ -585,15 +608,11 @@ export function LibroDetailSheet({
               <Button
                 variant="outline"
                 className={cn(
+                  "hidden md:inline-flex",
                   copia.leido &&
                     "border-green-600 bg-green-600 text-white hover:bg-green-700 hover:text-white"
                 )}
-                onClick={() =>
-                  toggleLeido(copia.id, !copia.leido).catch((err) => {
-                    logError("Error actualizando leído:", err);
-                    toast.error(t("libroDetail.errorActualizandoLeido"));
-                  })
-                }
+                onClick={handleToggleLeido}
               >
                 {copia.leido && <Check className="size-4" />}
                 {copia.leido ? t("libroDetail.leido") : t("libroDetail.marcarLeido")}
@@ -604,6 +623,19 @@ export function LibroDetailSheet({
             </div>
           )}
         </SheetFooter>
+
+        {!prestando && (
+          <button
+            onClick={handleToggleLeido}
+            aria-label={copia.leido ? t("libroDetail.leido") : t("libroDetail.marcarLeido")}
+            className={cn(
+              "fixed bottom-6 right-4 z-50 flex size-14 items-center justify-center rounded-full text-white shadow-lg md:hidden",
+              copia.leido ? "bg-green-600" : "bg-primary"
+            )}
+          >
+            <Check className="size-6" />
+          </button>
+        )}
       </SheetContent>
 
       <PortadaPicker
@@ -629,6 +661,14 @@ export function LibroDetailSheet({
               onEncontrado={handleDatosEncontrados}
             />
 
+            <FieldEdit label={t("libroDetail.campoIsbn")}>
+              <Input
+                inputMode="numeric"
+                maxLength={13}
+                value={formEdit.isbn}
+                onChange={(e) => setCampoEdit("isbn", sanitizarIsbn(e.target.value))}
+              />
+            </FieldEdit>
             <FieldEdit label={t("libroDetail.campoTitulo")}>
               <Input
                 value={formEdit.titulo}

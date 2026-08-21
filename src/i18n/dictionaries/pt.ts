@@ -184,6 +184,7 @@ const pt: Dictionary = {
     leido: "Lido",
     marcarLeido: "Marcar como lido",
     editarDatos: "Editar dados",
+    campoIsbn: "ISBN",
     campoTitulo: "Título",
     campoSubtitulo: "Subtítulo",
     campoAutor: "Autor(es)",

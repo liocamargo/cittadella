@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { useLocale } from "@/hooks/use-locale";
 
-const IDIOMAS_INFO = [
+export const IDIOMAS_INFO = [
   { value: "es", bandera: "🇪🇸", key: "idiomaSelect.espanol" },
   { value: "en", bandera: "🇺🇸", key: "idiomaSelect.ingles" },
   { value: "pt", bandera: "🇧🇷", key: "idiomaSelect.portugues" },
@@ -18,6 +18,11 @@ const IDIOMAS_INFO = [
   { value: "de", bandera: "🇩🇪", key: "idiomaSelect.aleman" },
   { value: "otro", bandera: "🌐", key: "idiomaSelect.otro" },
 ];
+
+/** Busca la bandera/traducción de un código de idioma (p.ej. el que devuelve Google Books). */
+export function getIdiomaInfo(value?: string) {
+  return IDIOMAS_INFO.find((i) => i.value === value);
+}
 
 interface IdiomaSelectProps {
   value: string;

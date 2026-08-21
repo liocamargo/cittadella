@@ -5,11 +5,11 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { BookOpen, Heart } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { logError } from "@/lib/log";
@@ -167,15 +167,15 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
         )}
       </div>
 
-      <Dialog
+      <Sheet
         open={Boolean(seleccionado)}
         onOpenChange={(o) => !o && setSeleccionado(null)}
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{seleccionado?.titulo}</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-3 text-sm">
+        <SheetContent side="right" className="w-full gap-0 sm:max-w-[420px]">
+          <SheetHeader>
+            <SheetTitle>{seleccionado?.titulo}</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 pb-6 text-sm">
             <div className="text-muted-foreground">{seleccionado?.autor}</div>
             {seleccionado?.sinopsis && (
               <p className="leading-relaxed">{seleccionado.sinopsis}</p>
@@ -226,8 +226,8 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
               </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

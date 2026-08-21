@@ -184,6 +184,7 @@ const en: Dictionary = {
     leido: "Read",
     marcarLeido: "Mark as read",
     editarDatos: "Edit details",
+    campoIsbn: "ISBN",
     campoTitulo: "Title",
     campoSubtitulo: "Subtitle",
     campoAutor: "Author(s)",
