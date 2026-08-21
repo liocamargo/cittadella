@@ -78,6 +78,13 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
     }
 
+    // Lista de deseos de un usuario (libros que quiere conseguir, los
+    // tenga en su biblioteca o no). Doc id = `${uid}_${isbn}`.
+    match /Deseos/{deseoId} {
+      allow read, delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+    }
+
     // Preferencias personales (idioma de la página / de lectura). Doc id = uid.
     match /Perfiles/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;

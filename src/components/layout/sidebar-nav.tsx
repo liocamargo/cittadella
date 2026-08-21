@@ -7,6 +7,7 @@ import { logError } from "@/lib/log";
 import {
   Home,
   Library,
+  Heart,
   ArrowLeftRight,
   BookCheck,
   Users,
@@ -40,6 +41,7 @@ const VERSION = "Beta";
 const NAV_ITEMS_BASE = [
   { href: "/inicio", i18nKey: "nav.inicio", icon: Home },
   { href: "/catalogo", i18nKey: "nav.catalogo", icon: Library },
+  { href: "/deseos", i18nKey: "nav.deseos", icon: Heart },
   { href: "/leidos", i18nKey: "nav.leidos", icon: BookCheck },
   { href: "/prestamos", i18nKey: "nav.prestamos", icon: ArrowLeftRight },
   { href: "/espacio", i18nKey: "nav.espacio", icon: Users },
@@ -49,8 +51,8 @@ const NAV_ITEMS_BASE = [
 const SOCIOS_ITEM = { href: "/socios", i18nKey: "nav.socios", icon: IdCard } as const;
 
 // En mobile, la tab bar de abajo solo tiene lugar para lo más usado; el
-// resto (Espacio, Importar, Socios) vive en el menú de arriba.
-const HREFS_MENU_MOBILE = new Set(["/espacio", "/importar", "/socios"]);
+// resto (Deseos, Espacio, Importar, Socios) vive en el menú de arriba.
+const HREFS_MENU_MOBILE = new Set(["/deseos", "/espacio", "/importar", "/socios"]);
 
 export function SidebarNav() {
   const pathname = usePathname();
@@ -64,7 +66,7 @@ export function SidebarNav() {
   const [creating, setCreating] = useState(false);
 
   const navItems = bibliotecaActual?.modoSocios
-    ? [...NAV_ITEMS_BASE.slice(0, 4), SOCIOS_ITEM, ...NAV_ITEMS_BASE.slice(4)]
+    ? [...NAV_ITEMS_BASE.slice(0, 5), SOCIOS_ITEM, ...NAV_ITEMS_BASE.slice(5)]
     : NAV_ITEMS_BASE;
   const mobileTabItems = navItems.filter((item) => !HREFS_MENU_MOBILE.has(item.href));
   const mobileMenuItems = navItems.filter((item) => HREFS_MENU_MOBILE.has(item.href));

@@ -23,9 +23,9 @@ import { LibroDetailSheet } from "@/components/catalogo/libro-detail-sheet";
 import { ShareCatalogPopover } from "@/components/catalogo/share-catalog-popover";
 import type { LibroEnBiblioteca } from "@/types";
 
-type Filtro = "all" | "disponible" | "favorito";
+type Filtro = "all" | "disponible";
 
-const FILTROS: Filtro[] = ["all", "disponible", "favorito"];
+const FILTROS: Filtro[] = ["all", "disponible"];
 
 /** Primera letra para agrupar/indexar; todo lo que no sea A-Z cae en "#". */
 function letraDe(titulo: string): string {
@@ -84,7 +84,6 @@ export default function CatalogoPage() {
     () => ({
       all: copias.length,
       disponible: copias.filter((c) => c.estado === "disponible").length,
-      favorito: copias.filter((c) => c.favorito).length,
     }),
     [copias]
   );
@@ -103,7 +102,6 @@ export default function CatalogoPage() {
     return copias.filter((c) => {
       const g = globales[c.isbn];
       if (filtro === "disponible" && c.estado !== "disponible") return false;
-      if (filtro === "favorito" && !c.favorito) return false;
       if (shelfFilter !== "all" && c.estante !== shelfFilter) return false;
       if (term) {
         const haystack = normalizarBusqueda(
@@ -148,7 +146,6 @@ export default function CatalogoPage() {
   const filtroLabel: Record<Filtro, string> = {
     all: t("catalogo.filtroTodos"),
     disponible: t("catalogo.filtroDisponibles"),
-    favorito: t("catalogo.filtroFavoritos"),
   };
 
   async function handleCreateShelf() {

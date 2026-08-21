@@ -211,6 +211,38 @@ export async function agregarLibroLeido(
   });
 }
 
+/**
+ * Agrega un libro a la lista de deseos del usuario sin agregarlo a ninguna
+ * biblioteca física: crea/enriquece Libros_Globales si hace falta (sin
+ * sumar a "propietarios", porque no es una copia física) y crea el
+ * registro en Deseos.
+ */
+export async function agregarDeseo(
+  isbn: string,
+  uid: string,
+  comunidad: DatosComunidad
+): Promise<void> {
+  const globalRef = doc(db, GLOBALES, isbn);
+  const deseoRef = doc(db, "Deseos", `${uid}_${isbn}`);
+
+  await runTransaction(db, async (tx) => {
+    const globalSnap = await tx.get(globalRef);
+    if (!globalSnap.exists()) {
+      tx.set(globalRef, {
+        ...comunidad,
+        propietarios: 0,
+        ratingPromedio: 0,
+        totalResenas: 0,
+      });
+    }
+    tx.set(deseoRef, {
+      uid,
+      isbn,
+      fechaAgregado: new Date().toISOString(),
+    });
+  });
+}
+
 export async function actualizarCopia(
   copiaId: string,
   data: Partial<Pick<LibroEnBiblioteca, "estante" | "tipoTapa" | "notas">>
