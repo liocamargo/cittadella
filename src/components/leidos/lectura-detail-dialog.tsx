@@ -23,12 +23,11 @@ import {
   publicarResena,
   type DatosComunidad,
 } from "@/lib/firestore/libros";
-import { actualizarProgresoLectura, quitarLectura } from "@/lib/firestore/lecturas";
+import { quitarLectura } from "@/lib/firestore/lecturas";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
 import { GeneroSelect } from "@/components/catalogo/genero-select";
 import { BuscarMasInformacion } from "@/components/catalogo/buscar-mas-informacion";
 import { RatingCara, RatingCaraPicker } from "@/components/catalogo/rating-cara";
-import { ProgresoLectura } from "@/components/catalogo/progreso-lectura";
 import type { LibroGlobal, Resena } from "@/types";
 
 const CAMPOS_EDITABLES = {
@@ -48,14 +47,12 @@ const CAMPOS_EDITABLES = {
 interface LecturaDetailDialogProps {
   isbn: string | null;
   global?: LibroGlobal;
-  progreso?: number;
   onClose: () => void;
 }
 
 export function LecturaDetailDialog({
   isbn,
   global,
-  progreso,
   onClose,
 }: LecturaDetailDialogProps) {
   const { user } = useAuth();
@@ -339,13 +336,6 @@ export function LecturaDetailDialog({
 
               {global?.sinopsis && <p className="leading-relaxed">{global.sinopsis}</p>}
             </>
-          )}
-
-          {user && (
-            <ProgresoLectura
-              progreso={progreso}
-              onGuardar={(p) => actualizarProgresoLectura(user.uid, isbn, p)}
-            />
           )}
 
           <div className="border-t pt-3">

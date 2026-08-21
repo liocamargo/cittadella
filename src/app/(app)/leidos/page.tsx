@@ -52,8 +52,6 @@ export default function LeidosPage() {
   const globales = useLibrosGlobales(isbns);
 
   const copiaSeleccionada = copias.find((c) => c.id === seleccionCopiaId) ?? null;
-  const lecturaSeleccionada =
-    lecturas.find((l) => l.isbn === seleccionIsbnSuelto) ?? null;
 
   return (
     <div>
@@ -113,11 +111,6 @@ export default function LeidosPage() {
                   estante: copia.estante || t("leidos.sinEstante"),
                 })}
               </Badge>
-              {typeof copia.progreso === "number" && copia.progreso < 100 && (
-                <Badge variant="outline" className="w-fit text-[11px]">
-                  {t("leidos.progreso", { progreso: copia.progreso })}
-                </Badge>
-              )}
             </button>
           );
         })}
@@ -152,11 +145,6 @@ export default function LeidosPage() {
               <Badge variant="outline" className="w-fit text-[11px]">
                 {t("leidos.noEnBiblioteca")}
               </Badge>
-              {typeof lectura.progreso === "number" && lectura.progreso < 100 && (
-                <Badge variant="outline" className="w-fit text-[11px]">
-                  {t("leidos.progreso", { progreso: lectura.progreso })}
-                </Badge>
-              )}
             </button>
           );
         })}
@@ -171,7 +159,6 @@ export default function LeidosPage() {
       <LecturaDetailDialog
         isbn={seleccionIsbnSuelto}
         global={seleccionIsbnSuelto ? globales[seleccionIsbnSuelto] : undefined}
-        progreso={lecturaSeleccionada?.progreso}
         onClose={() => setSeleccionIsbnSuelto(null)}
       />
     </div>
