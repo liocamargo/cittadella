@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { toast } from "sonner";
+import { BookOpen, Heart } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,9 +11,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { logError } from "@/lib/log";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocale } from "@/hooks/use-locale";
-import { getSeleccionSemanal } from "@/lib/firestore/libros";
+import { agregarDeseo, getSeleccionSemanal } from "@/lib/firestore/libros";
+import { listenDeseos, quitarDeseo } from "@/lib/firestore/deseos";
 import { listenPerfil } from "@/lib/firestore/perfiles";
 import type { LibroGlobal } from "@/types";
 
@@ -34,12 +38,20 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
   const [libros, setLibros] = useState<LibroGlobal[] | null>(null);
   const [seleccionado, setSeleccionado] = useState<LibroGlobal | null>(null);
   const [generosFavoritos, setGenerosFavoritos] = useState<string[]>([]);
+  const [isbnsDeseados, setIsbnsDeseados] = useState<Set<string>>(new Set());
   const key = Array.from(new Set(isbnsPropios)).sort().join(",");
 
   useEffect(() => {
     if (!user) return;
     return listenPerfil(user.uid, (perfil) => {
       if (perfil) setGenerosFavoritos(perfil.generosFavoritos);
+    });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    return listenDeseos(user.uid, (deseos) => {
+      setIsbnsDeseados(new Set(deseos.map((d) => d.isbn)));
     });
   }, [user]);
 
@@ -58,6 +70,33 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
 
   const linkLectura = linkLecturaDe(seleccionado);
 
+  async function handleToggleDeseo(libro: LibroGlobal) {
+    if (!user) return;
+    try {
+      if (isbnsDeseados.has(libro.isbn)) {
+        await quitarDeseo(user.uid, libro.isbn);
+      } else {
+        await agregarDeseo(libro.isbn, user.uid, {
+          titulo: libro.titulo,
+          subtitulo: libro.subtitulo,
+          autor: libro.autor,
+          ilustrador: libro.ilustrador,
+          editorial: libro.editorial,
+          anio: libro.anio,
+          paginas: libro.paginas,
+          volumen: libro.volumen,
+          idioma: libro.idioma,
+          genero: libro.genero,
+          sinopsis: libro.sinopsis,
+          portadaUrl: libro.portadaUrl,
+        });
+      }
+    } catch (err) {
+      logError("Error actualizando la lista de deseos:", err);
+      toast.error(t("seleccionSemanal.errorActualizandoDeseo"));
+    }
+  }
+
   return (
     <div>
       <h2 className="mb-1 text-lg font-bold">{t("seleccionSemanal.titulo")}</h2>
@@ -74,30 +113,51 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
       <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-4">
         {(libros ?? Array.from({ length: 8 })).map((libro, i) =>
           libro ? (
-            <button
-              key={libro.isbn}
-              onClick={() => setSeleccionado(libro)}
-              className="flex flex-col gap-2 text-left"
-            >
-              {libro.portadaUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={libro.portadaUrl}
-                  alt={libro.titulo}
-                  className="aspect-[3/4.2] w-full rounded-lg border object-cover"
-                />
-              ) : (
-                <div className="flex aspect-[3/4.2] items-center justify-center rounded-lg border bg-muted">
-                  <span className="text-xl font-bold text-muted-foreground/60">
-                    {libro.titulo.trim().charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-              <div className="text-xs font-semibold leading-tight">{libro.titulo}</div>
+            <div key={libro.isbn} className="flex flex-col gap-2">
+              <div
+                onClick={() => setSeleccionado(libro)}
+                className="relative cursor-pointer"
+              >
+                {libro.portadaUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={libro.portadaUrl}
+                    alt={libro.titulo}
+                    className="aspect-[3/4.2] w-full rounded-lg border object-cover"
+                  />
+                ) : (
+                  <div className="flex aspect-[3/4.2] items-center justify-center rounded-lg border bg-muted">
+                    <span className="text-xl font-bold text-muted-foreground/60">
+                      {libro.titulo.trim().charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleDeseo(libro);
+                  }}
+                  className={cn(
+                    "absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-md bg-background/90 text-muted-foreground shadow-sm",
+                    isbnsDeseados.has(libro.isbn) && "text-rose-500"
+                  )}
+                >
+                  <Heart
+                    className="size-3.5"
+                    fill={isbnsDeseados.has(libro.isbn) ? "currentColor" : "none"}
+                  />
+                </button>
+              </div>
+              <div
+                onClick={() => setSeleccionado(libro)}
+                className="cursor-pointer text-xs font-semibold leading-tight"
+              >
+                {libro.titulo}
+              </div>
               <div className="line-clamp-2 text-[11px] text-muted-foreground" title={libro.autor}>
                 {libro.autor}
               </div>
-            </button>
+            </div>
           ) : (
             <div
               key={i}
@@ -120,6 +180,28 @@ export function SeleccionSemanal({ isbnsPropios }: SeleccionSemanalProps) {
             {seleccionado?.sinopsis && (
               <p className="leading-relaxed">{seleccionado.sinopsis}</p>
             )}
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full",
+                seleccionado &&
+                  isbnsDeseados.has(seleccionado.isbn) &&
+                  "border-rose-500 bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
+              )}
+              onClick={() => seleccionado && handleToggleDeseo(seleccionado)}
+            >
+              <Heart
+                className="size-4"
+                fill={
+                  seleccionado && isbnsDeseados.has(seleccionado.isbn)
+                    ? "currentColor"
+                    : "none"
+                }
+              />
+              {seleccionado && isbnsDeseados.has(seleccionado.isbn)
+                ? t("seleccionSemanal.quitarDeDeseos")
+                : t("seleccionSemanal.agregarADeseos")}
+            </Button>
             {linkLectura && (
               <Button asChild variant="outline" className="w-full">
                 <a href={linkLectura} target="_blank" rel="noopener noreferrer">

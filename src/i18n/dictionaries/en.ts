@@ -639,6 +639,9 @@ const en: Dictionary = {
     buscarlo: "Look it up",
     resenas: "({cantidad} review(s))",
     bibliotecasLoTienen: "{cantidad} library(ies) have it",
+    agregarADeseos: "Add to wishlist",
+    quitarDeDeseos: "Remove from wishlist",
+    errorActualizandoDeseo: "We couldn't update your wishlist.",
   },
   importar: {
     errorNoCsv: "That file isn't a .csv.",

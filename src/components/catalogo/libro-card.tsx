@@ -1,6 +1,6 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useLocale } from "@/hooks/use-locale";
@@ -47,10 +47,10 @@ export function LibroCard({
           }}
           className={cn(
             "absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-md bg-background/90 text-muted-foreground shadow-sm",
-            copia.favorito && "text-amber-500"
+            copia.favorito && "text-rose-500"
           )}
         >
-          <Star className="size-3.5" fill={copia.favorito ? "currentColor" : "none"} />
+          <Heart className="size-3.5" fill={copia.favorito ? "currentColor" : "none"} />
         </button>
       </div>
       <div onClick={onClick} className="cursor-pointer text-[13px] font-semibold leading-tight">

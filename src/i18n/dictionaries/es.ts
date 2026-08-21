@@ -637,6 +637,9 @@ const es = {
     buscarlo: "Buscarlo",
     resenas: "({cantidad} reseña(s))",
     bibliotecasLoTienen: "{cantidad} biblioteca(s) lo tienen",
+    agregarADeseos: "Agregar a deseos",
+    quitarDeDeseos: "Quitar de deseos",
+    errorActualizandoDeseo: "No pudimos actualizar tu lista de deseos.",
   },
   importar: {
     errorNoCsv: "Ese archivo no es un .csv.",

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, PenLine, Plus, ScanBarcode } from "lucide-react";
+import { ArrowLeft, Heart, Loader2, PenLine, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
@@ -400,7 +400,7 @@ export default function AgregarDeseoPage() {
                     variant="outline"
                     onClick={() => handleAgregarDesdeMiBiblioteca(copia)}
                   >
-                    <Plus className="size-3.5" />
+                    <Heart className="size-3.5" />
                     {t("deseosAgregar.agregar")}
                   </Button>
                 </div>
@@ -465,7 +465,7 @@ export default function AgregarDeseoPage() {
                         disabled={agregandoIsbn === libro.isbn}
                         onClick={() => handleAgregarSugerido(libro)}
                       >
-                        <Plus className="size-3.5" />
+                        <Heart className="size-3.5" />
                         {t("deseosAgregar.agregar")}
                       </Button>
                     </div>

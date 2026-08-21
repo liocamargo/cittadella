@@ -1,6 +1,6 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useLocale } from "@/hooks/use-locale";
@@ -66,10 +66,10 @@ export function LibroListItem({
         }}
         className={cn(
           "flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground",
-          copia.favorito && "text-amber-500"
+          copia.favorito && "text-rose-500"
         )}
       >
-        <Star className="size-4" fill={copia.favorito ? "currentColor" : "none"} />
+        <Heart className="size-4" fill={copia.favorito ? "currentColor" : "none"} />
       </button>
     </div>
   );

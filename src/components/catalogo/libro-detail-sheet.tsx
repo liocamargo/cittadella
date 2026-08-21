@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { BookOpen, Check, Pencil, Star, Trash2 } from "lucide-react";
+import { BookOpen, Check, Heart, Pencil, Trash2 } from "lucide-react";
 import { logError } from "@/lib/log";
 import {
   Sheet,
@@ -356,10 +356,10 @@ export function LibroDetailSheet({
               }
               className={cn(
                 "flex size-8 items-center justify-center rounded-md border text-muted-foreground",
-                copia.favorito && "text-amber-500"
+                copia.favorito && "text-rose-500"
               )}
             >
-              <Star
+              <Heart
                 className="size-4"
                 fill={copia.favorito ? "currentColor" : "none"}
               />
