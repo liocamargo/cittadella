@@ -7,6 +7,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn, normalizarBusqueda } from "@/lib/utils";
 import { useLocale } from "@/hooks/use-locale";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
@@ -21,11 +28,15 @@ import { LibroCard } from "@/components/catalogo/libro-card";
 import { LibroListItem } from "@/components/catalogo/libro-list-item";
 import { LibroDetailSheet } from "@/components/catalogo/libro-detail-sheet";
 import { ShareCatalogPopover } from "@/components/catalogo/share-catalog-popover";
+import { getIdiomaInfo } from "@/components/catalogo/idioma-select";
 import type { LibroEnBiblioteca } from "@/types";
 
 type Filtro = "all" | "disponible";
 
 const FILTROS: Filtro[] = ["all", "disponible"];
+
+/** Valor especial para filtrar por libros sin género/idioma cargado. */
+const SIN_DATO = "__sin__";
 
 /** Primera letra para agrupar/indexar; todo lo que no sea A-Z cae en "#". */
 function letraDe(titulo: string): string {
@@ -49,6 +60,7 @@ export default function CatalogoPage() {
   const [filtro, setFiltro] = useState<Filtro>("all");
   const [shelfFilter, setShelfFilter] = useState("all");
   const [generoFilter, setGeneroFilter] = useState("all");
+  const [idiomaFilter, setIdiomaFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newShelf, setNewShelf] = useState("");
   const [shelfCreateOpen, setShelfCreateOpen] = useState(false);
@@ -119,13 +131,38 @@ export default function CatalogoPage() {
     return Object.keys(conteoPorGenero).sort((a, b) => collator.compare(a, b));
   }, [conteoPorGenero]);
 
+  const sinCategoria = copias.length - Object.values(conteoPorGenero).reduce((a, b) => a + b, 0);
+
+  const conteoPorIdioma = useMemo(() => {
+    const mapa: Record<string, number> = {};
+    for (const c of copias) {
+      const idioma = globales[c.isbn]?.idioma;
+      if (!idioma) continue;
+      mapa[idioma] = (mapa[idioma] ?? 0) + 1;
+    }
+    return mapa;
+  }, [copias, globales]);
+
+  const idiomas = useMemo(() => Object.keys(conteoPorIdioma), [conteoPorIdioma]);
+
+  const sinIdioma = copias.length - Object.values(conteoPorIdioma).reduce((a, b) => a + b, 0);
+
   const filtrados = useMemo(() => {
     const term = normalizarBusqueda(search.trim());
     return copias.filter((c) => {
       const g = globales[c.isbn];
       if (filtro === "disponible" && c.estado !== "disponible") return false;
       if (shelfFilter !== "all" && c.estante !== shelfFilter) return false;
-      if (generoFilter !== "all" && (g?.genero ?? "") !== generoFilter) return false;
+      if (generoFilter === SIN_DATO) {
+        if (g?.genero) return false;
+      } else if (generoFilter !== "all" && (g?.genero ?? "") !== generoFilter) {
+        return false;
+      }
+      if (idiomaFilter === SIN_DATO) {
+        if (g?.idioma) return false;
+      } else if (idiomaFilter !== "all" && (g?.idioma ?? "") !== idiomaFilter) {
+        return false;
+      }
       if (term) {
         // Texto visible + claves canónicas precalculadas: busca igual en docs
         // viejos (sin backfill) y encuentra variantes como "jrr_tolkien".
@@ -137,7 +174,7 @@ export default function CatalogoPage() {
       }
       return true;
     });
-  }, [copias, globales, search, filtro, shelfFilter, generoFilter]);
+  }, [copias, globales, search, filtro, shelfFilter, generoFilter, idiomaFilter]);
 
   const ordenados = useMemo(() => {
     const collator = new Intl.Collator("es", { sensitivity: "base" });
@@ -269,29 +306,25 @@ export default function CatalogoPage() {
             {filtroLabel[f]} ({conteos[f]})
           </button>
         ))}
-        <div className="mx-1 h-5 w-px bg-border" />
+      </div>
+
+      <div className="mb-6 flex flex-wrap items-center gap-2">
         <span className="text-xs text-muted-foreground">{t("catalogo.estanteLabel")}</span>
-        <button
-          onClick={() => setShelfFilter("all")}
-          className={cn(
-            "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
-            shelfFilter === "all" && "border-foreground bg-foreground text-background"
-          )}
-        >
-          {t("catalogo.estanteTodos")} ({copias.length})
-        </button>
-        {estantes.map((e) => (
-          <button
-            key={e}
-            onClick={() => setShelfFilter(e)}
-            className={cn(
-              "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
-              shelfFilter === e && "border-foreground bg-foreground text-background"
-            )}
-          >
-            {e} ({conteoPorEstante[e] ?? 0})
-          </button>
-        ))}
+        <Select value={shelfFilter} onValueChange={setShelfFilter}>
+          <SelectTrigger className="h-8 w-[150px] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {t("catalogo.estanteTodos")} ({copias.length})
+            </SelectItem>
+            {estantes.map((e) => (
+              <SelectItem key={e} value={e}>
+                {e} ({conteoPorEstante[e] ?? 0})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {shelfFilter !== "all" && (
           <button
             onClick={() => handleDeleteShelf(shelfFilter)}
@@ -322,34 +355,57 @@ export default function CatalogoPage() {
             {t("catalogo.crearEstante")}
           </button>
         )}
-      </div>
 
-      {generos.length > 0 && (
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">{t("catalogo.categoriaLabel")}</span>
-          <button
-            onClick={() => setGeneroFilter("all")}
-            className={cn(
-              "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
-              generoFilter === "all" && "border-foreground bg-foreground text-background"
+        <div className="mx-1 h-5 w-px bg-border" />
+
+        <span className="text-xs text-muted-foreground">{t("catalogo.categoriaLabel")}</span>
+        <Select value={generoFilter} onValueChange={setGeneroFilter}>
+          <SelectTrigger className="h-8 w-[170px] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {t("catalogo.categoriaTodas")} ({copias.length})
+            </SelectItem>
+            {sinCategoria > 0 && (
+              <SelectItem value={SIN_DATO}>
+                {t("catalogo.categoriaSinCategoria")} ({sinCategoria})
+              </SelectItem>
             )}
-          >
-            {t("catalogo.categoriaTodas")} ({copias.length})
-          </button>
-          {generos.map((genero) => (
-            <button
-              key={genero}
-              onClick={() => setGeneroFilter(genero)}
-              className={cn(
-                "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
-                generoFilter === genero && "border-foreground bg-foreground text-background"
-              )}
-            >
-              {genero} ({conteoPorGenero[genero] ?? 0})
-            </button>
-          ))}
-        </div>
-      )}
+            {generos.map((genero) => (
+              <SelectItem key={genero} value={genero}>
+                {genero} ({conteoPorGenero[genero] ?? 0})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <span className="text-xs text-muted-foreground">{t("catalogo.idiomaLabel")}</span>
+        <Select value={idiomaFilter} onValueChange={setIdiomaFilter}>
+          <SelectTrigger className="h-8 w-[150px] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {t("catalogo.idiomaTodos")} ({copias.length})
+            </SelectItem>
+            {sinIdioma > 0 && (
+              <SelectItem value={SIN_DATO}>
+                {t("catalogo.idiomaSinIdioma")} ({sinIdioma})
+              </SelectItem>
+            )}
+            {idiomas.map((codigo) => {
+              const info = getIdiomaInfo(codigo);
+              return (
+                <SelectItem key={codigo} value={codigo}>
+                  {info ? `${info.bandera} ${t(info.key)}` : codigo} (
+                  {conteoPorIdioma[codigo] ?? 0})
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
 
       {filtrados.length === 0 && (
         <div className="py-16 text-center text-sm text-muted-foreground">

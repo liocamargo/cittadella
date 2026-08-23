@@ -90,7 +90,7 @@ export function CategoriasChart({ copias, globales }: CategoriasChartProps) {
   let acumulado = 0;
 
   return (
-    <div className="mt-10">
+    <div className="mt-10 rounded-xl border p-5">
       <h2 className="mb-4 text-lg font-bold">{t("categoriasChart.titulo")}</h2>
       <div className="flex flex-wrap items-center gap-8">
         <div className="relative shrink-0" style={{ width: SIZE, height: SIZE }}>
