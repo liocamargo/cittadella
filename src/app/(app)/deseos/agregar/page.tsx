@@ -114,7 +114,10 @@ export default function AgregarDeseoPage() {
     if (!term) return sinFavorito;
     return sinFavorito.filter((c) => {
       const g = globalesBiblioteca[c.isbn];
-      const haystack = normalizarBusqueda(`${g?.titulo ?? ""} ${g?.autor ?? ""}`);
+      const haystack = [
+        normalizarBusqueda(`${g?.titulo ?? ""} ${g?.autor ?? ""}`),
+        ...(g?.autores_normalizados ?? []),
+      ].join(" ");
       return haystack.includes(term);
     });
   }, [sinFavorito, globalesBiblioteca, busquedaBiblioteca]);

@@ -87,9 +87,12 @@ export default function CatalogoPublicoPage() {
     if (filtro === "prestado" && c.estado !== "prestado") return false;
     if (!term) return true;
     const g = globales[c.isbn];
-    return normalizarBusqueda(
-      `${g?.titulo ?? ""} ${g?.autor ?? ""} ${g?.genero ?? ""}`
-    ).includes(term);
+    // Texto visible + claves canónicas precalculadas (ver catálogo).
+    const haystack = [
+      normalizarBusqueda(`${g?.titulo ?? ""} ${g?.autor ?? ""} ${g?.genero ?? ""}`),
+      ...(g?.autores_normalizados ?? []),
+    ].join(" ");
+    return haystack.includes(term);
   });
 
   const totalPages = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE));

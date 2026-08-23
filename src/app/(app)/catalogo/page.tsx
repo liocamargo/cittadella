@@ -104,9 +104,12 @@ export default function CatalogoPage() {
       if (filtro === "disponible" && c.estado !== "disponible") return false;
       if (shelfFilter !== "all" && c.estante !== shelfFilter) return false;
       if (term) {
-        const haystack = normalizarBusqueda(
-          `${g?.titulo ?? ""} ${g?.autor ?? ""} ${g?.genero ?? ""}`
-        );
+        // Texto visible + claves canónicas precalculadas: busca igual en docs
+        // viejos (sin backfill) y encuentra variantes como "jrr_tolkien".
+        const haystack = [
+          normalizarBusqueda(`${g?.titulo ?? ""} ${g?.autor ?? ""} ${g?.genero ?? ""}`),
+          ...(g?.autores_normalizados ?? []),
+        ].join(" ");
         if (!haystack.includes(term)) return false;
       }
       return true;

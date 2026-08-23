@@ -31,6 +31,36 @@ export interface LibroGlobal {
   propietarios: number;
   ratingPromedio: number;
   totalResenas: number;
+  /**
+   * Claves canónicas de cada autor (normalizeString), para agrupar y buscar
+   * sin ambigüedad de acentos/puntuación. Puede faltar en docs viejos.
+   */
+  autores_normalizados?: string[];
+  /** Título como clave canónica (normalizeString). Puede faltar en docs viejos. */
+  titulo_normalizado?: string;
+  /** Id del doc en `Obras` que agrupa todas las ediciones de este libro. */
+  obra_id?: string;
+}
+
+/**
+ * Documento en `Obras/{obraId}`: la "obra maestra" que agrupa las distintas
+ * ediciones (ISBNs) de un mismo libro, sea cual sea quien la escaneó.
+ */
+export interface Obra {
+  id: string;
+  titulo: string;
+  /** Primer autor del array original, tal cual se muestra en la UI. */
+  autorPrincipal: string;
+  autores_normalizados: string[];
+  titulo_normalizado: string;
+  /** Todas las ediciones conocidas de esta obra. */
+  isbns_asociados: string[];
+  /** Suma de copias físicas de todas las ediciones de la obra. */
+  propietarios: number;
+  /** Promedio ponderado de `ratingPromedio` de todas las ediciones, por su `totalResenas`. */
+  ratingPromedio: number;
+  /** Suma de `totalResenas` de todas las ediciones de la obra. */
+  totalResenas: number;
 }
 
 /** Subcolección `Libros_Globales/{isbn}/resenas/{resenaId}`. */

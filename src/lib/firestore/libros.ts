@@ -1,4 +1,5 @@
 import {
+  arrayUnion,
   collection,
   deleteDoc,
   deleteField,
@@ -14,15 +15,171 @@ import {
   updateDoc,
   where,
   writeBatch,
+  type DocumentReference,
+  type DocumentSnapshot,
+  type Transaction,
   type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
-import type { HistorialPrestamo, LibroEnBiblioteca, LibroGlobal, Resena } from "@/types";
+import type {
+  HistorialPrestamo,
+  LibroEnBiblioteca,
+  LibroGlobal,
+  Resena,
+} from "@/types";
 import { logError } from "@/lib/log";
+import { normalizeString } from "@/lib/utils";
 
 const GLOBALES = "Libros_Globales";
 const COPIAS = "Libros_En_Biblioteca";
 const HISTORIAL = "HistorialPrestamos";
+const OBRAS = "Obras";
+
+/**
+ * Autores de un campo "A, B, C" como claves canónicas (normalizeString),
+ * para control de autoridades: "García, J." y "garcia j" colapsan en uno.
+ */
+export function normalizarAutores(autor: string): string[] {
+  return autor
+    .split(",")
+    .map((a) => normalizeString(a))
+    .filter(Boolean);
+}
+
+/** Conectores entre coautores que no aportan identidad ("Autor A y Autor B"). */
+const CONECTORES_AUTOR = new Set(["y", "and", "e"]);
+
+/**
+ * Clave de autor para agrupar obras: bolsa de palabras normalizadas y
+ * ordenadas alfabéticamente, sin importar el orden en que se escribieron.
+ * Así "J.R.R. Tolkien" y "Tolkien, J.R.R." colapsan en la misma clave, igual
+ * que "Gabriel García Márquez" y "García Márquez, Gabriel".
+ */
+function claveAutorObra(autor: string): string {
+  const tokens = normalizeString(autor)
+    .split("_")
+    .filter((t) => t && !CONECTORES_AUTOR.has(t));
+  return [...new Set(tokens)].sort().join("_");
+}
+
+/** Palabras de edición/formato que no distinguen la obra en sí. */
+const RUIDO_TITULO = new Set([
+  "edicion",
+  "ilustrada",
+  "ilustrado",
+  "especial",
+  "revisada",
+  "revisado",
+  "aniversario",
+  "definitiva",
+  "definitivo",
+  "conmemorativa",
+  "conmemorativo",
+  "tapa",
+  "dura",
+  "blanda",
+  "bolsillo",
+  "coleccionista",
+  "deluxe",
+]);
+
+/**
+ * Clave de título para agrupar obras: descarta paréntesis/corchetes
+ * ("(Edición ilustrada)") y palabras de formato/edición, para que esas
+ * variantes de la misma obra terminen bajo la misma clave. El orden de las
+ * palabras restantes se conserva porque en un título sí importa.
+ */
+function claveTituloObra(titulo: string): string {
+  const sinAclaraciones = titulo.replace(/[([][^)\]]*[)\]]/g, " ");
+  return normalizeString(sinAclaraciones)
+    .split("_")
+    .filter((t) => t && !RUIDO_TITULO.has(t))
+    .join("_");
+}
+
+/** ID de la obra que agrupa las ediciones: título + autor con variantes unificadas. */
+export function generarObraId(titulo: string, autor: string): string {
+  return [claveTituloObra(titulo), claveAutorObra(autor)]
+    .filter(Boolean)
+    .join("__");
+}
+
+interface CamposDerivados {
+  titulo_normalizado: string;
+  autores_normalizados: string[];
+  obra_id: string;
+}
+
+function camposDerivados(comunidad: DatosComunidad): CamposDerivados {
+  return {
+    titulo_normalizado: normalizeString(comunidad.titulo),
+    autores_normalizados: normalizarAutores(comunidad.autor),
+    obra_id: generarObraId(comunidad.titulo, comunidad.autor),
+  };
+}
+
+/** Decide crear o enriquecer el doc por ISBN; completa campos normalizados si faltan (docs viejos). */
+function guardarLibroGlobalEnTx(
+  tx: Transaction,
+  snap: DocumentSnapshot,
+  ref: DocumentReference,
+  comunidad: DatosComunidad,
+  derivados: CamposDerivados,
+  sumaPropietario: boolean
+) {
+  if (snap.exists()) {
+    tx.update(ref, {
+      ...(sumaPropietario ? { propietarios: increment(1) } : {}),
+      ...(snap.data().obra_id ? {} : derivados),
+    });
+  } else {
+    tx.set(ref, {
+      ...comunidad,
+      ...derivados,
+      propietarios: sumaPropietario ? 1 : 0,
+      ratingPromedio: 0,
+      totalResenas: 0,
+    });
+  }
+}
+
+/**
+ * Agrupa la edición bajo su obra: si existe, agrega el ISBN al array y suma
+ * al contador solo cuando entra una copia física; si no, crea el doc.
+ * Sin obra_id (título y autor vacíos) no hay nada que agrupar y se omite.
+ */
+function guardarObraEnTx(
+  tx: Transaction,
+  snap: DocumentSnapshot | null,
+  ref: DocumentReference | null,
+  isbn: string,
+  comunidad: DatosComunidad,
+  derivados: CamposDerivados,
+  sumaPropietario: boolean
+) {
+  if (!ref || !snap || !derivados.obra_id) return;
+  const base = {
+    titulo: comunidad.titulo,
+    autorPrincipal: comunidad.autor.split(",")[0].trim(),
+    titulo_normalizado: derivados.titulo_normalizado,
+    autores_normalizados: derivados.autores_normalizados,
+  };
+  if (snap.exists()) {
+    tx.update(ref, {
+      ...base,
+      isbns_asociados: arrayUnion(isbn),
+      ...(sumaPropietario ? { propietarios: increment(1) } : {}),
+    });
+  } else {
+    tx.set(ref, {
+      ...base,
+      isbns_asociados: [isbn],
+      propietarios: sumaPropietario ? 1 : 0,
+      ratingPromedio: 0,
+      totalResenas: 0,
+    });
+  }
+}
 
 function toLibroGlobal(isbn: string, data: Record<string, unknown>): LibroGlobal {
   return {
@@ -43,6 +200,11 @@ function toLibroGlobal(isbn: string, data: Record<string, unknown>): LibroGlobal
     propietarios: (data.propietarios as number) ?? 0,
     ratingPromedio: (data.ratingPromedio as number) ?? 0,
     totalResenas: (data.totalResenas as number) ?? 0,
+    autores_normalizados: Array.isArray(data.autores_normalizados)
+      ? (data.autores_normalizados as string[])
+      : undefined,
+    titulo_normalizado: data.titulo_normalizado as string | undefined,
+    obra_id: data.obra_id as string | undefined,
   };
 }
 
@@ -150,19 +312,16 @@ export async function agregarLibroABiblioteca(
 ): Promise<void> {
   const globalRef = doc(db, GLOBALES, isbn);
   const copiaRef = doc(collection(db, COPIAS));
+  const derivados = camposDerivados(comunidad);
+  const obraRef = derivados.obra_id ? doc(db, OBRAS, derivados.obra_id) : null;
 
   await runTransaction(db, async (tx) => {
     const globalSnap = await tx.get(globalRef);
-    if (globalSnap.exists()) {
-      tx.update(globalRef, { propietarios: increment(1) });
-    } else {
-      tx.set(globalRef, {
-        ...comunidad,
-        propietarios: 1,
-        ratingPromedio: 0,
-        totalResenas: 0,
-      });
-    }
+    const obraSnap = obraRef ? await tx.get(obraRef) : null;
+
+    guardarLibroGlobalEnTx(tx, globalSnap, globalRef, comunidad, derivados, true);
+    guardarObraEnTx(tx, obraSnap, obraRef, isbn, comunidad, derivados, true);
+
     tx.set(copiaRef, {
       bibliotecaId,
       isbn,
@@ -191,17 +350,17 @@ export async function agregarLibroLeido(
 ): Promise<void> {
   const globalRef = doc(db, GLOBALES, isbn);
   const lecturaRef = doc(db, "Lecturas", `${uid}_${isbn}`);
+  const derivados = camposDerivados(comunidad);
+  const obraRef = derivados.obra_id ? doc(db, OBRAS, derivados.obra_id) : null;
 
   await runTransaction(db, async (tx) => {
     const globalSnap = await tx.get(globalRef);
-    if (!globalSnap.exists()) {
-      tx.set(globalRef, {
-        ...comunidad,
-        propietarios: 0,
-        ratingPromedio: 0,
-        totalResenas: 0,
-      });
-    }
+    const obraSnap = obraRef ? await tx.get(obraRef) : null;
+
+    // Sin copia física: no suma a "propietarios".
+    guardarLibroGlobalEnTx(tx, globalSnap, globalRef, comunidad, derivados, false);
+    guardarObraEnTx(tx, obraSnap, obraRef, isbn, comunidad, derivados, false);
+
     tx.set(lecturaRef, {
       uid,
       isbn,
@@ -224,17 +383,17 @@ export async function agregarDeseo(
 ): Promise<void> {
   const globalRef = doc(db, GLOBALES, isbn);
   const deseoRef = doc(db, "Deseos", `${uid}_${isbn}`);
+  const derivados = camposDerivados(comunidad);
+  const obraRef = derivados.obra_id ? doc(db, OBRAS, derivados.obra_id) : null;
 
   await runTransaction(db, async (tx) => {
     const globalSnap = await tx.get(globalRef);
-    if (!globalSnap.exists()) {
-      tx.set(globalRef, {
-        ...comunidad,
-        propietarios: 0,
-        ratingPromedio: 0,
-        totalResenas: 0,
-      });
-    }
+    const obraSnap = obraRef ? await tx.get(obraRef) : null;
+
+    // Sin copia física: no suma a "propietarios".
+    guardarLibroGlobalEnTx(tx, globalSnap, globalRef, comunidad, derivados, false);
+    guardarObraEnTx(tx, obraSnap, obraRef, isbn, comunidad, derivados, false);
+
     tx.set(deseoRef, {
       uid,
       isbn,
@@ -254,19 +413,17 @@ export async function cambiarIsbnCopia(
   comunidad: DatosComunidad
 ): Promise<void> {
   const nuevoRef = doc(db, GLOBALES, isbnNuevo);
+  const derivados = camposDerivados(comunidad);
+  const obraRef = derivados.obra_id ? doc(db, OBRAS, derivados.obra_id) : null;
 
   await runTransaction(db, async (tx) => {
     const nuevoSnap = await tx.get(nuevoRef);
-    if (nuevoSnap.exists()) {
-      tx.update(nuevoRef, { propietarios: increment(1) });
-    } else {
-      tx.set(nuevoRef, {
-        ...comunidad,
-        propietarios: 1,
-        ratingPromedio: 0,
-        totalResenas: 0,
-      });
-    }
+    const obraSnap = obraRef ? await tx.get(obraRef) : null;
+
+    // La copia física se mueva a la edición nueva: suma propietario ahí.
+    guardarLibroGlobalEnTx(tx, nuevoSnap, nuevoRef, comunidad, derivados, true);
+    guardarObraEnTx(tx, obraSnap, obraRef, isbnNuevo, comunidad, derivados, true);
+
     tx.update(doc(db, COPIAS, copiaId), { isbn: isbnNuevo });
   });
 }
@@ -409,11 +566,54 @@ export async function publicarResena(
   const promedio = valores.length
     ? valores.reduce((a, b) => a + b, 0) / valores.length
     : 0;
+  const ratingPromedio = Math.round(promedio * 10) / 10;
 
   await updateDoc(doc(db, GLOBALES, isbn), {
-    ratingPromedio: Math.round(promedio * 10) / 10,
+    ratingPromedio,
     totalResenas: valores.length,
   });
+
+  await actualizarResenasObra(isbn);
+}
+
+/**
+ * Recalcula el rating y el total de reseñas de la obra sumando los de todas
+ * sus ediciones (ya actualizados por edición al publicar la reseña), para
+ * que dos ISBNs del mismo libro compartan una sola reputación agregada.
+ */
+async function actualizarResenasObra(isbn: string): Promise<void> {
+  const globalSnap = await getDoc(doc(db, GLOBALES, isbn));
+  if (!globalSnap.exists()) return;
+  const data = globalSnap.data();
+  const obraId =
+    (data.obra_id as string | undefined) ??
+    generarObraId((data.titulo as string) ?? "", (data.autor as string) ?? "");
+  if (!obraId) return;
+
+  const obraRef = doc(db, OBRAS, obraId);
+  const obraSnap = await getDoc(obraRef);
+  if (!obraSnap.exists()) return;
+  const isbnsAsociados = (obraSnap.data().isbns_asociados as string[]) ?? [isbn];
+
+  const ediciones = await Promise.all(
+    isbnsAsociados.map((edicionIsbn) => getDoc(doc(db, GLOBALES, edicionIsbn)))
+  );
+  const totalResenas = ediciones.reduce(
+    (suma, snap) => suma + ((snap.data()?.totalResenas as number) ?? 0),
+    0
+  );
+  const sumaPonderada = ediciones.reduce(
+    (suma, snap) =>
+      suma +
+      ((snap.data()?.ratingPromedio as number) ?? 0) *
+        ((snap.data()?.totalResenas as number) ?? 0),
+    0
+  );
+  const ratingPromedio = totalResenas
+    ? Math.round((sumaPonderada / totalResenas) * 10) / 10
+    : 0;
+
+  await updateDoc(obraRef, { ratingPromedio, totalResenas });
 }
 
 // --- Selección de la semana ---
@@ -493,11 +693,20 @@ export async function obtenerSugerenciasComunidad(): Promise<{
   const snap = await getDocs(query(collection(db, GLOBALES), limit(500)));
   const autores = new Set<string>();
   const editoriales = new Set<string>();
+  const clavesAutorVistas = new Set<string>();
   snap.docs.forEach((d) => {
     const data = d.data();
     const autor = ((data.autor as string) ?? "").trim();
     const editorial = ((data.editorial as string) ?? "").trim();
-    if (autor) autores.add(autor);
+    // Control de autoridades: "Gabriel García Márquez" y "GABRIEL GARCIA
+    // MARQUEZ" son la misma sugerencia; gana la primera variante vista.
+    if (autor) {
+      const clave = normalizeString(autor);
+      if (!clavesAutorVistas.has(clave)) {
+        clavesAutorVistas.add(clave);
+        autores.add(autor);
+      }
+    }
     if (editorial) editoriales.add(editorial);
   });
   return {

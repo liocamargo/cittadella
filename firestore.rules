@@ -36,6 +36,16 @@ service cloud.firestore {
       }
     }
 
+    // Agrupación de ediciones: un doc por "obra" (título + primer autor
+    // normalizados) con todos los ISBNs que la community descubrió. Misma
+    // política que Libros_Globales: lectura pública, escritura logueada,
+    // sin borrado.
+    match /Obras/{obraId} {
+      allow read: if true;
+      allow create, update: if signedIn();
+      allow delete: if false;
+    }
+
     // Espacios colaborativos. Solo los miembros pueden leer/escribir la
     // biblioteca; cualquier usuario logueado puede crear una nueva
     // agregándose a sí mismo como miembro. Un usuario invitado por email
