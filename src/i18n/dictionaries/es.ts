@@ -67,6 +67,8 @@ const es = {
     filtroFavoritos: "★ Favoritos",
     estanteLabel: "Estante:",
     estanteTodos: "Todos",
+    categoriaLabel: "Categoría:",
+    categoriaTodas: "Todas",
     eliminarEstante: "Eliminar estante",
     nombreEstantePlaceholder: "Nombre del estante",
     crear: "Crear",
@@ -626,6 +628,11 @@ const es = {
     prestados: "Prestados",
     tuObjetivo: "Tu objetivo",
     ponerObjetivo: "Poné tu objetivo",
+  },
+  categoriasChart: {
+    titulo: "Tu biblioteca por categoría",
+    otros: "Otros",
+    librosLabel: "libros",
   },
   seleccionSemanal: {
     titulo: "Selección de la semana",

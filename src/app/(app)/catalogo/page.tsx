@@ -48,6 +48,7 @@ export default function CatalogoPage() {
   const [search, setSearch] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("all");
   const [shelfFilter, setShelfFilter] = useState("all");
+  const [generoFilter, setGeneroFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newShelf, setNewShelf] = useState("");
   const [shelfCreateOpen, setShelfCreateOpen] = useState(false);
@@ -56,6 +57,12 @@ export default function CatalogoPage() {
   useEffect(() => {
     const guardada = localStorage.getItem("catalogo-vista");
     if (guardada === "grilla" || guardada === "lista") setVista(guardada);
+  }, []);
+
+  // Llegada desde el gráfico de categorías de Inicio (/catalogo?genero=X).
+  useEffect(() => {
+    const genero = new URLSearchParams(window.location.search).get("genero");
+    if (genero) setGeneroFilter(genero);
   }, []);
 
   function cambiarVista(v: "grilla" | "lista") {
@@ -97,12 +104,28 @@ export default function CatalogoPage() {
     return mapa;
   }, [copias]);
 
+  const conteoPorGenero = useMemo(() => {
+    const mapa: Record<string, number> = {};
+    for (const c of copias) {
+      const genero = globales[c.isbn]?.genero;
+      if (!genero) continue;
+      mapa[genero] = (mapa[genero] ?? 0) + 1;
+    }
+    return mapa;
+  }, [copias, globales]);
+
+  const generos = useMemo(() => {
+    const collator = new Intl.Collator("es", { sensitivity: "base" });
+    return Object.keys(conteoPorGenero).sort((a, b) => collator.compare(a, b));
+  }, [conteoPorGenero]);
+
   const filtrados = useMemo(() => {
     const term = normalizarBusqueda(search.trim());
     return copias.filter((c) => {
       const g = globales[c.isbn];
       if (filtro === "disponible" && c.estado !== "disponible") return false;
       if (shelfFilter !== "all" && c.estante !== shelfFilter) return false;
+      if (generoFilter !== "all" && (g?.genero ?? "") !== generoFilter) return false;
       if (term) {
         // Texto visible + claves canónicas precalculadas: busca igual en docs
         // viejos (sin backfill) y encuentra variantes como "jrr_tolkien".
@@ -114,7 +137,7 @@ export default function CatalogoPage() {
       }
       return true;
     });
-  }, [copias, globales, search, filtro, shelfFilter]);
+  }, [copias, globales, search, filtro, shelfFilter, generoFilter]);
 
   const ordenados = useMemo(() => {
     const collator = new Intl.Collator("es", { sensitivity: "base" });
@@ -300,6 +323,33 @@ export default function CatalogoPage() {
           </button>
         )}
       </div>
+
+      {generos.length > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">{t("catalogo.categoriaLabel")}</span>
+          <button
+            onClick={() => setGeneroFilter("all")}
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
+              generoFilter === "all" && "border-foreground bg-foreground text-background"
+            )}
+          >
+            {t("catalogo.categoriaTodas")} ({copias.length})
+          </button>
+          {generos.map((genero) => (
+            <button
+              key={genero}
+              onClick={() => setGeneroFilter(genero)}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground",
+                generoFilter === genero && "border-foreground bg-foreground text-background"
+              )}
+            >
+              {genero} ({conteoPorGenero[genero] ?? 0})
+            </button>
+          ))}
+        </div>
+      )}
 
       {filtrados.length === 0 && (
         <div className="py-16 text-center text-sm text-muted-foreground">

@@ -69,6 +69,8 @@ const it: Dictionary = {
     filtroFavoritos: "★ Preferiti",
     estanteLabel: "Scaffale:",
     estanteTodos: "Tutti",
+    categoriaLabel: "Categoria:",
+    categoriaTodas: "Tutte",
     eliminarEstante: "Elimina scaffale",
     nombreEstantePlaceholder: "Nome dello scaffale",
     crear: "Crea",
@@ -628,6 +630,11 @@ const it: Dictionary = {
     prestados: "In prestito",
     tuObjetivo: "Il tuo obiettivo",
     ponerObjetivo: "Imposta il tuo obiettivo",
+  },
+  categoriasChart: {
+    titulo: "La tua biblioteca per categoria",
+    otros: "Altri",
+    librosLabel: "libri",
   },
   seleccionSemanal: {
     titulo: "Selezione della settimana",

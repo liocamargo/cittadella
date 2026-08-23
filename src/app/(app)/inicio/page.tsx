@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Library, ArrowLeftRight, BookCheck, Target, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,11 @@ import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLocale } from "@/hooks/use-locale";
+import { useLibrosGlobales } from "@/hooks/use-libros-globales";
 import { listenInventario } from "@/lib/firestore/libros";
 import { getMetaLectura, setMetaLectura } from "@/lib/firestore/metas";
 import { SeleccionSemanal } from "@/components/inicio/seleccion-semanal";
+import { CategoriasChart } from "@/components/inicio/categorias-chart";
 import type { LibroEnBiblioteca } from "@/types";
 import { logError } from "@/lib/log";
 
@@ -40,6 +42,9 @@ export default function InicioPage() {
       setMetaInput(String(m));
     });
   }, [user]);
+
+  const isbns = useMemo(() => copias.map((c) => c.isbn), [copias]);
+  const globales = useLibrosGlobales(isbns);
 
   const totalLibros = copias.length;
   const prestados = copias.filter((c) => c.estado === "prestado").length;
@@ -145,6 +150,7 @@ export default function InicioPage() {
       </div>
 
       <SeleccionSemanal isbnsPropios={copias.map((c) => c.isbn)} />
+      <CategoriasChart copias={copias} globales={globales} />
     </div>
   );
 }

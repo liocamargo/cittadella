@@ -69,6 +69,8 @@ const pt: Dictionary = {
     filtroFavoritos: "★ Favoritos",
     estanteLabel: "Estante:",
     estanteTodos: "Todas",
+    categoriaLabel: "Categoria:",
+    categoriaTodas: "Todas",
     eliminarEstante: "Excluir estante",
     nombreEstantePlaceholder: "Nome da estante",
     crear: "Criar",
@@ -628,6 +630,11 @@ const pt: Dictionary = {
     prestados: "Emprestados",
     tuObjetivo: "Sua meta",
     ponerObjetivo: "Defina sua meta",
+  },
+  categoriasChart: {
+    titulo: "Sua biblioteca por categoria",
+    otros: "Outros",
+    librosLabel: "livros",
   },
   seleccionSemanal: {
     titulo: "Seleção da semana",
