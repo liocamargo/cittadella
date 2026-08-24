@@ -9,6 +9,13 @@ export interface Perfil {
   idiomaLectura: Locale[];
   /** Géneros favoritos, elegidos en Mi cuenta. */
   generosFavoritos: string[];
+  /**
+   * Hash MD5 de la clave de sincronización KOReader/KOSync. La clave en
+   * texto plano nunca se guarda: se muestra una sola vez al generarla
+   * (ver /api/kosync/clave) y este es el hash que el propio protocolo KOSync
+   * manda en cada request para autenticarse.
+   */
+  claveSincronizacionHash?: string;
 }
 
 /** Documento en `Libros_Globales`, indexado por ISBN (doc id = isbn). */
@@ -133,6 +140,36 @@ export interface Socio {
   email?: string;
   notas?: string;
   creadoEn: string;
+}
+
+/** Documento en `Ebooks/{ebookId}`: archivo digital (EPUB/PDF) de un libro de una biblioteca. */
+export interface Ebook {
+  id: string;
+  bibliotecaId: string;
+  isbn: string;
+  formato: "epub" | "pdf";
+  storagePath: string;
+  archivoUrl: string;
+  tamanio: number;
+  sha256: string;
+  agregadoPor: string;
+  agregadoEn: string;
+}
+
+/**
+ * Documento en `KosyncProgreso/{uid}_{document}`: progreso de lectura
+ * reportado vía el protocolo KOSync de KOReader. `document` es el digest
+ * opaco que KOReader calcula para identificar el archivo (no es el ISBN).
+ */
+export interface KosyncProgreso {
+  id: string;
+  uid: string;
+  document: string;
+  progress: string;
+  percentage: number;
+  device: string;
+  deviceId: string;
+  actualizadoEn: string;
 }
 
 /** Documento en `HistorialPrestamos`: registro histórico de cada préstamo. */

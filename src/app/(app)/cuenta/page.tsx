@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { LocaleSelect } from "@/components/cuenta/locale-select";
 import { LocaleMultiSelect } from "@/components/cuenta/locale-multi-select";
 import { GeneroMultiSelect } from "@/components/cuenta/genero-multi-select";
+import { SincronizacionKoreader } from "@/components/cuenta/sincronizacion-koreader";
 import { EliminarCuentaDialog } from "@/components/cuenta/eliminar-cuenta-dialog";
 import { listenPerfil, guardarPerfil } from "@/lib/firestore/perfiles";
 import { logError } from "@/lib/log";
@@ -69,6 +70,8 @@ export default function CuentaPage() {
           </p>
           <GeneroMultiSelect value={generosFavoritos} onChange={handleChangeGeneros} />
         </div>
+
+        <SincronizacionKoreader />
       </div>
 
       <p className="mt-8 text-xs text-muted-foreground">

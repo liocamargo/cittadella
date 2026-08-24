@@ -117,5 +117,23 @@ service cloud.firestore {
       // entera (ver eliminarDatosDeCuenta).
       allow delete: if isMemberOf(resource.data.bibliotecaId);
     }
+
+    // Archivos digitales (EPUB/PDF) de un libro de una biblioteca. Mismo
+    // criterio de privacidad que Libros_En_Biblioteca: el binario nunca es
+    // público, ni siquiera con catalogoPublico=true (ver storage.rules).
+    match /Ebooks/{ebookId} {
+      allow read: if isMemberOf(resource.data.bibliotecaId);
+      allow update, delete: if isMemberOf(resource.data.bibliotecaId);
+      allow create: if isMemberOf(request.resource.data.bibliotecaId);
+    }
+
+    // Progreso de lectura reportado vía el protocolo KOSync de KOReader.
+    // Doc id = `${uid}_${document}`. Lo escribe /api/kosync/* con el Admin
+    // SDK (bypassa estas reglas); se declaran para poder leerlo directo
+    // desde la web más adelante (p.ej. "leyendo ahora").
+    match /KosyncProgreso/{progresoId} {
+      allow read, delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create, update: if signedIn() && request.resource.data.uid == request.auth.uid;
+    }
   }
 }

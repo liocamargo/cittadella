@@ -11,5 +11,21 @@ service firebase.storage {
         request.resource.size < 5 * 1024 * 1024 &&
         request.resource.contentType.matches('image/.*');
     }
+
+    // Archivos EPUB/PDF de los libros de una biblioteca: a diferencia de las
+    // portadas, nunca son de lectura pública (mismo criterio que
+    // Libros_En_Biblioteca en firestore.rules) — solo los miembros de esa
+    // biblioteca pueden leerlos o subirlos.
+    match /libros/{bibliotecaId}/{archivo} {
+      function esMiembroDeBiblioteca() {
+        return request.auth != null &&
+          request.auth.uid in
+            firestore.get(/databases/(default)/documents/Bibliotecas/$(bibliotecaId)).data.miembrosUids;
+      }
+      allow read: if esMiembroDeBiblioteca();
+      allow write: if esMiembroDeBiblioteca() &&
+        request.resource.size < 60 * 1024 * 1024 &&
+        request.resource.contentType.matches('application/epub[+]zip|application/pdf');
+    }
   }
 }

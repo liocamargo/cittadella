@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { BookOpen, Check, Heart, Pencil, Trash2 } from "lucide-react";
+import { BookOpen, Check, FileUp, Heart, Pencil, Trash2 } from "lucide-react";
 import { logError } from "@/lib/log";
 import {
   Sheet,
@@ -50,12 +50,19 @@ import {
   type DatosComunidad,
 } from "@/lib/firestore/libros";
 import { listenSocios } from "@/lib/firestore/socios";
+import {
+  crearEbook,
+  eliminarEbook,
+  generarEbookId,
+  listenEbooksDeLibro,
+} from "@/lib/firestore/ebooks";
+import { subirArchivoLibro } from "@/lib/firebase/archivos-libro";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { RatingCara, RatingCaraPicker } from "@/components/catalogo/rating-cara";
 import { IdiomaSelect, getIdiomaInfo } from "@/components/catalogo/idioma-select";
 import { GeneroSelect } from "@/components/catalogo/genero-select";
 import { BuscarMasInformacion } from "@/components/catalogo/buscar-mas-informacion";
-import type { LibroEnBiblioteca, LibroGlobal, Resena, Socio } from "@/types";
+import type { Ebook, LibroEnBiblioteca, LibroGlobal, Resena, Socio } from "@/types";
 
 /** Deja solo los caracteres válidos de un ISBN y lo corta a 13 (ISBN-13). */
 function sanitizarIsbn(valor: string): string {
@@ -111,6 +118,9 @@ export function LibroDetailSheet({
   const [estrellas, setEstrellas] = useState(5);
   const [comentario, setComentario] = useState("");
   const [portadaPickerOpen, setPortadaPickerOpen] = useState(false);
+  const [ebooks, setEbooks] = useState<Ebook[]>([]);
+  const [subiendoArchivo, setSubiendoArchivo] = useState(false);
+  const archivoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!copia) return;
@@ -118,6 +128,11 @@ export function LibroDetailSheet({
     setReviewOpen(false);
     setEditando(false);
     return listenResenas(copia.isbn, setResenas);
+  }, [copia]);
+
+  useEffect(() => {
+    if (!copia) return;
+    return listenEbooksDeLibro(copia.bibliotecaId, copia.isbn, setEbooks);
   }, [copia]);
 
   useEffect(() => {
@@ -310,6 +325,46 @@ export function LibroDetailSheet({
     }
   }
 
+  async function handleSubirArchivo(file: File) {
+    if (!copia || !user) return;
+    setSubiendoArchivo(true);
+    try {
+      const ebookId = generarEbookId();
+      const { formato, storagePath, archivoUrl, sha256 } = await subirArchivoLibro(
+        copia.bibliotecaId,
+        ebookId,
+        file
+      );
+      await crearEbook(ebookId, {
+        bibliotecaId: copia.bibliotecaId,
+        isbn: copia.isbn,
+        formato,
+        storagePath,
+        archivoUrl,
+        tamanio: file.size,
+        sha256,
+        agregadoPor: user.uid,
+      });
+      toast.success(t("libroDetail.archivoSubido"));
+    } catch (err) {
+      logError("Error subiendo el archivo digital:", err);
+      toast.error(t("libroDetail.errorSubiendoArchivo"));
+    } finally {
+      setSubiendoArchivo(false);
+      if (archivoInputRef.current) archivoInputRef.current.value = "";
+    }
+  }
+
+  async function handleEliminarArchivo(ebook: Ebook) {
+    if (!window.confirm(t("libroDetail.confirmarEliminarArchivo"))) return;
+    try {
+      await eliminarEbook(ebook);
+    } catch (err) {
+      logError("Error eliminando el archivo digital:", err);
+      toast.error(t("libroDetail.errorEliminandoArchivo"));
+    }
+  }
+
   async function handleActualizarPortada(url: string) {
     if (!copia) return;
     try {
@@ -498,6 +553,52 @@ export function LibroDetailSheet({
             {copia.notas && (
               <div>
                 <strong>{t("libroDetail.notasPrivadas")}</strong> {copia.notas}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t pt-4">
+            <div className="mb-2.5 flex items-center justify-between">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                {t("libroDetail.archivoDigital")}
+              </div>
+              <button
+                onClick={() => archivoInputRef.current?.click()}
+                disabled={subiendoArchivo}
+                className="flex items-center gap-1 text-xs font-semibold text-primary underline disabled:opacity-50"
+              >
+                <FileUp className="size-3" />
+                {subiendoArchivo ? t("libroDetail.archivoSubiendo") : t("libroDetail.agregarArchivo")}
+              </button>
+              <input
+                ref={archivoInputRef}
+                type="file"
+                accept="application/epub+zip,application/pdf,.epub,.pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleSubirArchivo(file);
+                }}
+              />
+            </div>
+            {ebooks.length === 0 ? (
+              <p className="text-xs text-muted-foreground">—</p>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {ebooks.map((ebook) => (
+                  <div
+                    key={ebook.id}
+                    className="flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-xs"
+                  >
+                    <span className="uppercase">{ebook.formato}</span>
+                    <span className="text-muted-foreground">
+                      {(ebook.tamanio / (1024 * 1024)).toFixed(1)} MB
+                    </span>
+                    <button onClick={() => handleEliminarArchivo(ebook)} aria-label={t("libroDetail.eliminarArchivo")}>
+                      <Trash2 className="size-3.5 text-destructive" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>

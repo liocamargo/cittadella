@@ -23,6 +23,7 @@ function toPerfil(uid: string, data: Record<string, unknown> | undefined): Perfi
     idiomaUI: (data?.idiomaUI as Locale) ?? LOCALE_POR_DEFECTO,
     idiomaLectura: normalizarIdiomaLectura(data?.idiomaLectura),
     generosFavoritos: normalizarGenerosFavoritos(data?.generosFavoritos),
+    claveSincronizacionHash: data?.claveSincronizacionHash as string | undefined,
   };
 }
 
