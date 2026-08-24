@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, PenLine, Plus, ScanBarcode } from "lucide-react";
+import { ArrowLeft, FileUp, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/hooks/use-auth";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLocale } from "@/hooks/use-locale";
 import { useSugerenciasComunidad } from "@/hooks/use-sugerencias-comunidad";
@@ -26,16 +27,17 @@ import {
   getLibroGlobal,
 } from "@/lib/firestore/libros";
 import { agregarEstante } from "@/lib/firestore/bibliotecas";
+import { crearEbook, generarEbookId } from "@/lib/firestore/ebooks";
+import { subirArchivoLibro } from "@/lib/firebase/archivos-libro";
 import {
   buscarPorIsbn,
   mensajeErrorBusqueda,
   type ResultadoBusquedaTitulo,
 } from "@/services/google-books";
-import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { IdiomaSelect } from "@/components/catalogo/idioma-select";
 import { GeneroSelect } from "@/components/catalogo/genero-select";
-import { BuscarPorTitulo } from "@/components/catalogo/buscar-por-titulo";
+import { BuscadorUnificado } from "@/components/catalogo/buscador-unificado";
 import { BuscarMasInformacion } from "@/components/catalogo/buscar-mas-informacion";
 import type { DatosComunidad } from "@/lib/firestore/libros";
 import type { LibroGlobal } from "@/types";
@@ -67,35 +69,28 @@ const FORM_INICIAL = {
 
 export default function AgregarLibroPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const { bibliotecaActual } = useBiblioteca();
   const { localeLectura, t } = useLocale();
   const { autores: sugerenciasAutor, editoriales: sugerenciasEditorial } =
     useSugerenciasComunidad();
   const [paso, setPaso] = useState<Paso>("buscar");
-  const [isbnInput, setIsbnInput] = useState("");
   const [isbn, setIsbn] = useState("");
   const [buscando, setBuscando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [comunidad, setComunidad] = useState<LibroGlobal | null>(null);
   const [form, setForm] = useState(FORM_INICIAL);
-  const [escaneando, setEscaneando] = useState(false);
+  const [archivoLibro, setArchivoLibro] = useState<File | null>(null);
   const [portadaPickerOpen, setPortadaPickerOpen] = useState(false);
   const [cargaMultiple, setCargaMultiple] = useState(false);
   const [agregadosSesion, setAgregadosSesion] = useState(0);
   const [creandoEstante, setCreandoEstante] = useState(false);
   const [nuevoEstanteNombre, setNuevoEstanteNombre] = useState("");
   const estantes = bibliotecaActual?.estantes ?? [];
+  const archivoInputRef = useRef<HTMLInputElement>(null);
   // Guarda qué ISBN ya pasó por el aviso de "copia repetida" en buscar(),
   // para no volver a preguntar lo mismo al guardar.
   const isbnVerificadoRef = useRef<string | null>(null);
-
-  // En mobile abrimos la cámara sola; en desktop/web queda apagada por
-  // defecto (nadie quiere el permiso de cámara apenas entra a la página).
-  useEffect(() => {
-    if (window.matchMedia("(max-width: 767px)").matches) {
-      setEscaneando(true);
-    }
-  }, []);
 
   function setCampo<K extends keyof typeof FORM_INICIAL>(campo: K, valor: string) {
     setForm((f) => ({ ...f, [campo]: valor }));
@@ -116,10 +111,7 @@ export default function AgregarLibroPage() {
           const seguir = window.confirm(
             t("catalogoAgregar.confirmarCopiaExistente", { n: copiasExistentes })
           );
-          if (!seguir) {
-            setEscaneando(true);
-            return;
-          }
+          if (!seguir) return;
         }
         isbnVerificadoRef.current = codigo;
       } catch (err) {
@@ -128,6 +120,7 @@ export default function AgregarLibroPage() {
     }
 
     setBuscando(true);
+    setArchivoLibro(null);
     try {
       const local = await getLibroGlobal(codigo);
       if (local) {
@@ -188,46 +181,11 @@ export default function AgregarLibroPage() {
     }
   }
 
-  function handleBuscar() {
-    buscar(isbnInput.trim());
-  }
-
-  function handleDetected(codigoCrudo: string) {
-    // Algunos libros (colecciones/volúmenes) traen un add-on de 5 dígitos
-    // pegado al EAN-13 (código de 18 dígitos); nos quedamos con los
-    // primeros 13, que son el ISBN real.
-    const codigo = sanitizarIsbn(codigoCrudo);
-    setEscaneando(false);
-    setIsbnInput(codigo);
-    buscar(codigo);
-  }
-
-  function handleIsbnInputChange(valor: string) {
-    setIsbnInput(sanitizarIsbn(valor));
-  }
-
-  // Auto-búsqueda: apenas el ISBN tipeado llega a un largo válido (10 o 13
-  // dígitos) buscamos solo, sin esperar que aprieten "Buscar".
-  const largoAnteriorRef = useRef(0);
-  useEffect(() => {
-    const largo = isbnInput.length;
-    if (
-      paso === "buscar" &&
-      !buscando &&
-      (largo === 10 || largo === 13) &&
-      largo !== largoAnteriorRef.current
-    ) {
-      buscar(isbnInput);
-    }
-    largoAnteriorRef.current = largo;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isbnInput]);
-
   function handleManual() {
     setIsbn("");
     setComunidad(null);
     setForm(FORM_INICIAL);
-    setEscaneando(false);
+    setArchivoLibro(null);
     setPaso("formulario");
   }
 
@@ -235,12 +193,12 @@ export default function AgregarLibroPage() {
     // Si Google nos dio el ISBN de esa edición, seguimos el flujo normal
     // (chequea copias existentes, prioriza los datos de la comunidad).
     if (resultado.isbn) {
-      setIsbnInput(resultado.isbn);
       buscar(resultado.isbn);
       return;
     }
     setIsbn("");
     setComunidad(null);
+    setArchivoLibro(null);
     setForm({
       ...FORM_INICIAL,
       titulo: resultado.titulo ?? "",
@@ -254,7 +212,6 @@ export default function AgregarLibroPage() {
       sinopsis: resultado.sinopsis ?? "",
       portadaUrl: resultado.portadaUrl ?? "",
     });
-    setEscaneando(false);
     setPaso("formulario");
   }
 
@@ -346,16 +303,39 @@ export default function AgregarLibroPage() {
         }
       );
 
+      if (archivoLibro && user) {
+        try {
+          const ebookId = generarEbookId();
+          const { formato, storagePath, archivoUrl, sha256 } = await subirArchivoLibro(
+            bibliotecaActual.id,
+            ebookId,
+            archivoLibro
+          );
+          await crearEbook(ebookId, {
+            bibliotecaId: bibliotecaActual.id,
+            isbn: isbnFinal,
+            formato,
+            storagePath,
+            archivoUrl,
+            tamanio: archivoLibro.size,
+            sha256,
+            agregadoPor: user.uid,
+          });
+        } catch (err) {
+          logError("Error subiendo el archivo digital:", err);
+          toast.error(t("catalogoAgregar.errorSubiendoArchivo"));
+        }
+      }
+
       if (cargaMultiple) {
         const nuevoTotal = agregadosSesion + 1;
         setAgregadosSesion(nuevoTotal);
         toast.success(t("catalogoAgregar.agregadoSiguiente", { n: nuevoTotal }));
         setIsbn("");
-        setIsbnInput("");
         setComunidad(null);
         setForm(FORM_INICIAL);
+        setArchivoLibro(null);
         setPaso("buscar");
-        setEscaneando(true);
       } else {
         toast.success(t("catalogoAgregar.libroAgregado"));
         router.push("/catalogo");
@@ -400,64 +380,14 @@ export default function AgregarLibroPage() {
 
       <div className="flex-1 overflow-y-auto">
       {paso === "buscar" && (
-        <div className="flex flex-col gap-4">
-          {escaneando ? (
-            <>
-              <BarcodeScanner onDetected={handleDetected} />
-              <Button variant="ghost" size="sm" onClick={() => setEscaneando(false)}>
-                {t("catalogoAgregar.cancelarEscaneo")}
-              </Button>
-            </>
-          ) : (
-            <Button variant="outline" onClick={() => setEscaneando(true)}>
-              <ScanBarcode />
-              {t("catalogoAgregar.escanearCamara")}
-            </Button>
-          )}
-
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />
-            {t("catalogoAgregar.oIngresaIsbn")}
-            <div className="h-px flex-1 bg-border" />
-          </div>
-          <div className="flex gap-2">
-            <Input
-              placeholder={t("catalogoAgregar.isbnPlaceholder")}
-              inputMode="numeric"
-              maxLength={13}
-              value={isbnInput}
-              onChange={(e) => handleIsbnInputChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
-            />
-            <Button onClick={handleBuscar} disabled={buscando}>
-              {buscando ? <Loader2 className="size-4 animate-spin" /> : t("catalogoAgregar.buscar")}
-            </Button>
-          </div>
-          {buscando && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" />
-              {t("catalogoAgregar.buscandoLibro")}
-            </div>
-          )}
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />
-            {t("catalogoAgregar.oBuscaPorTitulo")}
-            <div className="h-px flex-1 bg-border" />
-          </div>
-          <BuscarPorTitulo
-            idiomasLectura={localeLectura}
-            onSeleccionar={handleSeleccionarPorTitulo}
-          />
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />
-            {t("catalogoAgregar.oSeparador")}
-            <div className="h-px flex-1 bg-border" />
-          </div>
-          <Button variant="outline" onClick={handleManual}>
-            <PenLine />
-            {t("catalogoAgregar.cargarManualmente")}
-          </Button>
-        </div>
+        <BuscadorUnificado
+          idiomasLectura={localeLectura}
+          buscandoIsbn={buscando}
+          forzarCamaraAlMontar={cargaMultiple && agregadosSesion > 0}
+          onIsbnDetectado={buscar}
+          onSeleccionarResultado={handleSeleccionarPorTitulo}
+          onCargarManualmente={handleManual}
+        />
       )}
 
       {paso === "formulario" && (
@@ -502,6 +432,41 @@ export default function AgregarLibroPage() {
                 : t("catalogoAgregar.buscarPortada")}
             </Button>
           </div>
+
+          <Field label={t("catalogoAgregar.campoArchivoDigital")}>
+            {archivoLibro ? (
+              <div className="flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-sm">
+                <span className="truncate">{archivoLibro.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setArchivoLibro(null)}
+                  aria-label={t("catalogoAgregar.quitarArchivo")}
+                >
+                  <X className="size-3.5 text-muted-foreground" />
+                </button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => archivoInputRef.current?.click()}
+              >
+                <FileUp className="size-4" />
+                {t("catalogoAgregar.agregarArchivo")}
+              </Button>
+            )}
+            <input
+              ref={archivoInputRef}
+              type="file"
+              accept="application/epub+zip,application/pdf,.epub,.pdf"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) setArchivoLibro(file);
+              }}
+            />
+          </Field>
 
           <Field label={t("catalogoAgregar.campoIsbn")}>
             <Input
