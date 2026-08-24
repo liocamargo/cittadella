@@ -450,6 +450,7 @@ export default function AgregarLibroPage() {
                 type="button"
                 variant="outline"
                 size="sm"
+                className="w-full"
                 onClick={() => archivoInputRef.current?.click()}
               >
                 <FileUp className="size-4" />
