@@ -647,11 +647,14 @@ function crearGeneradorSeed(seed: number) {
 }
 
 /**
- * Libros que ya tienen otras bibliotecas (propietarios > 0) y no están en
- * isbnsPropios. La selección es estable durante la semana ISO actual y
- * rota la semana siguiente. Si el usuario eligió géneros favoritos (Mi
- * cuenta), se priorizan esos géneros; el resto de los lugares se completa
- * con libros de cualquier género para seguir permitiendo el descubrimiento.
+ * Libros que ya tienen otras bibliotecas (propietarios > 0), con sinopsis
+ * cargada, y no están en isbnsPropios. Se priorizan los que más bibliotecas
+ * tienen y, entre esos, los que ya tienen alguna reseña. Los empates rotan
+ * cada semana ISO (estables durante la semana, distintos la siguiente) para
+ * no repetir siempre el mismo orden entre libros igual de populares. Si el
+ * usuario eligió géneros favoritos (Mi cuenta), se priorizan esos géneros;
+ * el resto de los lugares se completa con libros de cualquier género para
+ * seguir permitiendo el descubrimiento.
  */
 export async function getSeleccionSemanal(
   isbnsPropios: string[],
@@ -667,21 +670,26 @@ export async function getSeleccionSemanal(
         !propios.has(l.isbn) &&
         Boolean(l.portadaUrl) &&
         Boolean(l.autor) &&
-        Boolean(l.genero)
+        Boolean(l.genero) &&
+        Boolean(l.sinopsis)
     );
 
   const random = crearGeneradorSeed(hashString(claveSemanaActual()));
-  const mezclados = [...candidatos];
-  for (let i = mezclados.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [mezclados[i], mezclados[j]] = [mezclados[j], mezclados[i]];
-  }
+  const desempate = new Map(candidatos.map((l) => [l.isbn, random()]));
 
-  if (generosFavoritos.length === 0) return mezclados.slice(0, 8);
+  const ordenados = [...candidatos].sort((a, b) => {
+    if (b.propietarios !== a.propietarios) return b.propietarios - a.propietarios;
+    const tieneResenasA = a.totalResenas > 0 ? 1 : 0;
+    const tieneResenasB = b.totalResenas > 0 ? 1 : 0;
+    if (tieneResenasB !== tieneResenasA) return tieneResenasB - tieneResenasA;
+    return (desempate.get(a.isbn) ?? 0) - (desempate.get(b.isbn) ?? 0);
+  });
+
+  if (generosFavoritos.length === 0) return ordenados.slice(0, 8);
 
   const favoritos = new Set(generosFavoritos);
-  const preferidos = mezclados.filter((l) => favoritos.has(l.genero ?? ""));
-  const otros = mezclados.filter((l) => !favoritos.has(l.genero ?? ""));
+  const preferidos = ordenados.filter((l) => favoritos.has(l.genero ?? ""));
+  const otros = ordenados.filter((l) => !favoritos.has(l.genero ?? ""));
   return [...preferidos, ...otros].slice(0, 8);
 }
 
