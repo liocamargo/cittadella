@@ -213,7 +213,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background px-4">
       <div className="flex w-full max-w-[380px] flex-col gap-6 rounded-xl border bg-card p-9 shadow-sm">
-        <div>
+        <div className="flex flex-col items-center text-center">
           <Link href="/">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Cittadella" className="mb-3 h-9 w-auto" />

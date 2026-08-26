@@ -14,6 +14,10 @@ const EMAIL_CONTACTO = "[tu-email-de-contacto]";
 export default function PrivacidadPage() {
   return (
     <div className="mx-auto max-w-2xl px-5 py-16 text-sm leading-relaxed text-foreground">
+      <Link href="/">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="Cittadella" className="mb-6 h-9 w-auto" />
+      </Link>
       <Link href="/" className="text-xs text-muted-foreground underline">
         ← Volver al inicio
       </Link>
