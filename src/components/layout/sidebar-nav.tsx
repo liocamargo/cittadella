@@ -15,6 +15,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Check,
+  ChevronDown,
   Menu,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -94,12 +95,8 @@ export function SidebarNav() {
     }
   }
 
-  const accountMenuContent = (
-    <DropdownMenuContent align="start" className="w-64">
-      <div className="truncate px-1.5 py-1 text-xs text-muted-foreground">
-        {user?.email}
-      </div>
-      <DropdownMenuSeparator />
+  const bibliotecasListContent = (
+    <>
       {bibliotecas.map((b) => (
         <DropdownMenuItem
           key={b.id}
@@ -137,6 +134,33 @@ export function SidebarNav() {
           {t("common.crear")}
         </Button>
       </div>
+    </>
+  );
+
+  const cuentaMenuContent = (
+    <>
+      <div className="truncate px-1.5 py-1 text-xs text-muted-foreground">
+        {user?.email}
+      </div>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem asChild>
+        <Link href="/cuenta" className="flex items-center gap-2">
+          {t("nav.miCuenta")}
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem variant="destructive" onClick={handleLogout}>
+        {t("nav.cerrarSesion")}
+      </DropdownMenuItem>
+    </>
+  );
+
+  const accountMenuContent = (
+    <DropdownMenuContent align="start" className="w-64">
+      <div className="truncate px-1.5 py-1 text-xs text-muted-foreground">
+        {user?.email}
+      </div>
+      <DropdownMenuSeparator />
+      {bibliotecasListContent}
       <DropdownMenuSeparator />
       <DropdownMenuItem asChild>
         <Link href="/cuenta" className="flex items-center gap-2">
@@ -230,11 +254,11 @@ export function SidebarNav() {
         </div>
       </aside>
 
-      {/* Mobile: header fijo arriba — menú | título | cuenta */}
-      <header className="fixed inset-x-0 top-0 z-40 grid h-16 grid-cols-[auto_1fr_auto] items-center gap-2 border-b bg-background px-3 md:hidden">
+      {/* Mobile: header fijo arriba — menú | logo | biblioteca | cuenta */}
+      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-1.5 border-b bg-background px-3 md:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex size-8 items-center justify-center rounded-md border text-muted-foreground">
+            <button className="flex size-8 shrink-0 items-center justify-center rounded-md border text-muted-foreground">
               <Menu className="size-4" />
             </button>
           </DropdownMenuTrigger>
@@ -254,14 +278,28 @@ export function SidebarNav() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div className="flex justify-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Cittadella" className="h-6 w-auto" />
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="Cittadella" className="h-6 w-auto shrink-0" />
 
+        {/* Biblioteca seleccionada, separada de la cuenta: cambiar o crear una nueva. */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex size-8 items-center justify-center rounded-full">
+            <button className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-1.5 text-sm font-medium text-foreground hover:bg-accent">
+              <span className="truncate">
+                {bibliotecaActual?.nombre ?? t("common.cargando")}
+              </span>
+              <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-64">
+            {bibliotecasListContent}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Mi cuenta, separada de la biblioteca. */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex size-8 shrink-0 items-center justify-center rounded-full">
               <Avatar className="size-8">
                 <AvatarFallback className="bg-primary text-[12px] font-semibold text-primary-foreground">
                   {initial}
@@ -269,7 +307,9 @@ export function SidebarNav() {
               </Avatar>
             </button>
           </DropdownMenuTrigger>
-          {accountMenuContent}
+          <DropdownMenuContent align="end" className="w-56">
+            {cuentaMenuContent}
+          </DropdownMenuContent>
         </DropdownMenu>
       </header>
 
