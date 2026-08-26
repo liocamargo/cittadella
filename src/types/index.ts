@@ -154,6 +154,14 @@ export interface Ebook {
   sha256: string;
   agregadoPor: string;
   agregadoEn: string;
+  /**
+   * Digest que KOReader calcula para identificar este archivo (protocolo
+   * KOSync, ver `KosyncProgreso.document`). Se completa recién cuando el
+   * usuario vincula manualmente un progreso sin resolver a este ebook (ver
+   * "Leyendo ahora" en Inicio) — Cittadella no reimplementa el algoritmo de
+   * KOReader para calcularlo de antemano.
+   */
+  koreaderDigest?: string;
 }
 
 /**

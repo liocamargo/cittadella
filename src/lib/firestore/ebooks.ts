@@ -5,6 +5,7 @@ import {
   onSnapshot,
   query,
   setDoc,
+  updateDoc,
   where,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -26,6 +27,7 @@ function toEbook(id: string, data: Record<string, unknown>): Ebook {
     sha256: (data.sha256 as string) ?? "",
     agregadoPor: (data.agregadoPor as string) ?? "",
     agregadoEn: (data.agregadoEn as string) ?? "",
+    koreaderDigest: data.koreaderDigest as string | undefined,
   };
 }
 
@@ -43,6 +45,26 @@ export function listenEbooksDeLibro(
   return onSnapshot(q, (snap) => {
     onChange(snap.docs.map((d) => toEbook(d.id, d.data())));
   });
+}
+
+/** Todos los archivos digitales de una biblioteca, para cruzar contra el progreso de KOSync. */
+export function listenEbooksDeBiblioteca(
+  bibliotecaId: string,
+  onChange: (ebooks: Ebook[]) => void
+): Unsubscribe {
+  const q = query(collection(db, COL), where("bibliotecaId", "==", bibliotecaId));
+  return onSnapshot(q, (snap) => {
+    onChange(snap.docs.map((d) => toEbook(d.id, d.data())));
+  });
+}
+
+/**
+ * Vincula manualmente un progreso de KOSync sin resolver a este ebook,
+ * guardando el digest que mandó KOReader. A partir de ahí, ese progreso
+ * se resuelve solo (ver `leyendo-ahora.tsx`).
+ */
+export async function vincularDigestKosync(ebookId: string, digest: string): Promise<void> {
+  await updateDoc(doc(db, COL, ebookId), { koreaderDigest: digest });
 }
 
 /** Genera el id que va a tener el ebook antes de subir el archivo, para nombrarlo en Storage. */

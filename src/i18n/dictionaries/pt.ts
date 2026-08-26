@@ -665,6 +665,12 @@ const pt: Dictionary = {
     prestados: "Emprestados",
     tuObjetivo: "Sua meta",
     ponerObjetivo: "Defina sua meta",
+    leyendoAhoraTitulo: "Lendo agora",
+    leyendoAhoraDescripcion: "Progresso sincronizado do KOReader.",
+    progresoSinVincular: "Progresso sem vincular — {porcentaje}% lido",
+    sinEbooksParaVincular: "Você ainda não enviou nenhum arquivo digital para vincular.",
+    queLibroEs: "Qual livro é esse?",
+    errorVinculandoProgreso: "Não conseguimos vincular o progresso.",
   },
   categoriasChart: {
     titulo: "Sua biblioteca por categoria",

@@ -13,6 +13,7 @@ import { useLibrosGlobales } from "@/hooks/use-libros-globales";
 import { listenInventario } from "@/lib/firestore/libros";
 import { getMetaLectura, setMetaLectura } from "@/lib/firestore/metas";
 import { SeleccionSemanal } from "@/components/inicio/seleccion-semanal";
+import { LeyendoAhora } from "@/components/inicio/leyendo-ahora";
 import { CategoriasChart } from "@/components/inicio/categorias-chart";
 import type { LibroEnBiblioteca } from "@/types";
 import { logError } from "@/lib/log";
@@ -148,6 +149,10 @@ export default function InicioPage() {
           )}
         </div>
       </div>
+
+      {user && bibliotecaActual && (
+        <LeyendoAhora uid={user.uid} bibliotecaId={bibliotecaActual.id} />
+      )}
 
       <SeleccionSemanal isbnsPropios={copias.map((c) => c.isbn)} />
       <CategoriasChart copias={copias} globales={globales} />

@@ -665,6 +665,12 @@ const en: Dictionary = {
     prestados: "On loan",
     tuObjetivo: "Your goal",
     ponerObjetivo: "Set your goal",
+    leyendoAhoraTitulo: "Reading now",
+    leyendoAhoraDescripcion: "Progress synced from KOReader.",
+    progresoSinVincular: "Unlinked progress — {porcentaje}% read",
+    sinEbooksParaVincular: "You haven't uploaded any digital file to link yet.",
+    queLibroEs: "Which book is this?",
+    errorVinculandoProgreso: "We couldn't link the progress.",
   },
   categoriasChart: {
     titulo: "Your library by category",

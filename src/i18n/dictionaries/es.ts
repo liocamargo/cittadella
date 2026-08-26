@@ -663,6 +663,12 @@ const es = {
     prestados: "Prestados",
     tuObjetivo: "Tu objetivo",
     ponerObjetivo: "Poné tu objetivo",
+    leyendoAhoraTitulo: "Leyendo ahora",
+    leyendoAhoraDescripcion: "Progreso sincronizado desde KOReader.",
+    progresoSinVincular: "Progreso sin vincular — {porcentaje}% leído",
+    sinEbooksParaVincular: "Todavía no subiste ningún archivo digital para vincular.",
+    queLibroEs: "¿Qué libro es?",
+    errorVinculandoProgreso: "No pudimos vincular el progreso.",
   },
   categoriasChart: {
     titulo: "Tu biblioteca por categoría",
