@@ -659,14 +659,43 @@ function crearGeneradorSeed(seed: number) {
 }
 
 /**
+ * Ordena candidatos por cantidad de propietarios (más primero) y, entre
+ * empates, por si ya tienen alguna reseña. El resto de los empates se
+ * resuelve con un valor pseudoaleatorio determinado por `semilla` (para que
+ * la selección rote cada semana sin congelar el orden entre libros igual de
+ * populares). Si se pasan géneros favoritos, esos quedan primero. Devuelve
+ * como mucho 8 libros. Lógica pura, sin acceso a Firestore, para poder
+ * testearla sin mocks.
+ */
+export function ordenarSeleccion(
+  candidatos: LibroGlobal[],
+  generosFavoritos: string[],
+  semilla: number
+): LibroGlobal[] {
+  const random = crearGeneradorSeed(semilla);
+  const desempate = new Map(candidatos.map((l) => [l.isbn, random()]));
+
+  const ordenados = [...candidatos].sort((a, b) => {
+    if (b.propietarios !== a.propietarios) return b.propietarios - a.propietarios;
+    const tieneResenasA = a.totalResenas > 0 ? 1 : 0;
+    const tieneResenasB = b.totalResenas > 0 ? 1 : 0;
+    if (tieneResenasB !== tieneResenasA) return tieneResenasB - tieneResenasA;
+    return (desempate.get(a.isbn) ?? 0) - (desempate.get(b.isbn) ?? 0);
+  });
+
+  if (generosFavoritos.length === 0) return ordenados.slice(0, 8);
+
+  const favoritos = new Set(generosFavoritos);
+  const preferidos = ordenados.filter((l) => favoritos.has(l.genero ?? ""));
+  const otros = ordenados.filter((l) => !favoritos.has(l.genero ?? ""));
+  return [...preferidos, ...otros].slice(0, 8);
+}
+
+/**
  * Libros que ya tienen otras bibliotecas (propietarios > 0), con sinopsis
- * cargada, y no están en isbnsPropios. Se priorizan los que más bibliotecas
- * tienen y, entre esos, los que ya tienen alguna reseña. Los empates rotan
- * cada semana ISO (estables durante la semana, distintos la siguiente) para
- * no repetir siempre el mismo orden entre libros igual de populares. Si el
- * usuario eligió géneros favoritos (Mi cuenta), se priorizan esos géneros;
- * el resto de los lugares se completa con libros de cualquier género para
- * seguir permitiendo el descubrimiento.
+ * cargada, y no están en isbnsPropios. Ver `ordenarSeleccion` para el
+ * criterio de orden/prioridad; la semilla semanal hace que la selección sea
+ * estable durante la semana ISO actual y rote la semana siguiente.
  */
 export async function getSeleccionSemanal(
   isbnsPropios: string[],
@@ -686,23 +715,7 @@ export async function getSeleccionSemanal(
         Boolean(l.sinopsis)
     );
 
-  const random = crearGeneradorSeed(hashString(claveSemanaActual()));
-  const desempate = new Map(candidatos.map((l) => [l.isbn, random()]));
-
-  const ordenados = [...candidatos].sort((a, b) => {
-    if (b.propietarios !== a.propietarios) return b.propietarios - a.propietarios;
-    const tieneResenasA = a.totalResenas > 0 ? 1 : 0;
-    const tieneResenasB = b.totalResenas > 0 ? 1 : 0;
-    if (tieneResenasB !== tieneResenasA) return tieneResenasB - tieneResenasA;
-    return (desempate.get(a.isbn) ?? 0) - (desempate.get(b.isbn) ?? 0);
-  });
-
-  if (generosFavoritos.length === 0) return ordenados.slice(0, 8);
-
-  const favoritos = new Set(generosFavoritos);
-  const preferidos = ordenados.filter((l) => favoritos.has(l.genero ?? ""));
-  const otros = ordenados.filter((l) => !favoritos.has(l.genero ?? ""));
-  return [...preferidos, ...otros].slice(0, 8);
+  return ordenarSeleccion(candidatos, generosFavoritos, hashString(claveSemanaActual()));
 }
 
 /** Autores y editoriales ya cargados en la comunidad, para autocompletar formularios. */
