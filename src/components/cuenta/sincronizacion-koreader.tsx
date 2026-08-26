@@ -72,7 +72,10 @@ export function SincronizacionKoreader() {
         method: "POST",
         headers: { Authorization: `Bearer ${idToken}` },
       });
-      if (!res.ok) throw new Error(`status ${res.status}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? `status ${res.status}`);
+      }
       const datos: ClaveGenerada = await res.json();
       setClaveGenerada(datos);
       setTieneClave(true);

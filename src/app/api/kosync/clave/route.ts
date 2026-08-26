@@ -38,10 +38,18 @@ export async function POST(request: Request) {
   const clave = randomBytes(16).toString("hex");
   const claveSincronizacionHash = createHash("md5").update(clave).digest("hex");
 
-  await getAdminDb()
-    .collection("Perfiles")
-    .doc(uid)
-    .set({ claveSincronizacionHash }, { merge: true });
+  try {
+    await getAdminDb()
+      .collection("Perfiles")
+      .doc(uid)
+      .set({ claveSincronizacionHash }, { merge: true });
+  } catch (err) {
+    logError("Error guardando la clave de sincronización:", err);
+    return NextResponse.json(
+      { error: "No pudimos guardar la clave en el servidor." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ usuario: uid, clave });
 }
