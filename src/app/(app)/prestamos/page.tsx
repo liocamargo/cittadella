@@ -24,7 +24,12 @@ import {
 } from "@/components/ui/select";
 import { useBiblioteca } from "@/hooks/use-biblioteca";
 import { useLibrosGlobales } from "@/hooks/use-libros-globales";
-import { devolverLibro, listenInventario, prestarLibro } from "@/lib/firestore/libros";
+import {
+  devolverLibro,
+  estaVencido,
+  listenInventario,
+  prestarLibro,
+} from "@/lib/firestore/libros";
 import { listenSocios } from "@/lib/firestore/socios";
 import type { LibroEnBiblioteca, Socio } from "@/types";
 
@@ -40,6 +45,7 @@ export default function PrestamosPage() {
   const [fechaPrestamo, setFechaPrestamo] = useState(() =>
     new Date().toISOString().slice(0, 10)
   );
+  const [fechaLimitePrestamo, setFechaLimitePrestamo] = useState("");
   const [guardandoPrestamo, setGuardandoPrestamo] = useState(false);
 
   useEffect(() => {
@@ -84,6 +90,7 @@ export default function PrestamosPage() {
     setNombrePrestamo("");
     setSocioIdPrestamo("");
     setFechaPrestamo(new Date().toISOString().slice(0, 10));
+    setFechaLimitePrestamo("");
     setPrestarOpen(true);
   }
 
@@ -111,7 +118,8 @@ export default function PrestamosPage() {
         copia,
         nombreDestino,
         fechaPrestamo,
-        modoSocios ? socioIdPrestamo : undefined
+        modoSocios ? socioIdPrestamo : undefined,
+        fechaLimitePrestamo || undefined
       );
       toast.success(t("prestamos.prestamoRegistrado"));
       setPrestarOpen(false);
@@ -182,9 +190,16 @@ export default function PrestamosPage() {
               <div className="line-clamp-2 text-xs text-muted-foreground" title={global?.autor}>
                 {global?.autor}
               </div>
-              <Badge variant="outline" className="w-fit text-[11px]">
-                {t("prestamos.prestadoA", { nombre: copia.prestadoA ?? "" })}
-              </Badge>
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant="outline" className="w-fit text-[11px]">
+                  {t("prestamos.prestadoA", { nombre: copia.prestadoA ?? "" })}
+                </Badge>
+                {estaVencido(copia.fechaLimite) && (
+                  <Badge variant="destructive" className="w-fit text-[11px]">
+                    {t("prestamos.vencido")}
+                  </Badge>
+                )}
+              </div>
               <Button
                 size="sm"
                 variant="outline"
@@ -269,6 +284,16 @@ export default function PrestamosPage() {
                 type="date"
                 value={fechaPrestamo}
                 onChange={(e) => setFechaPrestamo(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label className="mb-1.5 block text-xs text-muted-foreground">
+                {t("prestamos.fechaLimite")}
+              </Label>
+              <Input
+                type="date"
+                value={fechaLimitePrestamo}
+                onChange={(e) => setFechaLimitePrestamo(e.target.value)}
               />
             </div>
             <div className="flex gap-2 pt-2">

@@ -42,6 +42,7 @@ import {
   cambiarIsbnCopia,
   devolverLibro,
   eliminarCopia,
+  estaVencido,
   listenResenas,
   prestarLibro,
   publicarResena,
@@ -112,6 +113,7 @@ export function LibroDetailSheet({
   const [loanDate, setLoanDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
+  const [loanFechaLimite, setLoanFechaLimite] = useState("");
   const [socios, setSocios] = useState<Socio[]>([]);
   const [resenas, setResenas] = useState<Resena[]>([]);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -234,10 +236,12 @@ export function LibroDetailSheet({
         copia,
         nombreDestino,
         loanDate,
-        modoSocios ? loanSocioId : undefined
+        modoSocios ? loanSocioId : undefined,
+        loanFechaLimite || undefined
       );
       setLoanName("");
       setLoanSocioId("");
+      setLoanFechaLimite("");
       setPrestando(false);
     } catch (err) {
       logError("Error registrando el préstamo:", err);
@@ -443,14 +447,21 @@ export function LibroDetailSheet({
             </button>
           </div>
 
-          <Badge
-            variant={copia.estado === "disponible" ? "secondary" : "outline"}
-            className="w-fit"
-          >
-            {copia.estado === "disponible"
-              ? t("libroDetail.disponible")
-              : t("libroDetail.prestadoA", { nombre: copia.prestadoA ?? "" })}
-          </Badge>
+          <div className="flex flex-wrap gap-1.5">
+            <Badge
+              variant={copia.estado === "disponible" ? "secondary" : "outline"}
+              className="w-fit"
+            >
+              {copia.estado === "disponible"
+                ? t("libroDetail.disponible")
+                : t("libroDetail.prestadoA", { nombre: copia.prestadoA ?? "" })}
+            </Badge>
+            {copia.estado === "prestado" && estaVencido(copia.fechaLimite) && (
+              <Badge variant="destructive" className="w-fit">
+                {t("libroDetail.vencido")}
+              </Badge>
+            )}
+          </div>
 
           <div className="flex flex-col gap-1.5 text-sm">
             <div className="flex items-center justify-between">
@@ -685,6 +696,12 @@ export function LibroDetailSheet({
                 type="date"
                 value={loanDate}
                 onChange={(e) => setLoanDate(e.target.value)}
+              />
+              <Label>{t("libroDetail.fechaLimite")}</Label>
+              <Input
+                type="date"
+                value={loanFechaLimite}
+                onChange={(e) => setLoanFechaLimite(e.target.value)}
               />
               <div className="flex gap-2">
                 <Button className="flex-1" onClick={handlePrestar}>

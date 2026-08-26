@@ -443,7 +443,8 @@ export async function prestarLibro(
   copia: Pick<LibroEnBiblioteca, "id" | "bibliotecaId" | "isbn">,
   prestadoA: string,
   fechaPrestamo: string,
-  socioId?: string
+  socioId?: string,
+  fechaLimite?: string
 ): Promise<void> {
   const historialRef = doc(collection(db, HISTORIAL));
   await setDoc(historialRef, {
@@ -453,14 +454,25 @@ export async function prestarLibro(
     socioId: socioId || undefined,
     prestadoA,
     fechaPrestamo,
+    fechaLimite: fechaLimite || undefined,
   });
   await updateDoc(doc(db, COPIAS, copia.id), {
     estado: "prestado",
     prestadoA,
     prestadoASocioId: socioId || deleteField(),
     fechaPrestamo,
+    fechaLimite: fechaLimite || deleteField(),
     historialActivoId: historialRef.id,
   });
+}
+
+/**
+ * Un préstamo está vencido si tiene fecha límite y ya pasó. Compara solo
+ * por fecha (no por hora) para no depender de la zona horaria del usuario.
+ */
+export function estaVencido(fechaLimite?: string): boolean {
+  if (!fechaLimite) return false;
+  return fechaLimite < new Date().toISOString().slice(0, 10);
 }
 
 /** `historialActivoId` es el que quedó guardado en la copia al prestarlo. */

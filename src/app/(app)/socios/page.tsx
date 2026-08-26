@@ -24,7 +24,7 @@ import {
   eliminarSocio,
   listenSocios,
 } from "@/lib/firestore/socios";
-import { listenHistorialDeSocio } from "@/lib/firestore/libros";
+import { estaVencido, listenHistorialDeSocio } from "@/lib/firestore/libros";
 import type { HistorialPrestamo, Socio } from "@/types";
 
 const FORM_INICIAL = { nombre: "", telefono: "", email: "", notas: "" };
@@ -299,6 +299,11 @@ export default function SociosPage() {
                             fecha: h.fechaDevolucion.slice(0, 10),
                           })
                         : " " + t("socios.noDevueltoAun")}
+                      {!h.fechaDevolucion && estaVencido(h.fechaLimite) && (
+                        <span className="ml-1 font-semibold text-destructive">
+                          {t("socios.vencido")}
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
