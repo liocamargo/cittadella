@@ -14,7 +14,6 @@ const en: Dictionary = {
     leidos: "Read",
     prestamos: "Loans",
     espacio: "Space",
-    importar: "Import/Export",
     socios: "Members",
     miCuenta: "My account",
     espacioCompartido: "Shared space",

@@ -14,7 +14,6 @@ const pt: Dictionary = {
     leidos: "Lidos",
     prestamos: "Empréstimos",
     espacio: "Espaço",
-    importar: "Importar/Exportar",
     socios: "Sócios",
     miCuenta: "Minha conta",
     espacioCompartido: "Espaço compartilhado",

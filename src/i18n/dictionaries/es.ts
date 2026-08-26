@@ -12,7 +12,6 @@ const es = {
     leidos: "Leídos",
     prestamos: "Préstamos",
     espacio: "Espacio",
-    importar: "Import/Export",
     socios: "Socios",
     miCuenta: "Mi cuenta",
     espacioCompartido: "Espacio compartido",

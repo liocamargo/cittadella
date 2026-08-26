@@ -11,7 +11,6 @@ import {
   ArrowLeftRight,
   BookCheck,
   Users,
-  ArrowDownUp,
   IdCard,
   PanelLeftClose,
   PanelLeftOpen,
@@ -45,14 +44,13 @@ const NAV_ITEMS_BASE = [
   { href: "/leidos", i18nKey: "nav.leidos", icon: BookCheck },
   { href: "/prestamos", i18nKey: "nav.prestamos", icon: ArrowLeftRight },
   { href: "/espacio", i18nKey: "nav.espacio", icon: Users },
-  { href: "/importar", i18nKey: "nav.importar", icon: ArrowDownUp },
 ] as const;
 
 const SOCIOS_ITEM = { href: "/socios", i18nKey: "nav.socios", icon: IdCard } as const;
 
 // En mobile, la tab bar de abajo solo tiene lugar para lo más usado; el
-// resto (Deseos, Espacio, Importar, Socios) vive en el menú de arriba.
-const HREFS_MENU_MOBILE = new Set(["/deseos", "/espacio", "/importar", "/socios"]);
+// resto (Deseos, Espacio, Socios) vive en el menú de arriba.
+const HREFS_MENU_MOBILE = new Set(["/deseos", "/espacio", "/socios"]);
 
 export function SidebarNav() {
   const pathname = usePathname();
