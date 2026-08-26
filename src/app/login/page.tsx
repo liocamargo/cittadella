@@ -78,6 +78,11 @@ function GoogleIcon() {
 
 type Step = "start" | "sent" | "completing" | "need-email";
 
+// Ocultos hasta tener la cuenta de Apple Developer y las credenciales de
+// Amazon configuradas. El código queda listo, solo falta esto en true.
+const LOGIN_APPLE_HABILITADO = false;
+const LOGIN_AMAZON_HABILITADO = false;
+
 export default function LoginPage() {
   const router = useRouter();
   const {
@@ -230,25 +235,29 @@ export default function LoginPage() {
               {t("login.continuarGoogle")}
             </Button>
 
-            <Button
-              variant="outline"
-              className="justify-center gap-2.5 py-5.5"
-              onClick={handleApple}
-              disabled={submitting}
-            >
-              <AppleIcon />
-              {t("login.continuarApple")}
-            </Button>
+            {LOGIN_APPLE_HABILITADO && (
+              <Button
+                variant="outline"
+                className="justify-center gap-2.5 py-5.5"
+                onClick={handleApple}
+                disabled={submitting}
+              >
+                <AppleIcon />
+                {t("login.continuarApple")}
+              </Button>
+            )}
 
-            <Button
-              variant="outline"
-              className="justify-center gap-2.5 py-5.5"
-              onClick={handleAmazon}
-              disabled={submitting}
-            >
-              <AmazonIcon />
-              {t("login.continuarAmazon")}
-            </Button>
+            {LOGIN_AMAZON_HABILITADO && (
+              <Button
+                variant="outline"
+                className="justify-center gap-2.5 py-5.5"
+                onClick={handleAmazon}
+                disabled={submitting}
+              >
+                <AmazonIcon />
+                {t("login.continuarAmazon")}
+              </Button>
+            )}
 
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <div className="h-px flex-1 bg-border" />
