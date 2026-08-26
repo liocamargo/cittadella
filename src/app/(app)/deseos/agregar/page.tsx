@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Heart, Loader2, PenLine, ScanBarcode } from "lucide-react";
+import { ArrowLeft, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
@@ -29,10 +29,9 @@ import {
   mensajeErrorBusqueda,
   type ResultadoBusquedaTitulo,
 } from "@/services/google-books";
-import { BarcodeScanner } from "@/components/catalogo/barcode-scanner";
 import { PortadaPicker } from "@/components/catalogo/portada-picker";
 import { GeneroSelect } from "@/components/catalogo/genero-select";
-import { BuscarPorTitulo } from "@/components/catalogo/buscar-por-titulo";
+import { BuscadorUnificado } from "@/components/catalogo/buscador-unificado";
 import type { LibroEnBiblioteca, LibroGlobal } from "@/types";
 
 type Tab = "biblioteca" | "buscar";
@@ -74,13 +73,11 @@ export default function AgregarDeseoPage() {
   const [agregandoIsbn, setAgregandoIsbn] = useState<string | null>(null);
 
   const [paso, setPaso] = useState<Paso>("elegir");
-  const [isbnInput, setIsbnInput] = useState("");
   const [isbn, setIsbn] = useState("");
   const [buscando, setBuscando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [comunidad, setComunidad] = useState<LibroGlobal | null>(null);
   const [form, setForm] = useState(FORM_INICIAL);
-  const [escaneando, setEscaneando] = useState(false);
   const [portadaPickerOpen, setPortadaPickerOpen] = useState(false);
 
   useEffect(() => {
@@ -223,37 +220,6 @@ export default function AgregarDeseoPage() {
     }
   }
 
-  function handleBuscar() {
-    buscar(isbnInput.trim());
-  }
-
-  function handleDetected(codigoCrudo: string) {
-    const codigo = sanitizarIsbn(codigoCrudo);
-    setEscaneando(false);
-    setIsbnInput(codigo);
-    buscar(codigo);
-  }
-
-  function handleIsbnInputChange(valor: string) {
-    setIsbnInput(sanitizarIsbn(valor));
-  }
-
-  const largoAnteriorRef = useRef(0);
-  useEffect(() => {
-    const largo = isbnInput.length;
-    if (
-      tab === "buscar" &&
-      paso === "elegir" &&
-      !buscando &&
-      (largo === 10 || largo === 13) &&
-      largo !== largoAnteriorRef.current
-    ) {
-      buscar(isbnInput);
-    }
-    largoAnteriorRef.current = largo;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isbnInput]);
-
   function handleManual() {
     setIsbn("");
     setComunidad(null);
@@ -263,7 +229,6 @@ export default function AgregarDeseoPage() {
 
   function handleSeleccionarPorTitulo(resultado: ResultadoBusquedaTitulo) {
     if (resultado.isbn) {
-      setIsbnInput(resultado.isbn);
       buscar(resultado.isbn);
       return;
     }
@@ -482,68 +447,13 @@ export default function AgregarDeseoPage() {
             <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
               {t("deseosAgregar.buscarNuevoTitulo")}
             </div>
-            <div className="flex flex-col gap-4">
-              {escaneando ? (
-                <BarcodeScanner onDetected={handleDetected} />
-              ) : (
-                <Button variant="outline" onClick={() => setEscaneando(true)}>
-                  <ScanBarcode />
-                  {t("deseosAgregar.escanear")}
-                </Button>
-              )}
-              {escaneando && (
-                <Button variant="ghost" size="sm" onClick={() => setEscaneando(false)}>
-                  {t("deseosAgregar.cancelarEscaneo")}
-                </Button>
-              )}
-
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <div className="h-px flex-1 bg-border" />
-                {t("deseosAgregar.oIngresarIsbn")}
-                <div className="h-px flex-1 bg-border" />
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder={t("deseosAgregar.placeholderIsbn")}
-                  inputMode="numeric"
-                  maxLength={13}
-                  value={isbnInput}
-                  onChange={(e) => handleIsbnInputChange(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
-                />
-                <Button onClick={handleBuscar} disabled={buscando}>
-                  {buscando ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    t("deseosAgregar.buscar")
-                  )}
-                </Button>
-              </div>
-              {buscando && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="size-3.5 animate-spin" />
-                  {t("deseosAgregar.buscandoLibro")}
-                </div>
-              )}
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <div className="h-px flex-1 bg-border" />
-                {t("deseosAgregar.oBuscarPorTitulo")}
-                <div className="h-px flex-1 bg-border" />
-              </div>
-              <BuscarPorTitulo
-                idiomasLectura={localeLectura}
-                onSeleccionar={handleSeleccionarPorTitulo}
-              />
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <div className="h-px flex-1 bg-border" />
-                {t("deseosAgregar.o")}
-                <div className="h-px flex-1 bg-border" />
-              </div>
-              <Button variant="outline" onClick={handleManual}>
-                <PenLine />
-                {t("deseosAgregar.cargarManualmente")}
-              </Button>
-            </div>
+            <BuscadorUnificado
+              idiomasLectura={localeLectura}
+              buscandoIsbn={buscando}
+              onIsbnDetectado={buscar}
+              onSeleccionarResultado={handleSeleccionarPorTitulo}
+              onCargarManualmente={handleManual}
+            />
           </div>
         </div>
       )}
