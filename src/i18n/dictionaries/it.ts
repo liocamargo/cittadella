@@ -26,6 +26,8 @@ const it: Dictionary = {
   login: {
     subtitulo: "Il catalogo condiviso della tua biblioteca",
     continuarGoogle: "Continua con Google",
+    continuarApple: "Continua con Apple",
+    continuarAmazon: "Continua con Amazon",
     oConCorreo: "oppure con la tua email",
     placeholderCorreo: "tu@email.com",
     enviarLink: "Invia link di accesso",
@@ -37,6 +39,8 @@ const it: Dictionary = {
     correo: "Email",
     ingresar: "Accedi",
     errorGoogle: "Non siamo riusciti ad accedere con Google.",
+    errorApple: "Non siamo riusciti ad accedere con Apple.",
+    errorAmazon: "Non siamo riusciti ad accedere con Amazon.",
     errorCorreoVacio: "Inserisci la tua email.",
     errorEnviandoLink: "Non siamo riusciti a inviare il link. Riprova.",
     errorCompletando: "Non siamo riusciti a completare l'accesso. Riprova.",

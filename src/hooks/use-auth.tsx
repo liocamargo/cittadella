@@ -2,12 +2,14 @@
 
 import {
   GoogleAuthProvider,
+  OAuthProvider,
   type User,
   deleteUser,
   isSignInWithEmailLink,
   onAuthStateChanged,
   reauthenticateWithPopup,
   sendSignInLinkToEmail,
+  signInWithCustomToken,
   signInWithEmailLink,
   signInWithPopup,
   signOut,
@@ -29,6 +31,9 @@ interface AuthContextValue {
   user: User | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
+  /** Lee el custom token que dejó /api/auth/amazon/callback y completa el login. */
+  completeAmazonSignIn: () => Promise<void>;
   sendLoginLink: (email: string) => Promise<void>;
   isEmailSignInLink: (url: string) => boolean;
   completeEmailLinkSignIn: (url: string, email?: string) => Promise<void>;
@@ -59,6 +64,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       async signInWithGoogle() {
         await signInWithPopup(auth, new GoogleAuthProvider());
+      },
+      async signInWithApple() {
+        const provider = new OAuthProvider("apple.com");
+        provider.addScope("email");
+        provider.addScope("name");
+        await signInWithPopup(auth, provider);
+      },
+      async completeAmazonSignIn() {
+        const res = await fetch("/api/auth/amazon/token");
+        if (!res.ok) {
+          throw new Error("No hay un login de Amazon pendiente.");
+        }
+        const { token } = await res.json();
+        await signInWithCustomToken(auth, token);
       },
       async sendLoginLink(email: string) {
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL

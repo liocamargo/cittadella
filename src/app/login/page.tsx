@@ -11,6 +11,48 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocale } from "@/hooks/use-locale";
 import { logError } from "@/lib/log";
 
+function AppleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="currentColor">
+      <path d="M15.5 8.5c-1 0-1.8.6-2.4.6s-1.5-.6-2.5-.6c-2.1 0-4.1 1.7-4.1 4.9 0 2.9 2.1 6.6 3.9 6.6.8 0 1.2-.5 2.2-.5s1.4.5 2.2.5c1.4 0 2.4-1.4 3.2-2.7.9-1.5 1.3-3 1.3-3.1-3.1-1.2-3.1-4.9.3-6-1.1-1.6-2.8-1.7-3.4-1.7z" />
+      <path d="M13.3 6.5c.6-.7 1-1.7.9-2.7-.9.1-2 .7-2.6 1.4-.5.6-1 1.6-.9 2.6.9.1 1.9-.5 2.6-1.3z" />
+    </svg>
+  );
+}
+
+function AmazonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <text
+        x="12"
+        y="15"
+        textAnchor="middle"
+        fontSize="13"
+        fontFamily="Arial, sans-serif"
+        fontWeight="700"
+        fill="currentColor"
+      >
+        a
+      </text>
+      <path
+        d="M6 16c3.5 2.2 8.5 2.2 12 0"
+        stroke="#FF9900"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M16.6 15.3l1.7.4-.5 1.7"
+        stroke="#FF9900"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -42,6 +84,8 @@ export default function LoginPage() {
     user,
     loading,
     signInWithGoogle,
+    signInWithApple,
+    completeAmazonSignIn,
     sendLoginLink,
     isEmailSignInLink,
     completeEmailLinkSignIn,
@@ -79,6 +123,23 @@ export default function LoginPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
+  // Vuelta del redirect de /api/auth/amazon/callback: ?provider=amazon si
+  // salió bien (hay un custom token esperando), ?error=amazon si no.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("provider") === "amazon") {
+      completeAmazonSignIn()
+        .then(() => router.replace("/inicio"))
+        .catch((err) => {
+          logError("Error completando el login con Amazon:", err);
+          toast.error(t("login.errorAmazon"));
+        });
+    } else if (params.get("error") === "amazon") {
+      toast.error(t("login.errorAmazon"));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleGoogle() {
     setSubmitting(true);
     try {
@@ -90,6 +151,23 @@ export default function LoginPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function handleApple() {
+    setSubmitting(true);
+    try {
+      await signInWithApple();
+      router.replace("/inicio");
+    } catch (err) {
+      logError("Error con Apple Sign-In:", err);
+      toast.error(t("login.errorApple"));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function handleAmazon() {
+    window.location.href = "/api/auth/amazon/iniciar";
   }
 
   async function handleSendLink() {
@@ -150,6 +228,26 @@ export default function LoginPage() {
             >
               <GoogleIcon />
               {t("login.continuarGoogle")}
+            </Button>
+
+            <Button
+              variant="outline"
+              className="justify-center gap-2.5 py-5.5"
+              onClick={handleApple}
+              disabled={submitting}
+            >
+              <AppleIcon />
+              {t("login.continuarApple")}
+            </Button>
+
+            <Button
+              variant="outline"
+              className="justify-center gap-2.5 py-5.5"
+              onClick={handleAmazon}
+              disabled={submitting}
+            >
+              <AmazonIcon />
+              {t("login.continuarAmazon")}
             </Button>
 
             <div className="flex items-center gap-3 text-xs text-muted-foreground">

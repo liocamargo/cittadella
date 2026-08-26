@@ -24,6 +24,8 @@ const es = {
   login: {
     subtitulo: "Catálogo compartido de tu biblioteca",
     continuarGoogle: "Continuar con Google",
+    continuarApple: "Continuar con Apple",
+    continuarAmazon: "Continuar con Amazon",
     oConCorreo: "o con tu correo",
     placeholderCorreo: "tu@correo.com",
     enviarLink: "Enviar link de acceso",
@@ -35,6 +37,8 @@ const es = {
     correo: "Correo",
     ingresar: "Ingresar",
     errorGoogle: "No pudimos iniciar sesión con Google.",
+    errorApple: "No pudimos iniciar sesión con Apple.",
+    errorAmazon: "No pudimos iniciar sesión con Amazon.",
     errorCorreoVacio: "Ingresá tu correo.",
     errorEnviandoLink: "No pudimos enviar el link. Probá de nuevo.",
     errorCompletando: "No pudimos completar el ingreso. Probá de nuevo.",
