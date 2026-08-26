@@ -6,7 +6,7 @@ import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 import type { LibroEnBiblioteca, LibroGlobal } from "@/types";
 
-/** Paleta categórica validada (CVD + contraste); "Otros" usa gris neutro, no un noveno tono. */
+/** Escala de negro a gris (la categoría más grande, más oscura); "Otros" usa el mismo gris neutro. */
 const COLORES = [
   "var(--chart-1)",
   "var(--chart-2)",
@@ -33,8 +33,8 @@ interface CategoriasChartProps {
   globales: Record<string, LibroGlobal>;
 }
 
-const SIZE = 168;
-const THICKNESS = 26;
+const SIZE = 220;
+const THICKNESS = 32;
 const R = (SIZE - THICKNESS) / 2;
 const CIRC = 2 * Math.PI * R;
 
