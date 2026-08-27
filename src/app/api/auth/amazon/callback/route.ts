@@ -3,6 +3,10 @@ import { getAdminAuth } from "@/lib/firebase/admin";
 import { getSiteUrl } from "@/lib/site-url";
 import { logError } from "@/lib/log";
 
+// firebase-admin requiere runtime Node (no Edge). Sin forzarlo, Vercel puede
+// ejecutar este handler en Edge y el módulo muere al importar → 500 HTML.
+export const runtime = "nodejs";
+
 const STATE_COOKIE = "amazon_oauth_state";
 const TOKEN_COOKIE = "amazon_custom_token";
 

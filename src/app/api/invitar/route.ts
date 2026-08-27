@@ -4,6 +4,11 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase/admin";
 import { getSiteUrl } from "@/lib/site-url";
 import { logError } from "@/lib/log";
 
+// firebase-admin y resend requieren el runtime Node (no Edge). En Vercel, si
+// no se fuerza, el handler puede caer en Edge y el módulo muere al importar
+// → 500 HTML en vez de nuestra respuesta JSON.
+export const runtime = "nodejs";
+
 interface InvitarBody {
   email: string;
   bibliotecaId: string;

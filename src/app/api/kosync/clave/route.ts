@@ -3,6 +3,12 @@ import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase/admin";
 import { logError } from "@/lib/log";
 
+// firebase-admin requiere APIs nativas de Node (crypto, fs, etc.) y no puede
+// correr en Edge Runtime. Forzarlo es obligatorio en Vercel, donde los Route
+// Handlers a veces se ejecutan en Edge y mueren al cargar el módulo (500 HTML
+// genérico que nunca llega al JSON de error de este handler).
+export const runtime = "nodejs";
+
 /**
  * Genera una clave de sincronización KOReader/KOSync nueva para el usuario
  * autenticado (invalida cualquier clave anterior). La clave en texto plano
@@ -22,7 +28,10 @@ export async function POST(request: Request) {
   } catch (err) {
     logError("Firebase Admin no está configurado:", err);
     return NextResponse.json(
-      { error: "Firebase Admin no está configurado en el servidor." },
+      {
+        error: "Firebase Admin no está configurado en el servidor.",
+        detalle: process.env.NODE_ENV === "development" ? String(err) : undefined,
+      },
       { status: 500 }
     );
   }
@@ -45,8 +54,19 @@ export async function POST(request: Request) {
       .set({ claveSincronizacionHash }, { merge: true });
   } catch (err) {
     logError("Error guardando la clave de sincronización:", err);
+    const parts =
+      typeof err === "object" && err !== null && "code" in err
+        ? [`${(err as { code: unknown }).code}`]
+        : [];
+    if (err instanceof Error && err.message) parts.push(err.message);
     return NextResponse.json(
-      { error: "No pudimos guardar la clave en el servidor." },
+      {
+        error: "No pudimos guardar la clave en el servidor.",
+        detalle:
+          process.env.NODE_ENV === "development"
+            ? parts.join(" — ")
+            : undefined,
+      },
       { status: 500 }
     );
   }

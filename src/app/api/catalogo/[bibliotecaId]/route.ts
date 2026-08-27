@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { logError } from "@/lib/log";
 
+export const runtime = "nodejs";
+
 export interface LibroCatalogoPublico {
   id: string;
   isbn: string;

@@ -74,7 +74,11 @@ export function SincronizacionKoreader() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? `status ${res.status}`);
+        const error = new Error(
+          body?.error ?? body?.detalle ?? `status ${res.status}`
+        ) as Error & { info?: { status: number; body: unknown } };
+        error.info = { status: res.status, body: body ?? null };
+        throw error;
       }
       const datos: ClaveGenerada = await res.json();
       setClaveGenerada(datos);
@@ -82,6 +86,13 @@ export function SincronizacionKoreader() {
     } catch (err) {
       logError("Error generando la clave de sincronización:", err);
       toast.error(t("cuenta.sincronizacionErrorGenerando"));
+      const info = (err as Error & { info?: { status: number; body: unknown } }).info;
+      if (info) {
+        console.log(
+          `🌐 [Cittadella] Detalle del error (status ${info.status}):`,
+          info.body
+        );
+      }
     } finally {
       setGenerando(false);
     }

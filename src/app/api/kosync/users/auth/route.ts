@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { verificarCredencialesKosync } from "@/lib/kosync/auth";
 
+export const runtime = "nodejs";
+
 export async function GET(request: Request) {
   const credenciales = await verificarCredencialesKosync(request);
   if (!credenciales) {
