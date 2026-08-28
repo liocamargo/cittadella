@@ -119,7 +119,7 @@ export function SincronizacionKoreader() {
         open={Boolean(claveGenerada)}
         onOpenChange={(open) => !open && setClaveGenerada(null)}
       >
-        <DialogContent>
+        <DialogContent className="w-fit max-w-[calc(100%-2rem)] sm:max-w-none min-w-0">
           <DialogHeader>
             <DialogTitle>{t("cuenta.sincronizacionDialogTitulo")}</DialogTitle>
           </DialogHeader>
